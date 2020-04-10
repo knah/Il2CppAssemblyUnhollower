@@ -106,6 +106,7 @@ namespace AssemblyUnhollower.Contexts
             return method.Name;
         }
 
+        private static readonly string[] MethodAccessTypeLabels = { "CompilerControlled", "Private", "FamAndAssem", "Internal", "Protected", "FamOrAssem", "Public"};
         private string UnmangleMethodNameWithSignature(MethodDefinition method)
         {
             var name = method.Name;
@@ -118,7 +119,7 @@ namespace AssemblyUnhollower.Contexts
             var builder = new StringBuilder();
             builder.Append(name);
             builder.Append('_');
-            builder.Append(method.Attributes & MethodAttributes.MemberAccessMask);
+            builder.Append(MethodAccessTypeLabels[(int) (method.Attributes & MethodAttributes.MemberAccessMask)]);
             foreach (var param in method.Parameters)
             {
                 builder.Append('_');
