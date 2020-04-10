@@ -1,0 +1,33 @@
+using System;
+using System.Text;
+
+namespace UnhollowerBaseLib
+{
+    public class Il2CppException : Exception
+    {
+        [ThreadStatic] private static byte[] ourMessageBytes;
+
+        public Il2CppException(IntPtr exception) : base(BuildMessage(exception))
+        {
+        }
+
+        private static unsafe string BuildMessage(IntPtr exception)
+        {
+            ourMessageBytes ??= new byte[65536];
+            fixed (byte* message = ourMessageBytes)
+                IL2CPP.il2cpp_format_exception(exception, message, ourMessageBytes.Length);
+            string builtMessage = Encoding.UTF8.GetString(ourMessageBytes, 0, Array.IndexOf(ourMessageBytes, (byte) 0));
+            fixed (byte* message = ourMessageBytes)
+                IL2CPP.il2cpp_format_stack_trace(exception, message, ourMessageBytes.Length);
+            builtMessage +=
+                "\n" + Encoding.UTF8.GetString(ourMessageBytes, 0, Array.IndexOf(ourMessageBytes, (byte) 0));
+            return builtMessage;
+        }
+
+        public static void RaiseExceptionIfNecessary(IntPtr returnedException)
+        {
+            if (returnedException == IntPtr.Zero) return;
+            throw new Il2CppException(returnedException);
+        }
+    }
+}
