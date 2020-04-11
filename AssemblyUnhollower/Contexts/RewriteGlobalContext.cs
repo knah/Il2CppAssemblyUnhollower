@@ -26,7 +26,7 @@ namespace AssemblyUnhollower.Contexts
                 var assemblyName = Path.GetFileNameWithoutExtension(sourceAssemblyPath);
                 if(assemblyName == "Il2CppDummyDll") continue;
                 
-                var sourceAssembly = AssemblyDefinition.ReadAssembly(File.OpenRead(sourceAssemblyPath), new ReaderParameters() {MetadataResolver = metadataResolver});
+                var sourceAssembly = AssemblyDefinition.ReadAssembly(File.OpenRead(sourceAssemblyPath), new ReaderParameters(ReadingMode.Immediate) {MetadataResolver = metadataResolver});
                 myAssemblyResolver.Register(sourceAssembly);
                 var newAssembly = AssemblyDefinition.CreateAssembly(
                     new AssemblyNameDefinition(sourceAssembly.Name.Name.UnSystemify(), sourceAssembly.Name.Version),
