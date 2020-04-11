@@ -17,7 +17,7 @@ namespace AssemblyUnhollower.Passes
                 
                 foreach (var typeContext in assemblyContext.Types)
                 {
-                    var typeGetMethod = new MethodDefinition("get_Il2CppType", MethodAttributes.Final | MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static, il2CppSystemTypeRef);
+                    var typeGetMethod = new MethodDefinition("get_Il2CppType", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static, il2CppSystemTypeRef);
                     typeContext.NewType.Methods.Add(typeGetMethod);
                     var typeProperty = new PropertyDefinition("Il2CppType", PropertyAttributes.None, il2CppSystemTypeRef);
                     typeProperty.GetMethod = typeGetMethod;

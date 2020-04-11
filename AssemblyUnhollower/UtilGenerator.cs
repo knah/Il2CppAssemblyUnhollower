@@ -31,7 +31,7 @@ namespace AssemblyUnhollower
 
         public static void GenerateBoxMethod(TypeDefinition targetType, FieldReference classHandle, TypeReference il2CppObjectTypeDef)
         {
-            var method = new MethodDefinition("BoxIl2CppObject", MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig, targetType.Module.ImportReference(il2CppObjectTypeDef));
+            var method = new MethodDefinition("BoxIl2CppObject", MethodAttributes.Public | MethodAttributes.HideBySig, targetType.Module.ImportReference(il2CppObjectTypeDef));
             targetType.Methods.Add(method);
 
             var methodBody = method.Body.GetILProcessor();

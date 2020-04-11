@@ -128,8 +128,8 @@ namespace AssemblyUnhollower
         private static MethodAttributes Field2MethodAttrs(FieldAttributes fieldAttributes)
         {
             if ((fieldAttributes & FieldAttributes.Static) != 0)
-                return MethodAttributes.Final | MethodAttributes.Public | MethodAttributes.Static;
-            return MethodAttributes.Final | MethodAttributes.Public;
+                return MethodAttributes.Public | MethodAttributes.Static;
+            return MethodAttributes.Public;
         }
     }
 }

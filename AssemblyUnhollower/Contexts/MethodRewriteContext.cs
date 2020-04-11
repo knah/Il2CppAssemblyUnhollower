@@ -87,10 +87,13 @@ namespace AssemblyUnhollower.Contexts
 
         private MethodAttributes AdjustAttributes(MethodAttributes original)
         {
-            original &= ~(MethodAttributes.MemberAccessMask);
+            original &= ~(MethodAttributes.MemberAccessMask); // todo: handle Object overload correctly
             original &= ~(MethodAttributes.PInvokeImpl);
             original &= ~(MethodAttributes.Abstract);
             original &= ~(MethodAttributes.Virtual);
+            original &= ~(MethodAttributes.Final);
+            original &= ~(MethodAttributes.NewSlot);
+            original &= ~(MethodAttributes.ReuseSlot);
             original |= MethodAttributes.Public;
             return original;
         }
