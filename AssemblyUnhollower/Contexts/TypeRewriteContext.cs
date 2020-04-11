@@ -42,8 +42,11 @@ namespace AssemblyUnhollower.Contexts
             else
             {
                 SelfSubstitutedRef = NewType;
-                var genericTypeRef = new GenericInstanceType(AssemblyContext.Imports.Il2CppClassPointerStore)
-                    {GenericArguments = {SelfSubstitutedRef}};
+                var genericTypeRef = new GenericInstanceType(AssemblyContext.Imports.Il2CppClassPointerStore);
+                if(OriginalType.IsPrimitive || OriginalType.FullName == "System.String")
+                    genericTypeRef.GenericArguments.Add(NewType.Module.ImportReference(TargetTypeSystemHandler.Type.Module.GetType(OriginalType.FullName)));
+                else
+                    genericTypeRef.GenericArguments.Add(SelfSubstitutedRef);
                 ClassPointerFieldRef = new FieldReference("NativeClassPtr", AssemblyContext.Imports.IntPtr,
                     NewType.Module.ImportReference(genericTypeRef));
             }
