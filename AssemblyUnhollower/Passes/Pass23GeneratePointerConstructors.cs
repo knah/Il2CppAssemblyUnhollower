@@ -17,7 +17,7 @@ namespace AssemblyUnhollower.Passes
                     var newType = typeContext.NewType;
                     var nativeCtor = new MethodDefinition(".ctor",
                         MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName |
-                        MethodAttributes.Final | MethodAttributes.HideBySig, assemblyContext.Imports.Void);
+                        MethodAttributes.HideBySig, assemblyContext.Imports.Void);
 
                     nativeCtor.Parameters.Add(new ParameterDefinition(assemblyContext.Imports.IntPtr));
                     

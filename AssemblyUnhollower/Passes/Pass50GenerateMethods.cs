@@ -23,7 +23,7 @@ namespace AssemblyUnhollower.Passes
                         foreach (var originalMethodParameter in originalMethod.Parameters)
                         {
                             var newParameter = new ParameterDefinition(originalMethodParameter.Name,
-                                originalMethodParameter.Attributes,
+                                originalMethodParameter.Attributes & ~ParameterAttributes.HasFieldMarshal,
                                 assemblyContext.RewriteTypeRef(originalMethodParameter.ParameterType));
                             newMethod.Parameters.Add(newParameter);
                         }
