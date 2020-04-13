@@ -7,12 +7,15 @@ namespace UnhollowerBaseLib
     {
         [ThreadStatic] private static byte[] ourMessageBytes;
 
+        public static Func<IntPtr, string> ParseMessageHook;
+
         public Il2CppException(IntPtr exception) : base(BuildMessage(exception))
         {
         }
 
         private static unsafe string BuildMessage(IntPtr exception)
         {
+            if (ParseMessageHook != null) return ParseMessageHook(exception);
             ourMessageBytes ??= new byte[65536];
             fixed (byte* message = ourMessageBytes)
                 IL2CPP.il2cpp_format_exception(exception, message, ourMessageBytes.Length);
