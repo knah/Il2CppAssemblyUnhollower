@@ -3,7 +3,7 @@ using Mono.Cecil;
 
 namespace AssemblyUnhollower.Passes
 {
-    public static class Pass11FillTypedefs
+    public static class Pass12FillTypedefs
     {
         public static void DoPass(RewriteGlobalContext context)
         {
@@ -21,7 +21,7 @@ namespace AssemblyUnhollower.Passes
                     if (typeContext.OriginalType.IsEnum)
                     {
                         typeContext.NewType.BaseType = assemblyContext.Imports.Enum;
-                    } else if (typeContext.OriginalType.IsValueType) {
+                    } else if (typeContext.ComputedTypeSpecifics == TypeRewriteContext.TypeSpecifics.BlittableStruct) {
                         typeContext.NewType.BaseType = assemblyContext.Imports.ValueType;
                     } else
                         typeContext.NewType.BaseType = assemblyContext.RewriteTypeRef(typeContext.OriginalType.BaseType);

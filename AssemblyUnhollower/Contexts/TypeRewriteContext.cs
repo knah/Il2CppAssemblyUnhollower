@@ -10,8 +10,12 @@ namespace AssemblyUnhollower.Contexts
         public readonly TypeDefinition OriginalType;
         public readonly TypeDefinition NewType;
 
+        public readonly bool OriginalNameWasObfuscated;
+
         public FieldReference ClassPointerFieldRef { get; private set; }
         public TypeReference SelfSubstitutedRef { get; private set; }
+
+        public TypeSpecifics ComputedTypeSpecifics;
 
         private readonly Dictionary<FieldDefinition, FieldRewriteContext> myFieldContexts = new Dictionary<FieldDefinition, FieldRewriteContext>();
         private readonly Dictionary<MethodDefinition, MethodRewriteContext> myMethodContexts = new Dictionary<MethodDefinition, MethodRewriteContext>();
@@ -24,6 +28,12 @@ namespace AssemblyUnhollower.Contexts
             AssemblyContext = assemblyContext ?? throw new ArgumentNullException(nameof(assemblyContext));
             OriginalType = originalType ?? throw new ArgumentNullException(nameof(originalType));
             NewType = newType ?? throw new ArgumentNullException(nameof(newType));
+
+            OriginalNameWasObfuscated = OriginalType.Name != NewType.Name;
+            if (!OriginalType.IsValueType)
+                ComputedTypeSpecifics = TypeSpecifics.ReferenceType;
+            else if (OriginalType.IsEnum)
+                ComputedTypeSpecifics = TypeSpecifics.BlittableStruct;
         }
 
         public void AddMembers()
@@ -73,5 +83,14 @@ namespace AssemblyUnhollower.Contexts
         public FieldRewriteContext GetFieldByOldField(FieldDefinition field) => myFieldContexts[field];
         public MethodRewriteContext GetMethodByOldMethod(MethodDefinition method) => myMethodContexts[method];
         public MethodRewriteContext? TryGetMethodByOldMethod(MethodDefinition method) => myMethodContexts.TryGetValue(method, out var result) ? result : null;
+
+        public enum TypeSpecifics
+        {
+            NotComputed,
+            Computing,
+            ReferenceType,
+            BlittableStruct,
+            NonBlittableStruct
+        }
     }
 }

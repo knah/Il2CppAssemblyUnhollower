@@ -3,7 +3,7 @@ using Mono.Cecil;
 
 namespace AssemblyUnhollower.Passes
 {
-    public static class Pass12FillGenericConstraints
+    public static class Pass13FillGenericConstraints
     {
         public static void DoPass(RewriteGlobalContext context)
         {

@@ -60,6 +60,8 @@ namespace AssemblyUnhollower
         private readonly Lazy<MethodReference> myRuntimeInvoke;
         private readonly Lazy<MethodReference> myRuntimeClassInit;
         private readonly Lazy<MethodReference> myObjectUnbox;
+        private readonly Lazy<MethodReference> myObjectBox;
+        private readonly Lazy<MethodReference> myValueSizeGet;
         private readonly Lazy<MethodReference> myRaiseExceptionIfNecessary;
         private readonly Lazy<MethodReference> myGetVirtualMethod;
         private readonly Lazy<MethodReference> myGetFieldPtr;
@@ -79,6 +81,8 @@ namespace AssemblyUnhollower
         public MethodReference RuntimeInvoke => myRuntimeInvoke.Value;
         public MethodReference RuntimeClassInit => myRuntimeClassInit.Value;
         public MethodReference ObjectUnbox => myObjectUnbox.Value;
+        public MethodReference ObjectBox => myObjectBox.Value;
+        public MethodReference ValueSizeGet => myValueSizeGet.Value;
         public MethodReference RaiseExceptionIfNecessary => myRaiseExceptionIfNecessary.Value;
         public MethodReference GetVirtualMethod => myGetVirtualMethod.Value;
         public MethodReference GetFieldPointer => myGetFieldPtr.Value;
@@ -120,6 +124,8 @@ namespace AssemblyUnhollower
             myRuntimeInvoke = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("il2cpp_runtime_invoke")));
             myRuntimeClassInit = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("il2cpp_runtime_class_init")));
             myObjectUnbox = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("il2cpp_object_unbox")));
+            myObjectBox = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_value_box))));
+            myValueSizeGet = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_class_value_size))));
             myRaiseExceptionIfNecessary = new Lazy<MethodReference>(() => Module.ImportReference(typeof(Il2CppException).GetMethod("RaiseExceptionIfNecessary")));
             myGetVirtualMethod = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("il2cpp_object_get_virtual_method")));
             myGetFieldPtr = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("GetIl2CppField")));

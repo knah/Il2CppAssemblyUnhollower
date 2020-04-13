@@ -79,25 +79,7 @@ namespace AssemblyUnhollower.Passes
                             bodyBuilder.Emit(OpCodes.Add);
 
                             var newParam = newMethod.Parameters[i];
-
-                            if (newParam.ParameterType.FullName == "System.String")
-                            {
-                                bodyBuilder.Emit(OpCodes.Ldarg, argOffset + i);
-                                bodyBuilder.Emit(OpCodes.Call, imports.StringToNative);
-                            } else if (newParam.ParameterType is GenericParameter)
-                            {
-                                GenerateGenericParameter(bodyBuilder, newMethod, newParam, imports, argOffset + i);
-                            }
-                            else if (newParam.ParameterType.IsValueType)
-                            {
-                                bodyBuilder.Emit(OpCodes.Ldarga, argOffset + i);
-                            }
-                            else
-                            {
-                                bodyBuilder.Emit(OpCodes.Ldarg, argOffset + i);
-                                bodyBuilder.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointer);
-                            }
-
+                            bodyBuilder.EmitObjectToPointer(originalMethod.Parameters[i].ParameterType, newParam.ParameterType, methodRewriteContext.DeclaringType, argOffset + i);
                             bodyBuilder.Emit(OpCodes.Stind_I);
                         }
 
@@ -117,17 +99,7 @@ namespace AssemblyUnhollower.Passes
                         if (originalMethod.IsStatic)
                             bodyBuilder.Emit(OpCodes.Ldc_I4_0);
                         else
-                        {
-                            if (originalMethod.DeclaringType.IsValueType)
-                            {
-                                bodyBuilder.Emit(OpCodes.Ldarg_0);
-                            }
-                            else
-                            {
-                                bodyBuilder.Emit(OpCodes.Ldarg_0);
-                                bodyBuilder.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointer);
-                            }
-                        }
+                            bodyBuilder.EmitObjectToPointer(originalMethod.DeclaringType, newMethod.DeclaringType, typeContext, 0, true);
 
                         bodyBuilder.Emit(OpCodes.Ldloc, argArray);
                         bodyBuilder.Emit(OpCodes.Ldloca, exceptionLocal);
@@ -137,100 +109,12 @@ namespace AssemblyUnhollower.Passes
                         bodyBuilder.Emit(OpCodes.Ldloc, exceptionLocal);
                         bodyBuilder.Emit(OpCodes.Call, imports.RaiseExceptionIfNecessary);
 
-                        bodyBuilder.Emit(OpCodes.Ldloc, resultVar);
-                        if (originalMethod.ReturnType.FullName == "System.Void")
-                        {
-                            bodyBuilder.Emit(OpCodes.Pop);
-                        }
-                        else if (originalMethod.ReturnType.FullName == "System.String")
-                        {
-                            bodyBuilder.Emit(OpCodes.Call, imports.StringFromNative);
-                        }
-                        else if (originalMethod.ReturnType.IsValueType)
-                        {
-                            bodyBuilder.Emit(OpCodes.Call, imports.ObjectUnbox);
-                            bodyBuilder.Emit(OpCodes.Ldobj, newMethod.ReturnType);
-                        } else if (originalMethod.ReturnType is GenericParameter)
-                        {
-                            GenerateGenericReturn(bodyBuilder, newMethod, assemblyContext.Imports);
-                        }
-                        else
-                        {
-                            var createRealObject = bodyBuilder.Create(OpCodes.Newobj,
-                                new MethodReference(".ctor", imports.Void, newMethod.ReturnType)
-                                    {Parameters = {new ParameterDefinition(imports.IntPtr)}, HasThis = true});
-
-                            bodyBuilder.Emit(OpCodes.Dup);
-                            bodyBuilder.Emit(OpCodes.Brtrue_S, createRealObject);
-                            bodyBuilder.Emit(OpCodes.Pop);
-                            bodyBuilder.Emit(OpCodes.Ldnull);
-                            bodyBuilder.Emit(OpCodes.Ret);
-
-                            bodyBuilder.Append(createRealObject);
-                        }
+                        bodyBuilder.EmitPointerToObject(originalMethod.ReturnType, newMethod.ReturnType, typeContext, bodyBuilder.Create(OpCodes.Ldloc, resultVar), false);
 
                         bodyBuilder.Emit(OpCodes.Ret);
                     }
                 }
             }
-        }
-
-        private static void GenerateGenericParameter(ILProcessor bodyBuilder, MethodDefinition method,
-            ParameterDefinition parameter, AssemblyKnownImports imports, int argNumber)
-        {
-            bodyBuilder.Emit(OpCodes.Ldtoken, parameter.ParameterType);
-            bodyBuilder.Emit(OpCodes.Call, method.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == nameof(Type.GetTypeFromHandle))));
-            bodyBuilder.Emit(OpCodes.Call, method.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == typeof(Type).GetProperty(nameof(Type.IsValueType))!.GetMethod!.Name)));
-
-            var finalNop = bodyBuilder.Create(OpCodes.Nop);
-            var valueTypeNop = bodyBuilder.Create(OpCodes.Nop);
-            
-            bodyBuilder.Emit(OpCodes.Brtrue, valueTypeNop);
-            
-            bodyBuilder.Emit(OpCodes.Ldarg, argNumber);
-            bodyBuilder.Emit(OpCodes.Box, parameter.ParameterType);
-            bodyBuilder.Emit(OpCodes.Isinst, imports.Il2CppObjectBase);
-            bodyBuilder.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointer);
-            
-            bodyBuilder.Emit(OpCodes.Br, finalNop);
-            bodyBuilder.Append(valueTypeNop);
-            
-            bodyBuilder.Emit(OpCodes.Ldarga, argNumber);
-            
-            bodyBuilder.Append(finalNop);
-        }
-
-        private static void GenerateGenericReturn(ILProcessor bodyBuilder, MethodDefinition method, AssemblyKnownImports imports)
-        {
-            bodyBuilder.Emit(OpCodes.Ldtoken, method.ReturnType);
-            bodyBuilder.Emit(OpCodes.Call, method.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == nameof(Type.GetTypeFromHandle))));
-            bodyBuilder.Emit(OpCodes.Call, method.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == typeof(Type).GetProperty(nameof(Type.IsValueType))!.GetMethod!.Name)));
-
-            var finalNop = bodyBuilder.Create(OpCodes.Nop);
-            var valueTypeNop = bodyBuilder.Create(OpCodes.Nop);
-            
-            bodyBuilder.Emit(OpCodes.Brtrue, valueTypeNop);
-            
-            var createRealObject = bodyBuilder.Create(OpCodes.Newobj,
-                new MethodReference(".ctor", imports.Void, imports.Il2CppObjectBase)
-                    {Parameters = {new ParameterDefinition(imports.IntPtr)}, HasThis = true});
-
-            bodyBuilder.Emit(OpCodes.Dup);
-            bodyBuilder.Emit(OpCodes.Brtrue_S, createRealObject);
-            bodyBuilder.Emit(OpCodes.Pop);
-            bodyBuilder.Emit(OpCodes.Ldnull);
-            bodyBuilder.Emit(OpCodes.Br, finalNop);
-
-            bodyBuilder.Append(createRealObject);
-            bodyBuilder.Emit(OpCodes.Call, method.Module.ImportReference(new GenericInstanceMethod(imports.Il2CppObjectCast) { GenericArguments = { method.ReturnType }}));
-            
-            bodyBuilder.Emit(OpCodes.Br, finalNop);
-            bodyBuilder.Append(valueTypeNop);
-            
-            bodyBuilder.Emit(OpCodes.Call, imports.ObjectUnbox);
-            bodyBuilder.Emit(OpCodes.Ldobj, method.ReturnType);
-            
-            bodyBuilder.Append(finalNop);
         }
     }
 }

@@ -53,6 +53,16 @@ namespace AssemblyUnhollower.Contexts
             return GetNewAssemblyForOriginal(originalType.Module.Assembly)
                 .GetContextForOriginalType(originalType);
         }
+        
+        public TypeRewriteContext.TypeSpecifics JudgeSpecificsByOriginalType(TypeReference typeRef)
+        {
+            if (typeRef.IsPrimitive || typeRef.IsPointer || typeRef.FullName == "System.TypedReference") return TypeRewriteContext.TypeSpecifics.BlittableStruct;
+            if (typeRef.FullName == "System.String" || typeRef.FullName == "System.Object" || typeRef.IsArray || typeRef.IsByReference || typeRef.IsGenericParameter || typeRef.IsGenericInstance)
+                return TypeRewriteContext.TypeSpecifics.ReferenceType;
+
+            var fieldTypeContext = GetNewTypeForOriginal(typeRef.Resolve());
+            return fieldTypeContext.ComputedTypeSpecifics;
+        }
 
         public AssemblyRewriteContext GetAssemblyByName(string name)
         {

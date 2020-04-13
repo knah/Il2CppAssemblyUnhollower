@@ -13,7 +13,7 @@ namespace AssemblyUnhollower.Passes
                 {
                     foreach (var fieldContext in typeContext.Fields)
                     {
-                        if (typeContext.OriginalType.IsValueType && !fieldContext.OriginalField.IsStatic) continue;
+                        if (typeContext.ComputedTypeSpecifics == TypeRewriteContext.TypeSpecifics.BlittableStruct && !fieldContext.OriginalField.IsStatic) continue;
 
                         var field = fieldContext.OriginalField;
                         var unmangleFieldName = fieldContext.UnmangledName;
@@ -22,10 +22,8 @@ namespace AssemblyUnhollower.Passes
                             assemblyContext.RewriteTypeRef(fieldContext.OriginalField.FieldType));
                         typeContext.NewType.Properties.Add(property);
 
-                        var getter = FieldAccessorGenerator.MakeGetter(field, fieldContext.PointerField, property);
-                        var setter = FieldAccessorGenerator.MakeSetter(field, fieldContext.PointerField, property);
-                        typeContext.NewType.Methods.Add(getter);
-                        typeContext.NewType.Methods.Add(setter);
+                        FieldAccessorGenerator.MakeGetter(field, fieldContext, property);
+                        FieldAccessorGenerator.MakeSetter(field, fieldContext, property);
                     }
                 }
             }
