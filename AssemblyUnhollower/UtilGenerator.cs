@@ -78,17 +78,58 @@ namespace AssemblyUnhollower
 
         private static void EmitObjectStoreGeneric(ILProcessor body, TypeReference originalType, TypeReference newType, TypeRewriteContext enclosingType, int argumentIndex)
         {
-            // todo
+            // input stack: target address
+            // output: nothing
+            
+            var imports = enclosingType.AssemblyContext.Imports;
+            
+            body.Emit(OpCodes.Ldtoken, newType);
+            body.Emit(OpCodes.Call, enclosingType.NewType.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == nameof(Type.GetTypeFromHandle))));
+            body.Emit(OpCodes.Dup);
+            body.Emit(OpCodes.Callvirt, enclosingType.NewType.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == typeof(Type).GetProperty(nameof(Type.IsValueType))!.GetMethod!.Name)));
+
+            var finalNop = body.Create(OpCodes.Nop);
+            var stringNop = body.Create(OpCodes.Nop);
+            var valueTypeNop = body.Create(OpCodes.Nop); // todo: non-blittable structs
+
+            body.Emit(OpCodes.Brtrue, valueTypeNop);
+            
+            body.Emit(OpCodes.Callvirt, enclosingType.NewType.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == typeof(Type).GetProperty(nameof(Type.FullName))!.GetMethod!.Name)));
+            body.Emit(OpCodes.Ldstr, "System.String");
+            body.Emit(OpCodes.Call, enclosingType.NewType.Module.ImportReference(TargetTypeSystemHandler.String.Methods.Single(it => it.Name == nameof(String.Equals) && it.IsStatic && it.Parameters.Count == 2)));
+            body.Emit(OpCodes.Brtrue_S, stringNop);
+            
+            body.Emit(OpCodes.Ldarg, argumentIndex);
+            body.Emit(OpCodes.Box, newType);
+            body.Emit(OpCodes.Isinst, imports.Il2CppObjectBase);
+            body.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointer);
+            body.Emit(OpCodes.Stind_I);
+            body.Emit(OpCodes.Br_S, finalNop);
+            
+            body.Append(stringNop);
+            body.Emit(OpCodes.Ldarg, argumentIndex);
+            body.Emit(OpCodes.Box, newType);
+            body.Emit(OpCodes.Isinst, imports.String);
+            body.Emit(OpCodes.Call, imports.StringToNative);
+            body.Emit(OpCodes.Stind_I);
+            body.Emit(OpCodes.Br_S, finalNop);
+            
+            body.Append(valueTypeNop);
+            body.Emit(OpCodes.Pop); // pop extra typeof(T)
+            body.Emit(OpCodes.Ldarg, argumentIndex);
+            body.Emit(OpCodes.Stobj, newType);
+            
+            body.Append(finalNop);
         }
 
-        public static void EmitObjectToPointer(this ILProcessor body, TypeReference originalType, TypeReference newType, TypeRewriteContext enclosingType, int argumentIndex, bool valueTypeArgument0IsAPointer = false)
+        public static void EmitObjectToPointer(this ILProcessor body, TypeReference originalType, TypeReference newType, TypeRewriteContext enclosingType, int argumentIndex, bool valueTypeArgument0IsAPointer, bool allowNullable, bool unboxNonBlittableType)
         {
             // input stack: not used
             // output stack: IntPtr to either Il2CppObject or IL2CPP value type
 
             if (originalType is GenericParameter)
             {
-                EmitObjectToPointerGeneric(body, originalType, newType, enclosingType, argumentIndex, valueTypeArgument0IsAPointer);
+                EmitObjectToPointerGeneric(body, originalType, newType, enclosingType, argumentIndex, valueTypeArgument0IsAPointer, allowNullable, unboxNonBlittableType);
                 return;
             }
 
@@ -107,7 +148,8 @@ namespace AssemblyUnhollower
                 {
                     body.Emit(OpCodes.Ldarg, argumentIndex);
                     body.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointerNotNull);
-                    body.Emit(OpCodes.Call, imports.ObjectUnbox);
+                    if (unboxNonBlittableType)
+                        body.Emit(OpCodes.Call, imports.ObjectUnbox);
                 }
             }
             else if (originalType.FullName == "System.String")
@@ -118,46 +160,66 @@ namespace AssemblyUnhollower
             else 
             {
                 body.Emit(OpCodes.Ldarg, argumentIndex);
-                body.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointerNotNull);
+                body.Emit(OpCodes.Call, allowNullable ? imports.Il2CppObjectBaseToPointer : imports.Il2CppObjectBaseToPointerNotNull);
             }
         }
 
         private static void EmitObjectToPointerGeneric(ILProcessor body, TypeReference originalType,
             TypeReference newType, TypeRewriteContext enclosingType, int argumentIndex,
-            bool valueTypeArgument0IsAPointer)
+            bool valueTypeArgument0IsAPointer, bool allowNullable, bool unboxNonBlittableType)
         {
             var imports = enclosingType.AssemblyContext.Imports;
             
             body.Emit(OpCodes.Ldtoken, newType);
             body.Emit(OpCodes.Call, enclosingType.NewType.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == nameof(Type.GetTypeFromHandle))));
-            body.Emit(OpCodes.Call, enclosingType.NewType.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == typeof(Type).GetProperty(nameof(Type.IsValueType))!.GetMethod!.Name)));
+            body.Emit(OpCodes.Callvirt, enclosingType.NewType.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == typeof(Type).GetProperty(nameof(Type.IsValueType))!.GetMethod!.Name)));
 
             var finalNop = body.Create(OpCodes.Nop);
-            var valueTypeNop = body.Create(OpCodes.Nop); // todo: strings, nin-blittable structs
+            var valueTypeNop = body.Create(OpCodes.Nop);
+            var stringNop = body.Create(OpCodes.Nop);
             
             body.Emit(OpCodes.Brtrue, valueTypeNop);
-            
+
             body.Emit(OpCodes.Ldarg, argumentIndex);
             body.Emit(OpCodes.Box, newType);
+            body.Emit(OpCodes.Dup);
+            body.Emit(OpCodes.Isinst, imports.String);
+            body.Emit(OpCodes.Brtrue_S, stringNop);
+
             body.Emit(OpCodes.Isinst, imports.Il2CppObjectBase);
-            body.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointer);
-            
+            body.Emit(OpCodes.Call, allowNullable ? imports.Il2CppObjectBaseToPointer : imports.Il2CppObjectBaseToPointerNotNull);
+            if (unboxNonBlittableType)
+            {
+                body.Emit(OpCodes.Dup);
+                body.Emit(OpCodes.Brfalse_S, finalNop); // return null immediately
+                body.Emit(OpCodes.Dup);
+                body.Emit(OpCodes.Call, imports.ObjectGetClass);
+                body.Emit(OpCodes.Call, imports.ClassIsValueType);
+                body.Emit(OpCodes.Brfalse_S, finalNop); // return reference types immediately
+                body.Emit(OpCodes.Call, imports.ObjectUnbox);
+            }
+
             body.Emit(OpCodes.Br, finalNop);
-            body.Append(valueTypeNop);
             
+            body.Append(stringNop);
+            body.Emit(OpCodes.Isinst, imports.String);
+            body.Emit(OpCodes.Call, imports.StringToNative);
+            body.Emit(OpCodes.Br_S, finalNop);
+            
+            body.Append(valueTypeNop);
             body.Emit(OpCodes.Ldarga, argumentIndex);
             
             body.Append(finalNop);
         }
 
-        public static void EmitPointerToObject(this ILProcessor body, TypeReference originalReturnType, TypeReference convertedReturnType, TypeRewriteContext enclosingType, Instruction loadPointer, bool extraDerefForNonValueTypes)
+        public static void EmitPointerToObject(this ILProcessor body, TypeReference originalReturnType, TypeReference convertedReturnType, TypeRewriteContext enclosingType, Instruction loadPointer, bool extraDerefForNonValueTypes, bool unboxValueType)
         {
             // input stack: not used
             // output stack: converted result
             
             if (originalReturnType is GenericParameter)
             {
-                EmitPointerToObjectGeneric(body, originalReturnType, convertedReturnType, enclosingType, loadPointer, extraDerefForNonValueTypes);
+                EmitPointerToObjectGeneric(body, originalReturnType, convertedReturnType, enclosingType, loadPointer, extraDerefForNonValueTypes, unboxValueType);
                 return;
             }
 
@@ -172,6 +234,7 @@ namespace AssemblyUnhollower
                 if (typeSpecifics == TypeRewriteContext.TypeSpecifics.BlittableStruct)
                 {
                     body.Append(loadPointer);
+                    if (unboxValueType) body.Emit(OpCodes.Call, imports.ObjectUnbox);
                     body.Emit(OpCodes.Ldobj, convertedReturnType);
                 }
                 else
@@ -211,8 +274,10 @@ namespace AssemblyUnhollower
             }
         }
 
-        private static void EmitPointerToObjectGeneric(ILProcessor body, TypeReference originalReturnType, TypeReference newReturnType,
-            TypeRewriteContext enclosingType, Instruction loadPointer, bool extraDerefForNonValueTypes)
+        private static void EmitPointerToObjectGeneric(ILProcessor body, TypeReference originalReturnType,
+            TypeReference newReturnType,
+            TypeRewriteContext enclosingType, Instruction loadPointer, bool extraDerefForNonValueTypes,
+            bool unboxValueType)
         {
             var imports = enclosingType.AssemblyContext.Imports;
             
@@ -220,12 +285,19 @@ namespace AssemblyUnhollower
             
             body.Emit(OpCodes.Ldtoken, newReturnType);
             body.Emit(OpCodes.Call, enclosingType.NewType.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == nameof(Type.GetTypeFromHandle))));
-            body.Emit(OpCodes.Call, enclosingType.NewType.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == typeof(Type).GetProperty(nameof(Type.IsValueType))!.GetMethod!.Name)));
+            body.Emit(OpCodes.Dup);
+            body.Emit(OpCodes.Callvirt, enclosingType.NewType.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == typeof(Type).GetProperty(nameof(Type.IsValueType))!.GetMethod!.Name)));
 
             var finalNop = body.Create(OpCodes.Nop);
             var valueTypeNop = body.Create(OpCodes.Nop);
+            var stringNop = body.Create(OpCodes.Nop);
             
-            body.Emit(OpCodes.Brtrue, valueTypeNop); // todo: strings, non-blittable value types
+            body.Emit(OpCodes.Brtrue, valueTypeNop); // todo: non-blittable value types
+            
+            body.Emit(OpCodes.Callvirt, enclosingType.NewType.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == typeof(Type).GetProperty(nameof(Type.FullName))!.GetMethod!.Name)));
+            body.Emit(OpCodes.Ldstr, "System.String");
+            body.Emit(OpCodes.Call, enclosingType.NewType.Module.ImportReference(TargetTypeSystemHandler.String.Methods.Single(it => it.Name == nameof(String.Equals) && it.IsStatic && it.Parameters.Count == 2)));
+            body.Emit(OpCodes.Brtrue_S, stringNop);
             
             var createRealObject = body.Create(OpCodes.Newobj,
                 new MethodReference(".ctor", imports.Void, imports.Il2CppObjectBase)
@@ -239,11 +311,16 @@ namespace AssemblyUnhollower
 
             body.Append(createRealObject);
             body.Emit(OpCodes.Call, enclosingType.NewType.Module.ImportReference(new GenericInstanceMethod(imports.Il2CppObjectCast) { GenericArguments = { newReturnType }}));
-            
             body.Emit(OpCodes.Br, finalNop);
-            body.Append(valueTypeNop);
             
-            body.Emit(OpCodes.Call, imports.ObjectUnbox);
+            body.Append(stringNop);
+            body.Emit(OpCodes.Call, imports.StringFromNative);
+            body.Emit(OpCodes.Isinst, newReturnType); // satisfy the verifier
+            body.Emit(OpCodes.Br_S, finalNop);
+            
+            body.Append(valueTypeNop);
+            body.Emit(OpCodes.Pop); // pop extra typeof(T)
+            if(unboxValueType) body.Emit(OpCodes.Call, imports.ObjectUnbox);
             body.Emit(OpCodes.Ldobj, newReturnType);
             
             body.Append(finalNop);

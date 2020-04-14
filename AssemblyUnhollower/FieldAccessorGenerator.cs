@@ -25,7 +25,7 @@ namespace AssemblyUnhollower
             }
             else
             {
-                getterBody.EmitObjectToPointer(fieldContext.DeclaringType.OriginalType, fieldContext.DeclaringType.NewType, fieldContext.DeclaringType, 0);
+                getterBody.EmitObjectToPointer(fieldContext.DeclaringType.OriginalType, fieldContext.DeclaringType.NewType, fieldContext.DeclaringType, 0, false, false, false);
                 getterBody.Emit(OpCodes.Ldsfld, fieldContext.PointerField);
                 getterBody.Emit(OpCodes.Call, imports.FieldGetOffset);
                 getterBody.Emit(OpCodes.Add);
@@ -33,7 +33,7 @@ namespace AssemblyUnhollower
                 getterBody.Emit(OpCodes.Stloc_0);
             }
 
-            getterBody.EmitPointerToObject(fieldContext.OriginalField.FieldType, property.PropertyType, fieldContext.DeclaringType, getterBody.Create(OpCodes.Ldloc_0), !field.IsStatic);
+            getterBody.EmitPointerToObject(fieldContext.OriginalField.FieldType, property.PropertyType, fieldContext.DeclaringType, getterBody.Create(OpCodes.Ldloc_0), !field.IsStatic, false);
 
             getterBody.Emit(OpCodes.Ret);
 
@@ -52,12 +52,12 @@ namespace AssemblyUnhollower
             if (field.IsStatic)
             {
                 setterBody.Emit(OpCodes.Ldsfld, fieldContext.PointerField);
-                setterBody.EmitObjectToPointer(field.FieldType, property.PropertyType, fieldContext.DeclaringType, 0);
+                setterBody.EmitObjectToPointer(field.FieldType, property.PropertyType, fieldContext.DeclaringType, 0, false, true, true);
                 setterBody.Emit(OpCodes.Call, imports.FieldStaticSet);
             }
             else
             {
-                setterBody.EmitObjectToPointer(fieldContext.DeclaringType.OriginalType, fieldContext.DeclaringType.NewType, fieldContext.DeclaringType, 0);
+                setterBody.EmitObjectToPointer(fieldContext.DeclaringType.OriginalType, fieldContext.DeclaringType.NewType, fieldContext.DeclaringType, 0, false, false, false);
                 setterBody.Emit(OpCodes.Ldsfld, fieldContext.PointerField);
                 setterBody.Emit(OpCodes.Call, imports.FieldGetOffset);
                 setterBody.Emit(OpCodes.Add);

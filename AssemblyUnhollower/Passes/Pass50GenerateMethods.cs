@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using AssemblyUnhollower.Contexts;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -65,9 +63,19 @@ namespace AssemblyUnhollower.Passes
                             }
                         }
 
-                        bodyBuilder.EmitLdcI4(originalMethod.Parameters.Count * IntPtr.Size);
-                        bodyBuilder.Emit(OpCodes.Conv_U);
-                        bodyBuilder.Emit(OpCodes.Localloc);
+                        if (originalMethod.Parameters.Count == 0)
+                        {
+                            bodyBuilder.Emit(OpCodes.Ldc_I4_0);
+                            bodyBuilder.Emit(OpCodes.Conv_U);
+                        }
+                        else
+                        {
+                            bodyBuilder.EmitLdcI4(originalMethod.Parameters.Count);
+                            bodyBuilder.Emit(OpCodes.Conv_U);
+                            bodyBuilder.Emit(OpCodes.Sizeof, imports.IntPtr);
+                            bodyBuilder.Emit(OpCodes.Mul_Ovf_Un);
+                            bodyBuilder.Emit(OpCodes.Localloc);
+                        }
                         bodyBuilder.Emit(OpCodes.Stloc, argArray);
 
                         var argOffset = originalMethod.IsStatic ? 0 : 1;
@@ -75,15 +83,18 @@ namespace AssemblyUnhollower.Passes
                         for (var i = 0; i < newMethod.Parameters.Count; i++)
                         {
                             bodyBuilder.Emit(OpCodes.Ldloc, argArray);
-                            bodyBuilder.EmitLdcI4(i * IntPtr.Size);
+                            bodyBuilder.EmitLdcI4(i);
+                            bodyBuilder.Emit(OpCodes.Conv_U);
+                            bodyBuilder.Emit(OpCodes.Sizeof, imports.IntPtr);
+                            bodyBuilder.Emit(OpCodes.Mul_Ovf_Un);
                             bodyBuilder.Emit(OpCodes.Add);
 
                             var newParam = newMethod.Parameters[i];
-                            bodyBuilder.EmitObjectToPointer(originalMethod.Parameters[i].ParameterType, newParam.ParameterType, methodRewriteContext.DeclaringType, argOffset + i);
+                            bodyBuilder.EmitObjectToPointer(originalMethod.Parameters[i].ParameterType, newParam.ParameterType, methodRewriteContext.DeclaringType, argOffset + i, false, true, true);
                             bodyBuilder.Emit(OpCodes.Stind_I);
                         }
 
-                        if (originalMethod.IsVirtual || originalMethod.IsAbstract)
+                        if (originalMethod.IsVirtual && !originalMethod.DeclaringType.IsValueType || originalMethod.IsAbstract)
                         {
                             bodyBuilder.Emit(OpCodes.Ldarg_0);
                             bodyBuilder.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointer);
@@ -99,7 +110,7 @@ namespace AssemblyUnhollower.Passes
                         if (originalMethod.IsStatic)
                             bodyBuilder.Emit(OpCodes.Ldc_I4_0);
                         else
-                            bodyBuilder.EmitObjectToPointer(originalMethod.DeclaringType, newMethod.DeclaringType, typeContext, 0, true);
+                            bodyBuilder.EmitObjectToPointer(originalMethod.DeclaringType, newMethod.DeclaringType, typeContext, 0, true, false, true);
 
                         bodyBuilder.Emit(OpCodes.Ldloc, argArray);
                         bodyBuilder.Emit(OpCodes.Ldloca, exceptionLocal);
@@ -109,7 +120,7 @@ namespace AssemblyUnhollower.Passes
                         bodyBuilder.Emit(OpCodes.Ldloc, exceptionLocal);
                         bodyBuilder.Emit(OpCodes.Call, imports.RaiseExceptionIfNecessary);
 
-                        bodyBuilder.EmitPointerToObject(originalMethod.ReturnType, newMethod.ReturnType, typeContext, bodyBuilder.Create(OpCodes.Ldloc, resultVar), false);
+                        bodyBuilder.EmitPointerToObject(originalMethod.ReturnType, newMethod.ReturnType, typeContext, bodyBuilder.Create(OpCodes.Ldloc, resultVar), false, true);
 
                         bodyBuilder.Emit(OpCodes.Ret);
                     }

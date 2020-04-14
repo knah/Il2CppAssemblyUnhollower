@@ -98,9 +98,6 @@ namespace UnhollowerBaseLib
             {
                 if(Marshal.PtrToStringAnsi(il2cpp_method_get_name(method)) != methodName)
                     continue;
-                
-                // if(il2cpp_method_get_param_count(method) != argTypes.Length)
-                    // continue;
 
                 var nParams = il2cpp_method_get_param_count(method);
                 LogSupport.Log("Method starts");
