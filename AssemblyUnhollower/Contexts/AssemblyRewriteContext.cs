@@ -57,7 +57,7 @@ namespace AssemblyUnhollower.Contexts
                 
                 var elementType = typeRef.GetElementType();
                 var convertedElementType = RewriteTypeRef(elementType);
-                return new GenericInstanceType(sourceModule.ImportReference(elementType.IsValueType
+                return new GenericInstanceType(sourceModule.ImportReference(convertedElementType.IsValueType
                     ? typeof(Il2CppStructArray<>)
                     : typeof(Il2CppReferenceArray<>))) {GenericArguments = {convertedElementType}};
             }
