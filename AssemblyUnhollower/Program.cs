@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using AssemblyUnhollower.Contexts;
@@ -59,6 +59,8 @@ namespace AssemblyUnhollower
                 Pass23GeneratePointerConstructors.DoPass(rewriteContext);
             using(new TimingCookie("Creating type getters"))
                 Pass24GenerateTypeStaticGetters.DoPass(rewriteContext);
+            using(new TimingCookie("Creating non-blittable struct constructors"))
+                Pass25GenerateNonBlittableValueTypeDefaultCtors.DoPass(rewriteContext);
             
             using(new TimingCookie("Creating generic method static constructors"))
                 Pass30GenerateGenericMethodStoreConstructors.DoPass(rewriteContext);
