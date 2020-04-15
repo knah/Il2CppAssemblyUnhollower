@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net4.7.1</TargetFramework>
+        <TargetFramework>net4.7.2</TargetFramework>
         <Nullable>enable</Nullable>
         <Version>0.1.1.0</Version>
         <LangVersion>latest</LangVersion>
