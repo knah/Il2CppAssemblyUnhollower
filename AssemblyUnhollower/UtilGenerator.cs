@@ -90,7 +90,8 @@ namespace AssemblyUnhollower
 
             var finalNop = body.Create(OpCodes.Nop);
             var stringNop = body.Create(OpCodes.Nop);
-            var valueTypeNop = body.Create(OpCodes.Nop); // todo: non-blittable structs
+            var valueTypeNop = body.Create(OpCodes.Nop);
+            var storePointerNop = body.Create(OpCodes.Nop);
 
             body.Emit(OpCodes.Brtrue, valueTypeNop);
             
@@ -103,6 +104,28 @@ namespace AssemblyUnhollower
             body.Emit(OpCodes.Box, newType);
             body.Emit(OpCodes.Isinst, imports.Il2CppObjectBase);
             body.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointer);
+            body.Emit(OpCodes.Dup);
+            body.Emit(OpCodes.Brfalse_S, storePointerNop);
+            
+            body.Emit(OpCodes.Dup);
+            body.Emit(OpCodes.Call, imports.ObjectGetClass);
+            body.Emit(OpCodes.Call, imports.ClassIsValueType);
+            body.Emit(OpCodes.Brfalse_S, storePointerNop);
+            
+            body.Emit(OpCodes.Dup);
+            var tempLocal = new VariableDefinition(imports.IntPtr);
+            body.Body.Variables.Add(tempLocal);
+            body.Emit(OpCodes.Stloc, tempLocal);
+            body.Emit(OpCodes.Call, imports.ObjectUnbox);
+            body.Emit(OpCodes.Ldloc, tempLocal);
+            body.Emit(OpCodes.Call, imports.ObjectGetClass);
+            body.Emit(OpCodes.Ldc_I4_0);
+            body.Emit(OpCodes.Conv_U);
+            body.Emit(OpCodes.Call, imports.ValueSizeGet);
+            body.Emit(OpCodes.Cpblk);
+            body.Emit(OpCodes.Br_S, finalNop);
+
+            body.Append(storePointerNop);
             body.Emit(OpCodes.Stind_I);
             body.Emit(OpCodes.Br_S, finalNop);
             
@@ -291,14 +314,35 @@ namespace AssemblyUnhollower
             var finalNop = body.Create(OpCodes.Nop);
             var valueTypeNop = body.Create(OpCodes.Nop);
             var stringNop = body.Create(OpCodes.Nop);
+            var normalRefTypeNop = body.Create(OpCodes.Nop);
             
-            body.Emit(OpCodes.Brtrue, valueTypeNop); // todo: non-blittable value types
+            body.Emit(OpCodes.Brtrue, valueTypeNop);
             
             body.Emit(OpCodes.Callvirt, enclosingType.NewType.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == typeof(Type).GetProperty(nameof(Type.FullName))!.GetMethod!.Name)));
             body.Emit(OpCodes.Ldstr, "System.String");
             body.Emit(OpCodes.Call, enclosingType.NewType.Module.ImportReference(TargetTypeSystemHandler.String.Methods.Single(it => it.Name == nameof(String.Equals) && it.IsStatic && it.Parameters.Count == 2)));
             body.Emit(OpCodes.Brtrue_S, stringNop);
             
+            if (!unboxValueType)
+            {
+                var loadClassPointer = body.Create(OpCodes.Ldsfld,
+                    new FieldReference(nameof(Il2CppClassPointerStore<int>.NativeClassPtr), imports.IntPtr,
+                        enclosingType.NewType.Module.ImportReference(
+                            new GenericInstanceType(imports.Il2CppClassPointerStore)
+                                {GenericArguments = {newReturnType}})));
+                
+                body.Append(loadClassPointer);
+                body.Emit(OpCodes.Call, imports.ClassIsValueType);
+                body.Emit(OpCodes.Brfalse, normalRefTypeNop);
+                
+                body.Emit(OpCodes.Pop); // pop object pointer
+                body.Append(loadClassPointer);
+                body.Append(loadPointer);
+                body.Emit(OpCodes.Call, imports.ObjectBox);
+
+                body.Append(normalRefTypeNop);
+            }
+
             var createRealObject = body.Create(OpCodes.Newobj,
                 new MethodReference(".ctor", imports.Void, imports.Il2CppObjectBase)
                     {Parameters = {new ParameterDefinition(imports.IntPtr)}, HasThis = true});
