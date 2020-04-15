@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Threading.Tasks;
 using AssemblyUnhollower.Contexts;
 
 namespace AssemblyUnhollower.Passes
@@ -6,8 +8,11 @@ namespace AssemblyUnhollower.Passes
     {
         public static void DoPass(RewriteGlobalContext context, string targetDir)
         {
-            foreach (var assemblyContext in context.Assemblies)
+            var tasks = context.Assemblies.Select(assemblyContext => Task.Run(() => {
                 assemblyContext.NewAssembly.Write(targetDir + "/" + assemblyContext.NewAssembly.Name.Name + ".dll");
+            })).ToArray();
+
+            Task.WaitAll(tasks);
         }
     }
 }
