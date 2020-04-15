@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using AssemblyUnhollower.Contexts;
 using AssemblyUnhollower.Passes;
+using UnhollowerBaseLib;
 
 namespace AssemblyUnhollower
 {
@@ -71,6 +72,10 @@ namespace AssemblyUnhollower
             
             using(new TimingCookie("Writing assemblies"))
                 Pass99WriteToDisk.DoPass(rewriteContext, targetDir);
+
+            File.Copy(typeof(IL2CPP).Assembly.Location, Path.Combine(targetDir, typeof(IL2CPP).Assembly.GetName().Name + ".dll"), true);
+            
+            Console.WriteLine("Done!");
         }
     }
 }
