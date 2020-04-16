@@ -9,15 +9,12 @@ This includes generic types and methods, arrays, and new object creation. Some t
   0. Build or get a release
   1. Obtain dummy assemblies using [Il2CppDumper](https://github.com/Perfare/Il2CppDumper)
   2. Run `AssemblyUnhollower <path to Il2CppDumper's dummy dll dir> <output directory> <path to target mscorlib>`    
-  3. Copy UnhollowerBaseLib from Unhollower's dir to output directory
-  4. Copy DelegateSupport library (found in release files) to output dir (optional, if you want to pass managed delegates to IL2CPP code)
+  3. Copy DelegateSupport library (found in release files) to output dir (optional, if you want to pass managed delegates to IL2CPP code)
        
  Resulting assemblies may be used with your favorite loader that offers a managed domain in the IL2CPP game process.    
  This was not extensively tested on any commercial games yet. Generated assemblies were tested with Mono and may break horribly on .NET Core or .NET Framework.
 
 ## Known Issues
- * Generic types with system types in generic arguments (int/string/etc) don't work
- * Arrays of systems types (int/string/etc) don't work
  * Delegates require external support for now
 
 ## Generated assemblies caveats
