@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net4.7.2</TargetFramework>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\UnhollowerBaseLib\UnhollowerBaseLib.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Il2Cppmscorlib, Version=3.7.1.6, Culture=neutral, PublicKeyToken=null">
+        <HintPath>Libs\Il2Cppmscorlib.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Libs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Libs\Il2Cppmscorlib.dll" />
+    </ItemGroup>
+</Project>

@@ -14,6 +14,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\UnhollowerBaseLib\UnhollowerBaseLib.csproj" />
+      <ProjectReference Include="..\UnhollowerRuntimeLib\UnhollowerRuntimeLib.csproj" />
     </ItemGroup>
-
 </Project>

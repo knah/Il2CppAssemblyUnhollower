@@ -1,6 +1,8 @@
+using System.Linq;
 using AssemblyUnhollower.Contexts;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using UnhollowerRuntimeLib;
 
 namespace AssemblyUnhollower.Passes
 {
@@ -51,6 +53,74 @@ namespace AssemblyUnhollower.Passes
             toBuilder.Append(createStringNop);
             toBuilder.Emit(OpCodes.Call, assemblyContext.Imports.StringFromNative);
             toBuilder.Emit(OpCodes.Ret);
+
+            AddDelegateConversions(context);
+        }
+
+        private static void AddDelegateConversions(RewriteGlobalContext context)
+        {
+            foreach (var assemblyContext in context.Assemblies)
+            {
+                foreach (var typeContext in assemblyContext.Types)
+                {
+                    if (typeContext.OriginalType.BaseType?.FullName != "System.MulticastDelegate") continue;
+                    
+                    var implicitMethod = new MethodDefinition("op_Implicit", MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, typeContext.SelfSubstitutedRef);
+                    typeContext.NewType.Methods.Add(implicitMethod);
+
+                    var invokeMethod = typeContext.NewType.Methods.Single(it => it.Name == "Invoke");
+                    if (invokeMethod.Parameters.Count > 8) continue; // mscorlib only contains delegates of up to 8 parameters
+
+                    var hasReturn = invokeMethod.ReturnType.FullName != "System.Void";
+                    var hasParameters = invokeMethod.Parameters.Count > 0;
+
+                    TypeReference monoDelegateType;
+                    if (!hasReturn && !hasParameters)
+                        monoDelegateType =
+                            typeContext.NewType.Module.ImportReference(
+                                assemblyContext.Imports.Type.Module.GetType("System.Action"));
+                    else if (!hasReturn)
+                    {
+                        monoDelegateType =
+                            typeContext.NewType.Module.ImportReference(
+                                assemblyContext.Imports.Type.Module.GetType(
+                                    "System.Action`" + invokeMethod.Parameters.Count));
+                    } else 
+                        monoDelegateType = 
+                            typeContext.NewType.Module.ImportReference(
+                                assemblyContext.Imports.Type.Module.GetType(
+                                    "System.Func`" + (invokeMethod.Parameters.Count + 1)));
+
+                    GenericInstanceType? genericInstanceType = null;
+                    if (hasReturn)
+                    {
+                        genericInstanceType = new GenericInstanceType(monoDelegateType);
+                        genericInstanceType.GenericArguments.Add(invokeMethod.ReturnType);
+                    }
+                    
+                    if (hasParameters)
+                    {
+                        genericInstanceType ??= new GenericInstanceType(monoDelegateType);
+                        for (var i = 0; i < invokeMethod.Parameters.Count; i++)
+                            genericInstanceType.GenericArguments.Add(invokeMethod.Parameters[i].ParameterType);
+                    }
+
+                    implicitMethod.Parameters.Add(new ParameterDefinition(genericInstanceType != null
+                        ? typeContext.NewType.Module.ImportReference(genericInstanceType)
+                        : monoDelegateType));
+
+                    var bodyBuilder = implicitMethod.Body.GetILProcessor();
+                    
+                    bodyBuilder.Emit(OpCodes.Ldarg_0);
+                    var delegateSupportTypeRef = typeContext.NewType.Module.ImportReference(typeof(DelegateSupport));
+                    var genericConvertRef = new MethodReference(nameof(DelegateSupport.ConvertDelegate), assemblyContext.Imports.Void, delegateSupportTypeRef) { HasThis = false, Parameters = { new ParameterDefinition(assemblyContext.Imports.Delegate)}};
+                    genericConvertRef.GenericParameters.Add(new GenericParameter(genericConvertRef));
+                    genericConvertRef.ReturnType = genericConvertRef.GenericParameters[0];
+                    var convertMethodRef = new GenericInstanceMethod(genericConvertRef) { GenericArguments = { typeContext.SelfSubstitutedRef }};
+                    bodyBuilder.Emit(OpCodes.Call, typeContext.NewType.Module.ImportReference(convertMethodRef));
+                    bodyBuilder.Emit(OpCodes.Ret);
+                }
+            }
         }
     }
 }

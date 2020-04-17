@@ -24,6 +24,7 @@ namespace AssemblyUnhollower
         private readonly Lazy<TypeReference> myStringReference;
         private readonly Lazy<TypeDefinition> myTypeReference;
         private readonly Lazy<TypeReference> myEnumReference;
+        private readonly Lazy<TypeReference> myDelegateReference;
         private readonly Lazy<TypeReference> myValueTypeReference;
         private readonly Lazy<TypeReference> myObjectReference;
         private readonly Lazy<TypeReference> myIl2CppClassPointerStoreReference;
@@ -35,6 +36,7 @@ namespace AssemblyUnhollower
         public TypeReference String => myStringReference.Value;
         public TypeDefinition Type => myTypeReference.Value;
         public TypeReference Enum => myEnumReference.Value;
+        public TypeReference Delegate => myDelegateReference.Value;
         public TypeReference ValueType => myValueTypeReference.Value;
         public TypeReference Object => myObjectReference.Value;
         public TypeReference Il2CppClassPointerStore => myIl2CppClassPointerStoreReference.Value;
@@ -108,6 +110,7 @@ namespace AssemblyUnhollower
             myStringReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.String));
             myTypeReference = new Lazy<TypeDefinition>(() => TargetTypeSystemHandler.Type);
             myEnumReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.Enum));
+            myDelegateReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.Delegate));
             myValueTypeReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.ValueType));
             myObjectReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.Object));
             myIl2CppClassPointerStoreReference = new Lazy<TypeReference>(() => Module.ImportReference(typeof(Il2CppClassPointerStore<>)));

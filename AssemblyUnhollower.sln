@@ -10,6 +10,8 @@ ProjectSection(SolutionItems) = preProject
 	README.md = README.md
 EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnhollowerRuntimeLib", "UnhollowerRuntimeLib\UnhollowerRuntimeLib.csproj", "{7B7E5024-385D-4A46-9196-A6AF8F7FBDD5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{F6405B5F-9162-49EA-9C8A-CE1AA0916CF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F6405B5F-9162-49EA-9C8A-CE1AA0916CF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F6405B5F-9162-49EA-9C8A-CE1AA0916CF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B7E5024-385D-4A46-9196-A6AF8F7FBDD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B7E5024-385D-4A46-9196-A6AF8F7FBDD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B7E5024-385D-4A46-9196-A6AF8F7FBDD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B7E5024-385D-4A46-9196-A6AF8F7FBDD5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

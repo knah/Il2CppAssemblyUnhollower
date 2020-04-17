@@ -11,6 +11,7 @@ namespace AssemblyUnhollower
         public static TypeReference Object { get; private set; }
         public static TypeReference Enum { get; private set; }
         public static TypeReference ValueType { get; private set; }
+        public static TypeReference Delegate { get; private set; }
 
         public static void Init(AssemblyDefinition mscorlib)
         {
@@ -21,6 +22,7 @@ namespace AssemblyUnhollower
             Object = mscorlib.MainModule.TypeSystem.Object;
             Enum = mscorlib.MainModule.GetType("System.Enum");
             ValueType = mscorlib.MainModule.GetType("System.ValueType");
+            Delegate = mscorlib.MainModule.GetType("System.Delegate");
         }
     }
 }

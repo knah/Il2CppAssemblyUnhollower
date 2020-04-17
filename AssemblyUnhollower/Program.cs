@@ -4,6 +4,7 @@ using System.IO;
 using AssemblyUnhollower.Contexts;
 using AssemblyUnhollower.Passes;
 using UnhollowerBaseLib;
+using UnhollowerRuntimeLib;
 
 namespace AssemblyUnhollower
 {
@@ -68,7 +69,8 @@ namespace AssemblyUnhollower
                 Pass40GenerateFieldAccessors.DoPass(rewriteContext);
             using(new TimingCookie("Filling methods"))
                 Pass50GenerateMethods.DoPass(rewriteContext);
-            Pass60AddImplicitConversions.DoPass(rewriteContext);
+            using(new TimingCookie("Generating implicit conversions"))
+                Pass60AddImplicitConversions.DoPass(rewriteContext);
             using(new TimingCookie("Creating properties"))
                 Pass70GenerateProperties.DoPass(rewriteContext);
             
@@ -76,6 +78,7 @@ namespace AssemblyUnhollower
                 Pass99WriteToDisk.DoPass(rewriteContext, targetDir);
 
             File.Copy(typeof(IL2CPP).Assembly.Location, Path.Combine(targetDir, typeof(IL2CPP).Assembly.GetName().Name + ".dll"), true);
+            File.Copy(typeof(DelegateSupport).Assembly.Location, Path.Combine(targetDir, typeof(DelegateSupport).Assembly.GetName().Name + ".dll"), true);
             
             Console.WriteLine("Done!");
         }
