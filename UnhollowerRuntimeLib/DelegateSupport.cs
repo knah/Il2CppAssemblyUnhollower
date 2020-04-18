@@ -177,6 +177,9 @@ namespace UnhollowerRuntimeLib
 
         public static TIl2Cpp ConvertDelegate<TIl2Cpp>(Delegate @delegate) where TIl2Cpp : Il2CppObjectBase
         {
+            if (@delegate == null)
+                return null;
+            
             if(!typeof(Il2CppSystem.Delegate).IsAssignableFrom(typeof(TIl2Cpp)))
                 throw new ArgumentException($"{typeof(TIl2Cpp)} is not a delegate");
             
