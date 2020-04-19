@@ -28,14 +28,32 @@ namespace AssemblyUnhollower.Contexts
             OffsetField = new FieldReference(offsetField.Name, offsetField.FieldType, DeclaringType.SelfSubstitutedRef);
         }
 
+        private static readonly string[] MethodAccessTypeLabels = { "CompilerControlled", "Private", "FamAndAssem", "Internal", "Protected", "FamOrAssem", "Public"};
+        private string UnmangleFieldNameBase(FieldDefinition field)
+        {
+            if (!field.Name.IsObfuscated()) return field.Name;
+
+            var accessModString = MethodAccessTypeLabels[(int) (field.Attributes & FieldAttributes.FieldAccessMask)];
+            return "field_" +accessModString + "_" + DeclaringType.AssemblyContext.RewriteTypeRef(field.FieldType).GetUnmangledName();
+        }
+        
         private string UnmangleFieldName(FieldDefinition field)
         {
             if (!field.Name.IsObfuscated()) return field.Name;
 
-            return "field_" +
-                   DeclaringType.AssemblyContext.RewriteTypeRef(field.FieldType).GetUnmangledName() + "_" +
-                   field.DeclaringType.Fields.Where(it => it.FieldType.GetUnmangledName() == field.FieldType.GetUnmangledName()).ToList()
-                       .IndexOf(field);
+            return UnmangleFieldNameBase(field) + "_" +
+                   field.DeclaringType.Fields.Where(it => FieldsHaveSameSignature(field, it)).TakeWhile(it => it != field).Count();
+        }
+
+        private static bool FieldsHaveSameSignature(FieldDefinition fieldA, FieldDefinition fieldB)
+        {
+            if ((fieldA.Attributes & FieldAttributes.FieldAccessMask) !=
+                (fieldB.Attributes & FieldAttributes.FieldAccessMask))
+                return false;
+
+            if (fieldA.IsStatic != fieldB.IsStatic) return false;
+
+            return fieldA.FieldType.FullName == fieldB.FieldType.FullName;
         }
     }
 }

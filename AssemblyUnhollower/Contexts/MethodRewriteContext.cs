@@ -151,10 +151,7 @@ namespace AssemblyUnhollower.Contexts
         
         private string UnmangleMethodNameWithSignature(MethodDefinition method)
         {
-            var ownSignatureBase = ProduceMethodSignatureBase(method);
-            ownSignatureBase += "_" + method.DeclaringType.Methods.Where(it => ParameterSignatureSame(it, method)).TakeWhile(it => it != method).Count();
-
-            return ownSignatureBase;
+            return ProduceMethodSignatureBase(method) + "_" + method.DeclaringType.Methods.Where(it => ParameterSignatureSame(it, method)).TakeWhile(it => it != method).Count();
         }
         
         private static bool ParameterSignatureSame(MethodDefinition aM, MethodDefinition bM)
@@ -168,6 +165,8 @@ namespace AssemblyUnhollower.Contexts
 
             if (aM.ReturnType.FullName != bM.ReturnType.FullName)
                 return false;
+
+            if (aM.IsStatic != bM.IsStatic) return false;
             
             var a = aM.Parameters;
             var b = bM.Parameters;
