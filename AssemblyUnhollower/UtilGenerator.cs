@@ -277,7 +277,13 @@ namespace AssemblyUnhollower
                 if (extraDerefForNonValueTypes) body.Emit(OpCodes.Ldind_I);
                 body.Emit(OpCodes.Call, imports.StringFromNative);
             }
-            else
+            else if (originalReturnType.IsArray && originalReturnType.GetElementType().IsGenericParameter)
+            {
+                body.Append(loadPointer);
+                body.Emit(OpCodes.Call,
+                    new MethodReference(nameof(Il2CppArrayBase<int>.WrapNativeGenericArrayPointer), convertedReturnType,
+                        convertedReturnType) {HasThis = false, Parameters = {new ParameterDefinition(imports.IntPtr)}});
+            } else
             {
                 var createRealObject = body.Create(OpCodes.Newobj,
                     new MethodReference(".ctor", imports.Void, convertedReturnType)

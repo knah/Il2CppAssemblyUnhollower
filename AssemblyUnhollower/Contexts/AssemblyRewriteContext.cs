@@ -56,7 +56,13 @@ namespace AssemblyUnhollower.Contexts
                     return Imports.Il2CppObjectBase;
                 
                 var elementType = typeRef.GetElementType();
+                if (elementType.FullName == "System.String")
+                    return sourceModule.ImportReference(typeof(Il2CppStringArray));
+
                 var convertedElementType = RewriteTypeRef(elementType);
+                if (elementType.IsGenericParameter)
+                    return new GenericInstanceType(sourceModule.ImportReference(typeof(Il2CppArrayBase<>))) {GenericArguments = {convertedElementType}};
+                
                 return new GenericInstanceType(sourceModule.ImportReference(convertedElementType.IsValueType
                     ? typeof(Il2CppStructArray<>)
                     : typeof(Il2CppReferenceArray<>))) {GenericArguments = {convertedElementType}};

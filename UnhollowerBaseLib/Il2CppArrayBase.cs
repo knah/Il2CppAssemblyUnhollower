@@ -68,6 +68,20 @@ namespace UnhollowerBaseLib
             set;
         }
 
+        public static Il2CppArrayBase<T> WrapNativeGenericArrayPointer(IntPtr pointer)
+        {
+            if (pointer == IntPtr.Zero) return null;
+
+            if (typeof(T) == typeof(string)) 
+                return new Il2CppStringArray(pointer) as Il2CppArrayBase<T>;
+            if (typeof(T).IsValueType) // can't construct required types here directly because of unfulfilled generic constraint
+                return Activator.CreateInstance(typeof(Il2CppStructArray<>).MakeGenericType(typeof(T)), pointer) as Il2CppArrayBase<T>;
+            if (typeof(Il2CppObjectBase).IsAssignableFrom(typeof(T)))
+                return Activator.CreateInstance(typeof(Il2CppReferenceArray<>).MakeGenericType(typeof(T)), pointer) as Il2CppArrayBase<T>;
+            
+            throw new ArgumentException($"{typeof(T)} is not a value type, not a string and not an IL2CPP object; it can't be used in IL2CPP arrays");
+        }
+
         private class IndexEnumerator : IEnumerator<T>
         {
             private Il2CppArrayBase<T> myArray;
