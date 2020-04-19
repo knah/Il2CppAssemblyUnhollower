@@ -56,8 +56,8 @@ namespace AssemblyUnhollower.Passes
         {
             if (!prop.Name.IsObfuscated()) return prop.Name;
 
-            return "prop_" + assemblyContext.RewriteTypeRef(prop.PropertyType).Name + "_" + prop.DeclaringType.Properties
-                .Where(it => it.PropertyType.FullName == prop.PropertyType.FullName).ToList().IndexOf(prop);
+            return "prop_" + assemblyContext.RewriteTypeRef(prop.PropertyType).GetUnmangledName() + "_" + prop.DeclaringType.Properties
+                .Where(it => it.PropertyType.GetUnmangledName() == prop.PropertyType.GetUnmangledName()).ToList().IndexOf(prop);
         }
     }
 }

@@ -110,12 +110,21 @@ namespace AssemblyUnhollower.Contexts
         }
 
         private static readonly string[] MethodAccessTypeLabels = { "CompilerControlled", "Private", "FamAndAssem", "Internal", "Protected", "FamOrAssem", "Public"};
-        private string UnmangleMethodNameWithSignature(MethodDefinition method)
+        private static readonly (MethodSemanticsAttributes, string)[] SemanticsToCheck =
+        {
+            (MethodSemanticsAttributes.Setter, "_set"),
+            (MethodSemanticsAttributes.Getter, "_get"),
+            (MethodSemanticsAttributes.Other, "_oth"),
+            (MethodSemanticsAttributes.AddOn, "_add"),
+            (MethodSemanticsAttributes.RemoveOn, "_rem"),
+            (MethodSemanticsAttributes.Fire, "_fire"),
+        };
+        private string ProduceMethodSignatureBase(MethodDefinition method)
         {
             var name = method.Name;
             if (method.Name.IsObfuscated())
                 name = "Method";
-            
+
             if (method.Name == "GetType" && method.Parameters.Count == 0)
                 name = "GetIl2CppType";
 
@@ -123,22 +132,41 @@ namespace AssemblyUnhollower.Contexts
             builder.Append(name);
             builder.Append('_');
             builder.Append(MethodAccessTypeLabels[(int) (method.Attributes & MethodAttributes.MemberAccessMask)]);
+            foreach (var (semantic, str) in SemanticsToCheck)
+                if ((semantic & method.SemanticsAttributes) != 0)
+                    builder.Append(str);
+
+            builder.Append('_');
+            builder.Append(DeclaringType.AssemblyContext.RewriteTypeRef(method.ReturnType).GetUnmangledName());
+            
             foreach (var param in method.Parameters)
             {
                 builder.Append('_');
                 builder.Append(DeclaringType.AssemblyContext.RewriteTypeRef(param.ParameterType).GetUnmangledName());
             }
 
-            builder.Append('_');
-            builder.Append(method.DeclaringType.Methods.Where(it => ParameterSignatureSame(it, method)).TakeWhile(it => it != method).Count());
-
             return builder.ToString();
+        }
+
+        
+        private string UnmangleMethodNameWithSignature(MethodDefinition method)
+        {
+            var ownSignatureBase = ProduceMethodSignatureBase(method);
+            ownSignatureBase += "_" + method.DeclaringType.Methods.Where(it => ParameterSignatureSame(it, method)).TakeWhile(it => it != method).Count();
+
+            return ownSignatureBase;
         }
         
         private static bool ParameterSignatureSame(MethodDefinition aM, MethodDefinition bM)
         {
             if ((aM.Attributes & MethodAttributes.MemberAccessMask) !=
                 (bM.Attributes & MethodAttributes.MemberAccessMask))
+                return false;
+
+            if (aM.SemanticsAttributes != bM.SemanticsAttributes)
+                return false;
+
+            if (aM.ReturnType.FullName != bM.ReturnType.FullName)
                 return false;
             
             var a = aM.Parameters;

@@ -39,10 +39,22 @@ namespace AssemblyUnhollower
                     builder.Append("_");
                     builder.Append(genericArgument.GetUnmangledName());
                 }
+            } else if (typeRef is ByReferenceType byRef)
+            {
+                builder.Append("byref_");
+                builder.Append(byRef.ElementType.GetUnmangledName());
+            } else if (typeRef is PointerType pointer)
+            {
+                builder.Append("ptr_");
+                builder.Append(pointer.ElementType.GetUnmangledName());
             }
             else
             {
-                builder.Append(typeRef.Name.Replace('`', '_'));
+                if (typeRef.Namespace == nameof(UnhollowerBaseLib) && typeRef.Name.StartsWith("Il2Cpp") && typeRef.Name.Contains("Array"))
+                {
+                    builder.Append("ArrayOf");
+                } else
+                    builder.Append(typeRef.Name.Replace('`', '_'));
             }
 
             return builder.ToString();
