@@ -280,9 +280,11 @@ namespace AssemblyUnhollower
             else if (originalReturnType.IsArray && originalReturnType.GetElementType().IsGenericParameter)
             {
                 body.Append(loadPointer);
-                body.Emit(OpCodes.Call,
-                    new MethodReference(nameof(Il2CppArrayBase<int>.WrapNativeGenericArrayPointer), convertedReturnType,
-                        convertedReturnType) {HasThis = false, Parameters = {new ParameterDefinition(imports.IntPtr)}});
+                var actualReturnType = imports.Il2CppArrayBaseSelfSubst;
+                var methodRef = new MethodReference(nameof(Il2CppArrayBase<int>.WrapNativeGenericArrayPointer),
+                    actualReturnType,
+                    convertedReturnType) {HasThis = false, Parameters = {new ParameterDefinition(imports.IntPtr)}};
+                body.Emit(OpCodes.Call, methodRef);
             } else
             {
                 var createRealObject = body.Create(OpCodes.Newobj,
