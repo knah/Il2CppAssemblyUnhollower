@@ -73,10 +73,8 @@ namespace UnhollowerBaseLib
                 
                 var valueRawPointer = (byte*) IL2CPP.il2cpp_object_unbox(valuePointer);
                 var targetRawPointer = (byte*) targetPointer;
-                for (var i = 0; i < ourElementTypeSize; i++)
-                {
+                for (var i = 0; i < ourElementTypeSize; i++) 
                     targetRawPointer[i] = valueRawPointer[i];
-                }
             }
             else
             {
@@ -95,7 +93,10 @@ namespace UnhollowerBaseLib
                 return (T) ourCachedInstanceCtor.Invoke(new object[]
                     {IL2CPP.il2cpp_value_box(Il2CppClassPointerStore<T>.NativeClassPtr, memberPointer)});
 
-            return (T) ourCachedInstanceCtor.Invoke(new object[] {*(IntPtr*) memberPointer});
+            var referencePointer = *(IntPtr*) memberPointer;
+            if (referencePointer == IntPtr.Zero) return null;
+            
+            return (T) ourCachedInstanceCtor.Invoke(new object[] {referencePointer});
         }
 
         private static IntPtr AllocateArray(long size)
