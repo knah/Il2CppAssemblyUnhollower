@@ -34,7 +34,8 @@ namespace AssemblyUnhollower.Contexts
             if (!field.Name.IsObfuscated()) return field.Name;
 
             var accessModString = MethodAccessTypeLabels[(int) (field.Attributes & FieldAttributes.FieldAccessMask)];
-            return "field_" +accessModString + "_" + DeclaringType.AssemblyContext.RewriteTypeRef(field.FieldType).GetUnmangledName();
+            var staticString = field.IsStatic ? "_Static" : "";
+            return "field_" + accessModString + staticString + "_" + DeclaringType.AssemblyContext.RewriteTypeRef(field.FieldType).GetUnmangledName();
         }
         
         private string UnmangleFieldName(FieldDefinition field)

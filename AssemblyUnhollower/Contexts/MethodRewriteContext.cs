@@ -132,6 +132,8 @@ namespace AssemblyUnhollower.Contexts
             builder.Append(name);
             builder.Append('_');
             builder.Append(MethodAccessTypeLabels[(int) (method.Attributes & MethodAttributes.MemberAccessMask)]);
+            if (method.IsStatic)
+                builder.Append("_Static");
             foreach (var (semantic, str) in SemanticsToCheck)
                 if ((semantic & method.SemanticsAttributes) != 0)
                     builder.Append(str);
