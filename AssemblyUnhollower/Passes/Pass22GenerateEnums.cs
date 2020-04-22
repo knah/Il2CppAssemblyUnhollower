@@ -17,9 +17,13 @@ namespace AssemblyUnhollower.Passes
                     
                     var type = typeContext.OriginalType;
                     var newType = typeContext.NewType;
-                    foreach (var fieldDefinition in type.Fields) 
+                    foreach (var fieldDefinition in type.Fields)
                     {
-                        var newDef = new FieldDefinition(fieldDefinition.Name, fieldDefinition.Attributes, assemblyContext.RewriteTypeRef(fieldDefinition.FieldType));
+                        var fieldName = fieldDefinition.Name;
+                        if (fieldName.IsObfuscated())
+                            fieldName = "EnumValue" + fieldDefinition.Constant;
+                        
+                        var newDef = new FieldDefinition(fieldName, fieldDefinition.Attributes, assemblyContext.RewriteTypeRef(fieldDefinition.FieldType));
                         newType.Fields.Add(newDef);
 
                         newDef.Constant = fieldDefinition.Constant;
