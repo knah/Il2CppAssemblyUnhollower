@@ -16,7 +16,7 @@ namespace AssemblyUnhollower.Passes
 
         private static void ProcessType(TypeDefinition type, AssemblyRewriteContext assemblyContext, TypeDefinition? parentType)
         {
-            var newType = new TypeDefinition(type.Namespace.UnSystemify(), GetConvertedTypeName(type), AdjustAttributes(type.Attributes));
+            var newType = new TypeDefinition(type.Namespace.UnSystemify(), GetConvertedTypeName(assemblyContext.GlobalContext, type), AdjustAttributes(type.Attributes));
             
             if(parentType == null)
                 assemblyContext.NewAssembly.MainModule.Types.Add(newType);
@@ -32,16 +32,16 @@ namespace AssemblyUnhollower.Passes
             assemblyContext.RegisterTypeRewrite(new TypeRewriteContext(assemblyContext, type, newType));
         }
 
-        private static string GetConvertedTypeName(TypeReference type)
+        private static string GetConvertedTypeName(RewriteGlobalContext assemblyContextGlobalContext, TypeDefinition type)
         {
             if (type.Name.IsObfuscated())
             {
-                if (type.IsNested)
-                {
-                    return "Nested" + type.DeclaringType.Resolve().NestedTypes.IndexOf(type.Resolve());
-                }
-
-                return "Type" + (uint) type.Name.StableHash();
+                var newNameBase = assemblyContextGlobalContext.RenamedTypes[type];
+                var genericParametersCount = type.GenericParameters.Count;
+                var renameGroup =
+                    assemblyContextGlobalContext.RenameGroups[((object) type.DeclaringType ?? type.Namespace, newNameBase, genericParametersCount)];
+                var genericSuffix = genericParametersCount == 0 ? "" : "`" + genericParametersCount;
+                return newNameBase + (renameGroup.Count == 1 ? "Unique" : renameGroup.IndexOf(type).ToString()) + genericSuffix;
             }
 
             return type.Name;

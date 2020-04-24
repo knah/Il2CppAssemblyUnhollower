@@ -6,17 +6,23 @@ namespace AssemblyUnhollower.Contexts
 {
     public class RewriteGlobalContext
     {
+        public UnhollowerOptions Options { get; }
         private readonly Dictionary<string, AssemblyRewriteContext> myAssemblies = new Dictionary<string, AssemblyRewriteContext>();
         private readonly Dictionary<AssemblyDefinition, AssemblyRewriteContext> myAssembliesByOld = new Dictionary<AssemblyDefinition, AssemblyRewriteContext>();
         private readonly Resolver myAssemblyResolver = new Resolver();
+        
+        internal readonly Dictionary<(object, string, int), List<TypeDefinition>> RenameGroups = new Dictionary<(object, string, int), List<TypeDefinition>>();
+        internal readonly Dictionary<TypeDefinition, string> RenamedTypes = new Dictionary<TypeDefinition, string>();
+        internal readonly Dictionary<TypeDefinition, string> PreviousRenamedTypes = new Dictionary<TypeDefinition, string>();
 
         public IEnumerable<AssemblyRewriteContext> Assemblies => myAssemblies.Values;
         
-        public RewriteGlobalContext(string mscorlibPath, IEnumerable<string> sourceAssemblyPaths)
+        public RewriteGlobalContext(UnhollowerOptions options, IEnumerable<string> sourceAssemblyPaths)
         {
+            Options = options;
             var metadataResolver = new MetadataResolver(myAssemblyResolver);
             
-            var mscorlib = AssemblyDefinition.ReadAssembly(mscorlibPath);
+            var mscorlib = AssemblyDefinition.ReadAssembly(options.MscorlibPath);
             TargetTypeSystemHandler.Init(mscorlib);
             
             myAssemblyResolver.Register(mscorlib);
