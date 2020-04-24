@@ -6,10 +6,10 @@ namespace AssemblyUnhollower.Passes
 {
     public static class Pass99WriteToDisk
     {
-        public static void DoPass(RewriteGlobalContext context, string targetDir)
+        public static void DoPass(RewriteGlobalContext context, UnhollowerOptions options)
         {
-            var tasks = context.Assemblies.Select(assemblyContext => Task.Run(() => {
-                assemblyContext.NewAssembly.Write(targetDir + "/" + assemblyContext.NewAssembly.Name.Name + ".dll");
+            var tasks = context.Assemblies.Where(it => !options.AdditionalAssembliesBlacklist.Contains(it.NewAssembly.Name.Name)).Select(assemblyContext => Task.Run(() => {
+                assemblyContext.NewAssembly.Write(options.OutputDir + "/" + assemblyContext.NewAssembly.Name.Name + ".dll");
             })).ToArray();
 
             Task.WaitAll(tasks);

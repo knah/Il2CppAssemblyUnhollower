@@ -50,30 +50,97 @@ namespace AssemblyUnhollower
             }
         }
 
+        private const string ParamInputDir = "--input=";
+        private const string ParamOutputDir = "--output=";
+        private const string ParamMscorlibPath = "--mscorlib=";
+        private const string ParamUnityDir = "--unity=";
+        private const string ParamUniqChars = "--deobf-uniq-chars=";
+        private const string ParamUniqMax = "--deobf-uniq-max=";
+        private const string ParamAnalyze = "--deobf-analyze";
+        private const string ParamBlacklistAssembly = "--blacklist-assembly=";
+        private const string ParamHelp = "--help";
+        private const string ParamHelpShort = "-h";
+        private const string ParamHelpShortSlash = "/?";
+
+        private static void PrintUsage()
+        {
+            Console.WriteLine("Usage: AssemblyUnhollower [parameters]");
+            Console.WriteLine("Possible parameters:");
+            Console.WriteLine($"\t{ParamInputDir}<directory path> - Required. Directory with Il2CppDumper's dummy assemblies");
+            Console.WriteLine($"\t{ParamOutputDir}<directory path> - Required. Directory to put results into");
+            Console.WriteLine($"\t{ParamMscorlibPath}<file path> - Required. mscorlib.dll of target runtime system (typically loader's)");
+            Console.WriteLine($"\t{ParamUnityDir}<file path> - Optional. Directory with original Unity assemblies for unstripping. Not yet supported");
+            Console.WriteLine($"\t{ParamUniqChars}<number> - Optional. How many characters per unique token to use during deobfuscation");
+            Console.WriteLine($"\t{ParamUniqMax}<number> - Optional. How many maximum unique tokens per type are allowed during deobfuscation");
+            Console.WriteLine($"\t{ParamAnalyze} - Optional. Analyze deobfuscation performance with different parameter values");
+            Console.WriteLine($"\t{ParamBlacklistAssembly}<assembly name> - Optional. Don't write specified assembly to output. Can be used multiple times");
+            Console.WriteLine($"\t{ParamHelp}, {ParamHelpShort}, {ParamHelpShortSlash} - Optional. Show this help");
+            
+        }
+
         public static void Main(string[] args)
         {
-            if (args.Length != 3 && args.Length != 4)
+            var options = new UnhollowerOptions();
+            options.AdditionalAssembliesBlacklist.Add("Mono.Security"); // always blacklist this one
+            var analyze = false;
+            
+            foreach (var s in args)
             {
-                Console.WriteLine("Usage: AssemblyUnhollower.exe SourceAssemblyDir TargetAssemblyDir mscorlib");
-                return;
+                if (s == ParamAnalyze) 
+                    analyze = true;
+                else if (s == ParamHelp || s == ParamHelpShort || s == ParamHelpShortSlash)
+                {
+                    PrintUsage();
+                    return;
+                } else if (s.StartsWith(ParamInputDir))
+                    options.SourceDir = s.Substring(ParamInputDir.Length);
+                else if (s.StartsWith(ParamOutputDir))
+                    options.OutputDir = s.Substring(ParamOutputDir.Length);
+                else if (s.StartsWith(ParamMscorlibPath))
+                    options.MscorlibPath = s.Substring(ParamMscorlibPath.Length);
+                else if (s.StartsWith(ParamUnityDir))
+                    options.UnityBaseLibsDir = s.Substring(ParamUnityDir.Length);
+                else if(s.StartsWith(ParamUniqChars))
+                    options.TypeDeobfuscationCharsPerUniquifier = Int32.Parse(s.Substring(ParamUniqChars.Length));
+                else if(s.StartsWith(ParamUniqMax))
+                    options.TypeDeobfuscationMaxUniquifiers = Int32.Parse(s.Substring(ParamUniqMax.Length));
+                else if(s.StartsWith(ParamBlacklistAssembly))
+                    options.AdditionalAssembliesBlacklist.Add(s.Substring(ParamBlacklistAssembly.Length));
+                else
+                {
+                    Console.WriteLine($"Unrecognized option {s}; use -h for help");
+                    return;
+                }
             }
             
-            // todo: better parsing, better usage
-
-            var unhollowerOptions = new UnhollowerOptions
-            {
-                SourceDir = args[0],
-                OutputDir = args[1],
-                MscorlibPath = args[2],
-            };
-            if (args.Length == 4)
-                AnalyzeDeobfuscationParams(unhollowerOptions);
+            if (analyze)
+                AnalyzeDeobfuscationParams(options);
             else
-                Main(unhollowerOptions);
+                Main(options);
         }
         
         public static void Main(UnhollowerOptions options)
         {
+            if (string.IsNullOrEmpty(options.SourceDir))
+            {
+                Console.WriteLine("No input dir specified; use -h for help");
+                return;
+            }
+            
+            if (string.IsNullOrEmpty(options.OutputDir))
+            {
+                Console.WriteLine("No target dir specified; use -h for help");
+                return;
+            }
+            if (string.IsNullOrEmpty(options.MscorlibPath))
+            {
+                Console.WriteLine("No mscorlib specified; use -h for help");
+                return;
+            }
+
+            if (!Directory.Exists(options.OutputDir))
+                Directory.CreateDirectory(options.OutputDir);
+            
             if (options.UnityBaseLibsDir != null)
                 Console.WriteLine(
                     "Unity libs path is specified; this will currently do nothing, as unity unstripping is not yet implemented");
@@ -120,7 +187,7 @@ namespace AssemblyUnhollower
                 Pass70GenerateProperties.DoPass(rewriteContext);
             
             using(new TimingCookie("Writing assemblies"))
-                Pass99WriteToDisk.DoPass(rewriteContext, options.OutputDir);
+                Pass99WriteToDisk.DoPass(rewriteContext, options);
 
             File.Copy(typeof(IL2CPP).Assembly.Location, Path.Combine(options.OutputDir, typeof(IL2CPP).Assembly.GetName().Name + ".dll"), true);
             File.Copy(typeof(DelegateSupport).Assembly.Location, Path.Combine(options.OutputDir, typeof(DelegateSupport).Assembly.GetName().Name + ".dll"), true);
