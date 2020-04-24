@@ -239,7 +239,7 @@ namespace UnhollowerRuntimeLib
             var converted = new Il2CppSystem.Delegate(nativeDelegatePtr);
 
             converted.method_ptr = Marshal.GetFunctionPointerForDelegate(managedTrampoline);
-            converted.method_info = il2CppDelegateType.GetMethods()[0]; // todo: is this truly a good hack?
+            converted.method_info = nativeDelegateInvokeMethod; // todo: is this truly a good hack?
             ourDelegates[ourCounter] = @delegate;
             var methodInfoSize = Marshal.SizeOf<MethodInfo>();
             var methodInfoPointer = Marshal.AllocHGlobal(methodInfoSize);
