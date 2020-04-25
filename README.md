@@ -8,7 +8,7 @@ This includes generic types and methods, arrays, and new object creation. Some t
  ## Usage
   0. Build or get a release
   1. Obtain dummy assemblies using [Il2CppDumper](https://github.com/Perfare/Il2CppDumper)
-  2. Run `AssemblyUnhollower <path to Il2CppDumper's dummy dll dir> <output directory> <path to target mscorlib>`    
+  2. Run `AssemblyUnhollower --input=<path to Il2CppDumper's dummy dll dir> --output=<output directory> --mscorlib=<path to target mscorlib>`    
        
  Resulting assemblies may be used with your favorite loader that offers a Mono domain in the IL2CPP game process.    
  This was not extensively tested on any commercial games yet.  
