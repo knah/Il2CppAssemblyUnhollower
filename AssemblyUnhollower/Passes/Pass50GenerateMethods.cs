@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using AssemblyUnhollower.Contexts;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -80,6 +81,8 @@ namespace AssemblyUnhollower.Passes
 
                         var argOffset = originalMethod.IsStatic ? 0 : 1;
 
+                        var byRefParams = new List<(int, VariableDefinition)>();
+
                         for (var i = 0; i < newMethod.Parameters.Count; i++)
                         {
                             bodyBuilder.Emit(OpCodes.Ldloc, argArray);
@@ -90,8 +93,11 @@ namespace AssemblyUnhollower.Passes
                             bodyBuilder.Emit(OpCodes.Add);
 
                             var newParam = newMethod.Parameters[i];
-                            bodyBuilder.EmitObjectToPointer(originalMethod.Parameters[i].ParameterType, newParam.ParameterType, methodRewriteContext.DeclaringType, argOffset + i, false, true, true);
+                            bodyBuilder.EmitObjectToPointer(originalMethod.Parameters[i].ParameterType, newParam.ParameterType, methodRewriteContext.DeclaringType, argOffset + i, false, true, true, out var refVar);
                             bodyBuilder.Emit(OpCodes.Stind_I);
+                            
+                            if(refVar != null)
+                                byRefParams.Add((i, refVar));
                         }
 
                         if (originalMethod.IsVirtual && !originalMethod.DeclaringType.IsValueType || originalMethod.IsAbstract)
@@ -110,7 +116,7 @@ namespace AssemblyUnhollower.Passes
                         if (originalMethod.IsStatic)
                             bodyBuilder.Emit(OpCodes.Ldc_I4_0);
                         else
-                            bodyBuilder.EmitObjectToPointer(originalMethod.DeclaringType, newMethod.DeclaringType, typeContext, 0, true, false, true);
+                            bodyBuilder.EmitObjectToPointer(originalMethod.DeclaringType, newMethod.DeclaringType, typeContext, 0, true, false, true, out _);
 
                         bodyBuilder.Emit(OpCodes.Ldloc, argArray);
                         bodyBuilder.Emit(OpCodes.Ldloca, exceptionLocal);
@@ -119,6 +125,13 @@ namespace AssemblyUnhollower.Passes
 
                         bodyBuilder.Emit(OpCodes.Ldloc, exceptionLocal);
                         bodyBuilder.Emit(OpCodes.Call, imports.RaiseExceptionIfNecessary);
+                        
+                        foreach (var byRefParam in byRefParams)
+                        {
+                            var paramIndex = byRefParam.Item1;
+                            var paramVariable = byRefParam.Item2;
+                            bodyBuilder.EmitUpdateRef(newMethod.Parameters[paramIndex], paramIndex + argOffset, paramVariable, imports);
+                        }
 
                         bodyBuilder.EmitPointerToObject(originalMethod.ReturnType, newMethod.ReturnType, typeContext, bodyBuilder.Create(OpCodes.Ldloc, resultVar), false, true);
 

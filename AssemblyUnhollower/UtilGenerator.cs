@@ -145,10 +145,11 @@ namespace AssemblyUnhollower
             body.Append(finalNop);
         }
 
-        public static void EmitObjectToPointer(this ILProcessor body, TypeReference originalType, TypeReference newType, TypeRewriteContext enclosingType, int argumentIndex, bool valueTypeArgument0IsAPointer, bool allowNullable, bool unboxNonBlittableType)
+        public static void EmitObjectToPointer(this ILProcessor body, TypeReference originalType, TypeReference newType, TypeRewriteContext enclosingType, int argumentIndex, bool valueTypeArgument0IsAPointer, bool allowNullable, bool unboxNonBlittableType, out VariableDefinition refVariable)
         {
             // input stack: not used
             // output stack: IntPtr to either Il2CppObject or IL2CPP value type
+            refVariable = null;
 
             if (originalType is GenericParameter)
             {
@@ -157,7 +158,35 @@ namespace AssemblyUnhollower
             }
 
             var imports = enclosingType.AssemblyContext.Imports;
-            if (originalType.IsValueType)
+            if (originalType is ByReferenceType)
+            {
+                if (newType.GetElementType().IsValueType)
+                {
+                    body.Emit(OpCodes.Ldarg, argumentIndex);
+                    body.Emit(OpCodes.Conv_I);
+                } else if (originalType.GetElementType().IsValueType)
+                {
+                    body.Emit(OpCodes.Ldarg, argumentIndex);
+                    body.Emit(OpCodes.Ldind_Ref);
+                    body.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointerNotNull);
+                }
+                else 
+                {
+                    var pointerVar = new VariableDefinition(imports.IntPtr);
+                    refVariable = pointerVar;
+                    body.Body.Variables.Add(pointerVar);
+                    body.Emit(OpCodes.Ldarg, argumentIndex);
+                    body.Emit(OpCodes.Ldind_Ref);
+                    if (originalType.FullName == "System.String")
+                        body.Emit(OpCodes.Call, imports.StringToNative);
+                    else
+                        body.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointer);
+                    body.Emit(OpCodes.Stloc, pointerVar);
+                    body.Emit(OpCodes.Ldloca, pointerVar);
+                    body.Emit(OpCodes.Conv_I);
+                }
+            }
+            else if (originalType.IsValueType)
             {
                 var typeSpecifics =  enclosingType.AssemblyContext.GlobalContext.JudgeSpecificsByOriginalType(originalType);
                 if (typeSpecifics == TypeRewriteContext.TypeSpecifics.BlittableStruct)
@@ -391,6 +420,19 @@ namespace AssemblyUnhollower
             methodBody.Emit(OpCodes.Newobj, new MethodReference(".ctor", targetType.Module.ImportReference(TargetTypeSystemHandler.Void), il2CppObjectTypeDef) { Parameters = { new ParameterDefinition(targetType.Module.ImportReference(TargetTypeSystemHandler.IntPtr))}, HasThis = true});
             
             methodBody.Emit(OpCodes.Ret);
+        }
+
+        public static void EmitUpdateRef(this ILProcessor body, ParameterDefinition newMethodParameter, int argIndex, VariableDefinition paramVariable, AssemblyKnownImports imports)
+        {
+            body.Emit(OpCodes.Ldarg, argIndex);
+            body.Emit(OpCodes.Ldloc, paramVariable);
+            if (newMethodParameter.ParameterType.GetElementType().FullName == "System.String")
+                body.Emit(OpCodes.Call, imports.StringFromNative);
+            else
+                body.Emit(OpCodes.Newobj,
+                    new MethodReference(".ctor", imports.Void, newMethodParameter.ParameterType.GetElementType())
+                        {HasThis = true, Parameters = {new ParameterDefinition(imports.IntPtr)}});
+            body.Emit(OpCodes.Stind_Ref);
         }
     }
 }

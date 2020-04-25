@@ -3,7 +3,7 @@ A tool to generate Managed->IL2CPP proxy assemblies from
  [Il2CppDumper](https://github.com/Perfare/Il2CppDumper )'s output.
 
 This allows the use of IL2CPP domain and objects in it from a managed domain. 
-This includes generic types and methods, arrays, and new object creation. Some things, such as ref parameters, may be horribly broken. 
+This includes generic types and methods, arrays, and new object creation. Some things may be horribly broken. 
  
  ## Usage
   0. Build or get a release
@@ -18,6 +18,7 @@ This includes generic types and methods, arrays, and new object creation. Some t
  * Delegate support leaks some memory on each conversion, and it keeps managed delegates from being garbage collected. It's best to convert a delegate once, and then use it multiple times, than to convert the same delegate over and over.
  * Non-blittable structs can't be used in delegates
  * Types implementing interfaces, particularly IEnumerable, may be arbitrarily janky with interface methods. Additionally, using them in foreach may result in implicit casts on managed side (instead of `Cast<T>`, see below), leading to exceptions. Use `for` instead of `foreach` when possible as a workaround, or cast them to the specific interface you want to use.
+ * in/out/ref parameters on generic parameter types (like `out T` in `Dictionary.TryGetValue`) are currently broken
 
 ## Generated assemblies caveats
  * IL2CPP types must be cast using `.Cast<T>` or `.TryCast<T>` methods instead of C-style casts or `as`.

@@ -25,7 +25,7 @@ namespace AssemblyUnhollower
             }
             else
             {
-                getterBody.EmitObjectToPointer(fieldContext.DeclaringType.OriginalType, fieldContext.DeclaringType.NewType, fieldContext.DeclaringType, 0, false, false, false);
+                getterBody.EmitObjectToPointer(fieldContext.DeclaringType.OriginalType, fieldContext.DeclaringType.NewType, fieldContext.DeclaringType, 0, false, false, false, out _);
                 getterBody.Emit(OpCodes.Ldsfld, fieldContext.PointerField);
                 getterBody.Emit(OpCodes.Call, imports.FieldGetOffset);
                 getterBody.Emit(OpCodes.Add);
@@ -52,12 +52,12 @@ namespace AssemblyUnhollower
             if (field.IsStatic)
             {
                 setterBody.Emit(OpCodes.Ldsfld, fieldContext.PointerField);
-                setterBody.EmitObjectToPointer(field.FieldType, property.PropertyType, fieldContext.DeclaringType, 0, false, true, true);
+                setterBody.EmitObjectToPointer(field.FieldType, property.PropertyType, fieldContext.DeclaringType, 0, false, true, true, out _);
                 setterBody.Emit(OpCodes.Call, imports.FieldStaticSet);
             }
             else
             {
-                setterBody.EmitObjectToPointer(fieldContext.DeclaringType.OriginalType, fieldContext.DeclaringType.NewType, fieldContext.DeclaringType, 0, false, false, false);
+                setterBody.EmitObjectToPointer(fieldContext.DeclaringType.OriginalType, fieldContext.DeclaringType.NewType, fieldContext.DeclaringType, 0, false, false, false, out _);
                 setterBody.Emit(OpCodes.Ldsfld, fieldContext.PointerField);
                 setterBody.Emit(OpCodes.Call, imports.FieldGetOffset);
                 setterBody.Emit(OpCodes.Add);
