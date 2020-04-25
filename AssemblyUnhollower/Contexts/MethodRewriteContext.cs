@@ -132,8 +132,11 @@ namespace AssemblyUnhollower.Contexts
             builder.Append(name);
             builder.Append('_');
             builder.Append(MethodAccessTypeLabels[(int) (method.Attributes & MethodAttributes.MemberAccessMask)]);
-            if (method.IsStatic)
-                builder.Append("_Static");
+            if (method.IsAbstract) builder.Append("_Abstract");
+            if (method.IsVirtual) builder.Append("_Virtual");
+            if (method.IsStatic) builder.Append("_Static");
+            if (method.IsFinal) builder.Append("_Final");
+            if (method.IsNewSlot) builder.Append("_New");
             foreach (var (semantic, str) in SemanticsToCheck)
                 if ((semantic & method.SemanticsAttributes) != 0)
                     builder.Append(str);
@@ -158,8 +161,10 @@ namespace AssemblyUnhollower.Contexts
         
         private static bool ParameterSignatureSame(MethodDefinition aM, MethodDefinition bM)
         {
-            if ((aM.Attributes & MethodAttributes.MemberAccessMask) !=
-                (bM.Attributes & MethodAttributes.MemberAccessMask))
+            var comparisonMask = MethodAttributes.MemberAccessMask | MethodAttributes.Static | MethodAttributes.Final |
+                                 MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
+            if ((aM.Attributes & comparisonMask) !=
+                (bM.Attributes & comparisonMask))
                 return false;
 
             if (aM.SemanticsAttributes != bM.SemanticsAttributes)
@@ -168,8 +173,6 @@ namespace AssemblyUnhollower.Contexts
             if (aM.ReturnType.FullName != bM.ReturnType.FullName)
                 return false;
 
-            if (aM.IsStatic != bM.IsStatic) return false;
-            
             var a = aM.Parameters;
             var b = bM.Parameters;
             
