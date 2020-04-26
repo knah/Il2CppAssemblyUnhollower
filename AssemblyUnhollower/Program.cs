@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -146,10 +146,6 @@ namespace AssemblyUnhollower
 
             if (!Directory.Exists(options.OutputDir))
                 Directory.CreateDirectory(options.OutputDir);
-            
-            if (options.UnityBaseLibsDir != null)
-                Console.WriteLine(
-                    "Unity libs path is specified; this will currently do nothing, as unity unstripping is not yet implemented");
 
             RewriteGlobalContext rewriteContext;
             using(new TimingCookie("Reading assemblies"))
@@ -191,6 +187,16 @@ namespace AssemblyUnhollower
                 Pass60AddImplicitConversions.DoPass(rewriteContext);
             using(new TimingCookie("Creating properties"))
                 Pass70GenerateProperties.DoPass(rewriteContext);
+
+            if (options.UnityBaseLibsDir != null)
+            {
+                using (new TimingCookie("Unstripping types"))
+                    Pass79UnstripTypes.DoPass(rewriteContext);
+                using (new TimingCookie("Unstripping methods"))
+                    Pass80UnstripMethods.DoPass(rewriteContext);
+            }
+            else
+                Console.WriteLine("Not performing unstripping as unity libs are not specified");
             
             using(new TimingCookie("Writing assemblies"))
                 Pass99WriteToDisk.DoPass(rewriteContext, options);

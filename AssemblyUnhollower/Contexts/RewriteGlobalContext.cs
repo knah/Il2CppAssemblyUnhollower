@@ -74,5 +74,10 @@ namespace AssemblyUnhollower.Contexts
         {
             return myAssemblies[name];
         }
+        
+        public AssemblyRewriteContext? TryGetAssemblyByName(string name)
+        {
+            return myAssemblies.TryGetValue(name, out var result) ? result : null;
+        }
     }
 }

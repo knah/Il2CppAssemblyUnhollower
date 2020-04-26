@@ -25,11 +25,14 @@ namespace AssemblyUnhollower
         private readonly Lazy<TypeDefinition> myTypeReference;
         private readonly Lazy<TypeReference> myEnumReference;
         private readonly Lazy<TypeReference> myDelegateReference;
+        private readonly Lazy<TypeReference> myMulticastDelegateReference;
         private readonly Lazy<TypeReference> myValueTypeReference;
         private readonly Lazy<TypeReference> myObjectReference;
         private readonly Lazy<TypeReference> myIl2CppClassPointerStoreReference;
         private readonly Lazy<TypeReference> myIl2CppObjectBaseReference;
         private readonly Lazy<TypeReference> myIl2CppReferenceArray;
+        private readonly Lazy<TypeReference> myIl2CppStructArray;
+        private readonly Lazy<TypeReference> myIl2CppStringArray;
         private readonly Lazy<TypeReference> myIl2CppArrayBase;
         private readonly Lazy<TypeReference> myIl2CppArrayBaseSetlfSubst;
         private readonly Lazy<TypeReference> myDefaultMemberAttribute;
@@ -40,11 +43,14 @@ namespace AssemblyUnhollower
         public TypeDefinition Type => myTypeReference.Value;
         public TypeReference Enum => myEnumReference.Value;
         public TypeReference Delegate => myDelegateReference.Value;
+        public TypeReference MulticastDelegate => myMulticastDelegateReference.Value;
         public TypeReference ValueType => myValueTypeReference.Value;
         public TypeReference Object => myObjectReference.Value;
         public TypeReference Il2CppClassPointerStore => myIl2CppClassPointerStoreReference.Value;
         public TypeReference Il2CppObjectBase => myIl2CppObjectBaseReference.Value;
         public TypeReference Il2CppReferenceArray => myIl2CppReferenceArray.Value;
+        public TypeReference Il2CppStructArray => myIl2CppStructArray.Value;
+        public TypeReference Il2CppStringArray => myIl2CppStringArray.Value;
         public TypeReference Il2CppArrayBase => myIl2CppArrayBase.Value;
         public TypeReference Il2CppArrayBaseSelfSubst => myIl2CppArrayBaseSetlfSubst.Value;
         public TypeReference DefaultMemberAttribute => myDefaultMemberAttribute.Value;
@@ -54,12 +60,14 @@ namespace AssemblyUnhollower
         public MethodReference StringToNative => myStringToNative.Value;
         public MethodReference StringFromNative => myStringFromNative.Value;
         public MethodReference Il2CppObjectCast => myIl2CppObjectCast.Value;
+        public MethodReference Il2CppResolveICall => myIl2CppResolveICall.Value;
 
         private readonly Lazy<MethodReference> myIl2CppObjectToPointer;
         private readonly Lazy<MethodReference> myIl2CppObjectToPointerNotNull;
         private readonly Lazy<MethodReference> myStringToNative;
         private readonly Lazy<MethodReference> myStringFromNative;
         private readonly Lazy<MethodReference> myIl2CppObjectCast;
+        private readonly Lazy<MethodReference> myIl2CppResolveICall;
         
         private readonly Lazy<MethodReference> myFieldGetOffset;
         private readonly Lazy<MethodReference> myFieldStaticGet;
@@ -117,10 +125,13 @@ namespace AssemblyUnhollower
             myTypeReference = new Lazy<TypeDefinition>(() => TargetTypeSystemHandler.Type);
             myEnumReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.Enum));
             myDelegateReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.Delegate));
+            myMulticastDelegateReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.MulticastDelegate));
             myValueTypeReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.ValueType));
             myObjectReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.Object));
             myIl2CppClassPointerStoreReference = new Lazy<TypeReference>(() => Module.ImportReference(typeof(Il2CppClassPointerStore<>)));
             myIl2CppReferenceArray = new Lazy<TypeReference>(() => Module.ImportReference(typeof(Il2CppReferenceArray<>)));
+            myIl2CppStructArray = new Lazy<TypeReference>(() => Module.ImportReference(typeof(Il2CppStructArray<>)));
+            myIl2CppStringArray = new Lazy<TypeReference>(() => Module.ImportReference(typeof(Il2CppStringArray)));
             myIl2CppArrayBase = new Lazy<TypeReference>(() => Module.ImportReference(typeof(Il2CppArrayBase<>)));
             myIl2CppArrayBaseSetlfSubst = new Lazy<TypeReference>(() => Module.ImportReference(new GenericInstanceType(Il2CppArrayBase) { GenericArguments = { Il2CppArrayBase.GenericParameters[0] }}));
             myIl2CppObjectBaseReference = new Lazy<TypeReference>(() => Module.ImportReference(typeof(Il2CppObjectBase)));
@@ -132,6 +143,7 @@ namespace AssemblyUnhollower
             myStringFromNative = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("Il2CppStringToManaged")));
             myStringToNative = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("ManagedStringToIl2Cpp")));
             myIl2CppObjectCast = new Lazy<MethodReference>(() => Module.ImportReference(typeof(Il2CppObjectBase).GetMethod("Cast")));
+            myIl2CppResolveICall = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.ResolveICall))));
             
             myFieldGetOffset = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("il2cpp_field_get_offset")));
             myFieldStaticGet = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("il2cpp_field_static_get_value")));

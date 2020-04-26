@@ -163,6 +163,19 @@ namespace UnhollowerBaseLib
                 throw new NullReferenceException();
         }
 
+        public static T ResolveICall<T>(string signature) where T : Delegate
+        {
+            
+            var icallPtr = il2cpp_resolve_icall(signature);
+            if (icallPtr == IntPtr.Zero)
+            {
+                LogSupport.Error($"ICall {signature} not resolved");
+                return null;
+            }
+
+            return Marshal.GetDelegateForFunctionPointer<T>(icallPtr);
+        }
+
         // IL2CPP Functions
         [DllImport("GameAssembly", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern void il2cpp_init(IntPtr domain_name);

@@ -188,8 +188,7 @@ namespace AssemblyUnhollower
             }
             else if (originalType.IsValueType)
             {
-                var typeSpecifics =  enclosingType.AssemblyContext.GlobalContext.JudgeSpecificsByOriginalType(originalType);
-                if (typeSpecifics == TypeRewriteContext.TypeSpecifics.BlittableStruct)
+                if (newType.IsValueType)
                 {
                     if (argumentIndex == 0 && valueTypeArgument0IsAPointer)
                         body.Emit(OpCodes.Ldarg_0);
@@ -282,8 +281,7 @@ namespace AssemblyUnhollower
             }
             else if (originalReturnType.IsValueType)
             {
-                var typeSpecifics =  enclosingType.AssemblyContext.GlobalContext.JudgeSpecificsByOriginalType(originalReturnType);
-                if (typeSpecifics == TypeRewriteContext.TypeSpecifics.BlittableStruct)
+                if (convertedReturnType.IsValueType)
                 {
                     body.Append(loadPointer);
                     if (unboxValueType) body.Emit(OpCodes.Call, imports.ObjectUnbox);

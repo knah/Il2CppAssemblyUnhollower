@@ -19,6 +19,7 @@ namespace AssemblyUnhollower.Contexts
 
         private readonly Dictionary<FieldDefinition, FieldRewriteContext> myFieldContexts = new Dictionary<FieldDefinition, FieldRewriteContext>();
         private readonly Dictionary<MethodDefinition, MethodRewriteContext> myMethodContexts = new Dictionary<MethodDefinition, MethodRewriteContext>();
+        private readonly Dictionary<string, MethodRewriteContext> myMethodContextsByName = new Dictionary<string, MethodRewriteContext>();
 
         public IEnumerable<FieldRewriteContext> Fields => myFieldContexts.Values;
         public IEnumerable<MethodRewriteContext> Methods => myMethodContexts.Values;
@@ -26,9 +27,11 @@ namespace AssemblyUnhollower.Contexts
         public TypeRewriteContext(AssemblyRewriteContext assemblyContext, TypeDefinition originalType, TypeDefinition newType)
         {
             AssemblyContext = assemblyContext ?? throw new ArgumentNullException(nameof(assemblyContext));
-            OriginalType = originalType ?? throw new ArgumentNullException(nameof(originalType));
+            OriginalType = originalType;
             NewType = newType ?? throw new ArgumentNullException(nameof(newType));
 
+            if (OriginalType == null) return;
+            
             OriginalNameWasObfuscated = OriginalType.Name != NewType.Name;
             if (!OriginalType.IsValueType)
                 ComputedTypeSpecifics = TypeSpecifics.ReferenceType;
@@ -76,6 +79,7 @@ namespace AssemblyUnhollower.Contexts
 
                 var methodRewriteContext = new MethodRewriteContext(this, originalTypeMethod);
                 myMethodContexts[originalTypeMethod] = methodRewriteContext;
+                myMethodContextsByName[originalTypeMethod.Name] = methodRewriteContext;
                 methodRewriteContext.CtorPhase2();
             }
         }
@@ -83,6 +87,7 @@ namespace AssemblyUnhollower.Contexts
         public FieldRewriteContext GetFieldByOldField(FieldDefinition field) => myFieldContexts[field];
         public MethodRewriteContext GetMethodByOldMethod(MethodDefinition method) => myMethodContexts[method];
         public MethodRewriteContext? TryGetMethodByOldMethod(MethodDefinition method) => myMethodContexts.TryGetValue(method, out var result) ? result : null;
+        public MethodRewriteContext? TryGetMethodByName(string name) => myMethodContextsByName.TryGetValue(name, out var result) ? result : null;
 
         public enum TypeSpecifics
         {

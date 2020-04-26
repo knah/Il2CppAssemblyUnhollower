@@ -33,9 +33,10 @@ namespace AssemblyUnhollower.Contexts
 
         public void RegisterTypeRewrite(TypeRewriteContext context)
         {
-            myOldTypeMap[context.OriginalType] = context;
+            if (context.OriginalType != null)
+                myOldTypeMap[context.OriginalType] = context;
             myNewTypeMap[context.NewType] = context;
-            myNameTypeMap[context.OriginalType.FullName] = context;
+            myNameTypeMap[(context.OriginalType ?? context.NewType).FullName] = context;
         }
 
         public MethodReference RewriteMethodRef(MethodReference methodRef)
@@ -114,6 +115,11 @@ namespace AssemblyUnhollower.Contexts
         public TypeRewriteContext GetTypeByName(string name)
         {
             return myNameTypeMap[name];
+        }
+        
+        public TypeRewriteContext? TryGetTypeByName(string name)
+        {
+            return myNameTypeMap.TryGetValue(name, out var result) ? result : null;
         }
     }
 }
