@@ -166,7 +166,7 @@ namespace UnhollowerRuntimeLib
             bodyBuilder.Emit(OpCodes.Ldloc, exceptionLocal);
             bodyBuilder.Emit(OpCodes.Callvirt, typeof(object).GetMethod(nameof(ToString))!);
             bodyBuilder.Emit(OpCodes.Call, typeof(string).GetMethod(nameof(string.Concat), new []{typeof(string), typeof(string)})!);
-            bodyBuilder.Emit(OpCodes.Call, typeof(LogSupport).GetMethod(nameof(LogSupport.Log))!);
+            bodyBuilder.Emit(OpCodes.Call, typeof(LogSupport).GetMethod(nameof(LogSupport.Error))!);
             
             bodyBuilder.EndExceptionBlock();
             

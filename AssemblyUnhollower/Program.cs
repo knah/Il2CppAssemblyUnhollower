@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -58,6 +58,7 @@ namespace AssemblyUnhollower
         private const string ParamUniqMax = "--deobf-uniq-max=";
         private const string ParamAnalyze = "--deobf-analyze";
         private const string ParamBlacklistAssembly = "--blacklist-assembly=";
+        private const string ParamVerbose = "--verbose";
         private const string ParamHelp = "--help";
         private const string ParamHelpShort = "-h";
         private const string ParamHelpShortSlash = "/?";
@@ -74,12 +75,15 @@ namespace AssemblyUnhollower
             Console.WriteLine($"\t{ParamUniqMax}<number> - Optional. How many maximum unique tokens per type are allowed during deobfuscation");
             Console.WriteLine($"\t{ParamAnalyze} - Optional. Analyze deobfuscation performance with different parameter values");
             Console.WriteLine($"\t{ParamBlacklistAssembly}<assembly name> - Optional. Don't write specified assembly to output. Can be used multiple times");
+            Console.WriteLine($"\t{ParamVerbose} - Optional. Produce more console output");
             Console.WriteLine($"\t{ParamHelp}, {ParamHelpShort}, {ParamHelpShortSlash} - Optional. Show this help");
             
         }
 
         public static void Main(string[] args)
         {
+            LogSupport.InstallConsoleHandlers();
+            
             var options = new UnhollowerOptions();
             options.AdditionalAssembliesBlacklist.Add("Mono.Security"); // always blacklist this one
             var analyze = false;
@@ -92,7 +96,9 @@ namespace AssemblyUnhollower
                 {
                     PrintUsage();
                     return;
-                } else if (s.StartsWith(ParamInputDir))
+                } else if (s == ParamVerbose)
+                    LogSupport.TraceHandler += Console.WriteLine;
+                else if (s.StartsWith(ParamInputDir))
                     options.SourceDir = s.Substring(ParamInputDir.Length);
                 else if (s.StartsWith(ParamOutputDir))
                     options.OutputDir = s.Substring(ParamOutputDir.Length);

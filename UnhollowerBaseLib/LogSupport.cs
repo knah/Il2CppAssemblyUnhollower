@@ -5,19 +5,21 @@ namespace UnhollowerBaseLib
 {
     public static class LogSupport
     {
-        public static event Action<string> LogHandler;
+        public static event Action<string> ErrorHandler;
+        public static event Action<string> WarningHandler;
+        public static event Action<string> InfoHandler;
+        public static event Action<string> TraceHandler;
 
-        static LogSupport()
+        public static void InstallConsoleHandlers()
         {
-            LogHandler += s => OutputDebugStringA(s + "\n");
+            ErrorHandler += Console.WriteLine;
+            WarningHandler += Console.WriteLine;
+            InfoHandler += Console.WriteLine;
         }
 
-        public static void Log(string message)
-        {
-            LogHandler?.Invoke(message);
-        }
-
-        [DllImport("kernel32", CallingConvention = CallingConvention.StdCall)]
-        private static extern void OutputDebugStringA([MarshalAs(UnmanagedType.LPStr)] string chars);
+        public static void Error(string message) => ErrorHandler?.Invoke(message);
+        public static void Warning(string message) => WarningHandler?.Invoke(message);
+        public static void Info(string message) => InfoHandler?.Invoke(message);
+        public static void Trace(string message) => TraceHandler?.Invoke(message);
     }
 }

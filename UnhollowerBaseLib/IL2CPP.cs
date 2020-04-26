@@ -14,7 +14,7 @@ namespace UnhollowerBaseLib
             var domain = il2cpp_domain_get();
             if (domain == IntPtr.Zero)
             {
-                LogSupport.Log("No il2cpp domain found; sad!");
+                LogSupport.Error("No il2cpp domain found; sad!");
                 return;
             }
             uint assembliesCount = 0;
@@ -31,7 +31,7 @@ namespace UnhollowerBaseLib
         {
             if (!ourImagesMap.TryGetValue(assemblyName, out var image))
             {
-                LogSupport.Log($"Assembly {assemblyName} is not registered in il2cpp");
+                LogSupport.Error($"Assembly {assemblyName} is not registered in il2cpp");
                 return IntPtr.Zero;
             }
             
@@ -90,9 +90,9 @@ namespace UnhollowerBaseLib
 
             if (methodsSeen == 1) return lastMethod; 
             
-            LogSupport.Log($"Unable to find method {Marshal.PtrToStringAnsi(il2cpp_class_get_name(clazz))}::{methodName}; signature follows");
-            foreach (var argType in argTypes) LogSupport.Log($"    {argType}");
-            LogSupport.Log("Available methods of this name follow:");
+            LogSupport.Error($"Unable to find method {Marshal.PtrToStringAnsi(il2cpp_class_get_name(clazz))}::{methodName}; signature follows");
+            foreach (var argType in argTypes) LogSupport.Error($"    {argType}");
+            LogSupport.Error("Available methods of this name follow:");
             iter = IntPtr.Zero;
             while ((method = il2cpp_class_get_methods(clazz, ref iter)) != IntPtr.Zero)
             {
@@ -100,12 +100,12 @@ namespace UnhollowerBaseLib
                     continue;
 
                 var nParams = il2cpp_method_get_param_count(method);
-                LogSupport.Log("Method starts");
+                LogSupport.Error("Method starts");
                 for (var i = 0; i < nParams; i++)
                 {
                     var paramType = il2cpp_method_get_param(method, (uint) i);
                     var typeName = Marshal.PtrToStringAnsi(il2cpp_type_get_name(paramType));
-                    LogSupport.Log($"    {typeName}");
+                    LogSupport.Error($"    {typeName}");
                 }
                 
                 return method;
@@ -191,7 +191,7 @@ namespace UnhollowerBaseLib
         [DllImport("GameAssembly", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern void il2cpp_add_internal_call(IntPtr name, IntPtr method);
         [DllImport("GameAssembly", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern IntPtr il2cpp_resolve_icall(IntPtr name);
+        public static extern IntPtr il2cpp_resolve_icall([MarshalAs(UnmanagedType.LPStr)] string name);
         [DllImport("GameAssembly", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern IntPtr il2cpp_alloc(uint size);
         [DllImport("GameAssembly", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
