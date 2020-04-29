@@ -12,6 +12,7 @@ namespace AssemblyUnhollower.Passes
         {
             var assemblyContext = context.GetAssemblyByName("mscorlib");
             var typeContext = assemblyContext.GetTypeByName("System.String");
+            var objectTypeContext = assemblyContext.GetTypeByName("System.Object");
             
             var methodFromMonoString = new MethodDefinition("op_Implicit", MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, typeContext.NewType);
             methodFromMonoString.Parameters.Add(new ParameterDefinition(assemblyContext.Imports.String));
@@ -34,6 +35,13 @@ namespace AssemblyUnhollower.Passes
                 });
             fromBuilder.Emit(OpCodes.Ret);
             
+            var methodToObject = new MethodDefinition("op_Implicit", MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, objectTypeContext.NewType);
+            methodToObject.Parameters.Add(new ParameterDefinition(assemblyContext.Imports.String));
+            objectTypeContext.NewType.Methods.Add(methodToObject);
+            var toObjectBuilder = methodToObject.Body.GetILProcessor();
+            toObjectBuilder.Emit(OpCodes.Ldarg_0);
+            toObjectBuilder.Emit(OpCodes.Call, methodFromMonoString);
+            toObjectBuilder.Emit(OpCodes.Ret);
             
             var methodToMonoString = new MethodDefinition("op_Implicit", MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, assemblyContext.Imports.String);
             methodToMonoString.Parameters.Add(new ParameterDefinition(typeContext.NewType));
