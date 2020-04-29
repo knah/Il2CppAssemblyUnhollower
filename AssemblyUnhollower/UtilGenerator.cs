@@ -289,11 +289,22 @@ namespace AssemblyUnhollower
                 }
                 else
                 {
-                    var classPointerTypeRef = new GenericInstanceType(imports.Il2CppClassPointerStore) { GenericArguments = { convertedReturnType }};
-                    var classPointerFieldRef = new FieldReference(nameof(Il2CppClassPointerStore<int>.NativeClassPtr), imports.IntPtr, classPointerTypeRef);
-                    body.Emit(OpCodes.Ldsfld, enclosingType.NewType.Module.ImportReference(classPointerFieldRef));
-                    body.Append(loadPointer);
-                    body.Emit(OpCodes.Call, imports.ObjectBox);
+                    if (!unboxValueType)
+                    {
+                        var classPointerTypeRef = new GenericInstanceType(imports.Il2CppClassPointerStore)
+                            {GenericArguments = {convertedReturnType}};
+                        var classPointerFieldRef =
+                            new FieldReference(nameof(Il2CppClassPointerStore<int>.NativeClassPtr), imports.IntPtr,
+                                classPointerTypeRef);
+                        body.Emit(OpCodes.Ldsfld, enclosingType.NewType.Module.ImportReference(classPointerFieldRef));
+                        body.Append(loadPointer);
+                        body.Emit(OpCodes.Call, imports.ObjectBox);
+                    }
+                    else // already boxed
+                    {
+                        body.Append(loadPointer);
+                    }
+
                     body.Emit(OpCodes.Newobj,
                         new MethodReference(".ctor", imports.Void, convertedReturnType)
                             {Parameters = {new ParameterDefinition(imports.IntPtr)}, HasThis = true});
