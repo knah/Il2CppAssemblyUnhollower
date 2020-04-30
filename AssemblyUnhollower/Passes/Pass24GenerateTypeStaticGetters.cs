@@ -22,6 +22,15 @@ namespace AssemblyUnhollower.Passes
                     var typeProperty = new PropertyDefinition("Il2CppType", PropertyAttributes.None, il2CppSystemTypeRef);
                     typeProperty.GetMethod = typeGetMethod;
                     typeContext.NewType.Properties.Add(typeProperty);
+
+                    typeProperty.CustomAttributes.Add(new CustomAttribute(assemblyContext.Imports.ObsoleteAttributeCtor)
+                    {
+                        ConstructorArguments =
+                        {
+                            new CustomAttributeArgument(assemblyContext.Imports.String,
+                                "Use Il2CppTypeOf<T>.Type instead. This will be removed in a future version of unhollower.")
+                        }
+                    });
                     
                     var bodyBuilder = typeGetMethod.Body.GetILProcessor();
                     
