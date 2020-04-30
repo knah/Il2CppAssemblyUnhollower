@@ -1,47 +1,47 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Text;
 using UnhollowerBaseLib;
+using Object = Il2CppSystem.Object;
+using ValueType = Il2CppSystem.ValueType;
 
 namespace UnhollowerRuntimeLib
 {
     public static unsafe class DelegateSupport
     {
-        private static IntPtr ourCounter = new IntPtr(1);
-        private static readonly Dictionary<IntPtr, Delegate> ourDelegates = new Dictionary<IntPtr, Delegate>();
-
-        public static Delegate GetDelegate(IntPtr counter) => ourDelegates[counter];
-
         private static readonly ConcurrentDictionary<MethodSignature, Type> ourDelegateTypes = new ConcurrentDictionary<MethodSignature, Type>();
 
-        private static Type GetOrCreateDelegateType(MethodSignature signature, System.Reflection.MethodInfo managedMethod)
+        internal static Type GetOrCreateDelegateType(MethodSignature signature, MethodInfo managedMethod)
         {
-            return ourDelegateTypes.GetOrAdd(signature, (_, managedMethodInner) => CreateDelegateType(managedMethodInner), managedMethod);
+            return ourDelegateTypes.GetOrAdd(signature, (signature, managedMethodInner) => CreateDelegateType(managedMethodInner, signature.HasThis, signature.ConstructedFromNative), managedMethod);
         }
 
-        private static AssemblyBuilder ourAssemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Il2CppTrampolineDelegates"), AssemblyBuilderAccess.Run);
-        private static ModuleBuilder ourModuleBuilder = ourAssemblyBuilder.DefineDynamicModule("Il2CppTrampolineDelegates");
+        private static readonly AssemblyBuilder AssemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Il2CppTrampolineDelegates"), AssemblyBuilderAccess.Run);
+        private static readonly ModuleBuilder ModuleBuilder = AssemblyBuilder.DefineDynamicModule("Il2CppTrampolineDelegates");
 
-        private static Type CreateDelegateType(System.Reflection.MethodInfo managedMethodInner)
+        private static Type CreateDelegateType(MethodInfo managedMethodInner, bool addIntPtrForThis, bool addNamingDisambig)
         {
-            var newType = ourModuleBuilder.DefineType("Il2CppToManagedDelegate_" + ExtractSignature(managedMethodInner), TypeAttributes.Sealed | TypeAttributes.Public, typeof(MulticastDelegate));
+            var newType = ModuleBuilder.DefineType("Il2CppToManagedDelegate_" + ExtractSignature(managedMethodInner) + (addIntPtrForThis ? "HasThis" : "") + (addNamingDisambig ? "FromNative" : ""), TypeAttributes.Sealed | TypeAttributes.Public, typeof(MulticastDelegate));
             newType.SetCustomAttribute(new CustomAttributeBuilder(typeof(UnmanagedFunctionPointerAttribute).GetConstructor(new []{typeof(CallingConvention)})!, new object[]{CallingConvention.Cdecl}));
 
             var ctor = newType.DefineConstructor(MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName | MethodAttributes.Public, CallingConventions.HasThis, new []{typeof(object), typeof(IntPtr)});
             ctor.SetImplementationFlags(MethodImplAttributes.CodeTypeMask);
 
+            var parameterOffset = addIntPtrForThis ? 1 : 0;
             var managedParameters = managedMethodInner.GetParameters();
-            var parameterTypes = new Type[managedParameters.Length + 1];
+            var parameterTypes = new Type[managedParameters.Length + 1 + parameterOffset];
+
+            if (addIntPtrForThis)
+                parameterTypes[0] = typeof(IntPtr);
             
-            parameterTypes[managedParameters.Length] = typeof(MethodInfo*);
+            parameterTypes[parameterTypes.Length - 1] = typeof(Il2CppMethodInfo*);
             for (var i = 0; i < managedParameters.Length; i++)
             {
-                parameterTypes[i] = managedParameters[i].ParameterType.IsValueType
+                parameterTypes[i + parameterOffset] = managedParameters[i].ParameterType.IsValueType
                     ? managedParameters[i].ParameterType
                     : typeof(IntPtr);
             }
@@ -66,7 +66,7 @@ namespace UnhollowerRuntimeLib
             return newType.CreateType();
         }
 
-        private static string ExtractSignature(System.Reflection.MethodInfo methodInfo)
+        private static string ExtractSignature(MethodInfo methodInfo)
         {
             var builder = new StringBuilder();
             builder.Append(methodInfo.ReturnType.FullName);
@@ -80,16 +80,16 @@ namespace UnhollowerRuntimeLib
         }
 
 
-        private static readonly ConcurrentDictionary<System.Reflection.MethodInfo, Delegate> ourNativeToManagedTrampolines = new ConcurrentDictionary<System.Reflection.MethodInfo, Delegate>();
+        private static readonly ConcurrentDictionary<MethodInfo, Delegate> NativeToManagedTrampolines = new ConcurrentDictionary<MethodInfo, Delegate>();
 
-        private static Delegate GetOrCreateNativeToManagedTrampoline(MethodSignature signature, Il2CppSystem.Reflection.MethodInfo nativeMethod, System.Reflection.MethodInfo managedMethod)
+        private static Delegate GetOrCreateNativeToManagedTrampoline(MethodSignature signature, Il2CppSystem.Reflection.MethodInfo nativeMethod, MethodInfo managedMethod)
         {
-            return ourNativeToManagedTrampolines.GetOrAdd(managedMethod,
+            return NativeToManagedTrampolines.GetOrAdd(managedMethod,
                 (_, tuple) => GenerateNativeToManagedTrampoline(tuple.nativeMethod, tuple.managedMethod, tuple.signature), (nativeMethod, managedMethod, signature));
         }
 
         private static Delegate GenerateNativeToManagedTrampoline(Il2CppSystem.Reflection.MethodInfo nativeMethod,
-            System.Reflection.MethodInfo managedMethod, MethodSignature signature)
+            MethodInfo managedMethod, MethodSignature signature)
         {
             var returnType = nativeMethod.ReturnType.IsValueType
                 ? managedMethod.ReturnType
@@ -97,11 +97,12 @@ namespace UnhollowerRuntimeLib
 
             var managedParameters = managedMethod.GetParameters();
             var nativeParameters = nativeMethod.GetParameters();
-            var parameterTypes = new Type[managedParameters.Length + 1];
-            parameterTypes[managedParameters.Length] = typeof(MethodInfo*);
+            var parameterTypes = new Type[managedParameters.Length + 1 + 1]; // thisptr for target, methodInfo last arg
+            parameterTypes[0] = typeof(IntPtr);
+            parameterTypes[managedParameters.Length + 1] = typeof(Il2CppMethodInfo*);
             for (var i = 0; i < managedParameters.Length; i++)
             {
-                parameterTypes[i] = nativeParameters[i].ParameterType.IsValueType
+                parameterTypes[i + 1] = nativeParameters[i].ParameterType.IsValueType
                     ? managedParameters[i].ParameterType
                     : typeof(IntPtr);
             }
@@ -111,17 +112,16 @@ namespace UnhollowerRuntimeLib
 
             var tryLabel = bodyBuilder.BeginExceptionBlock();
 
-            bodyBuilder.Emit(OpCodes.Ldarg, managedParameters.Length);
-            bodyBuilder.Emit(OpCodes.Ldc_I4, (int) Marshal.OffsetOf<MethodInfo>(nameof(MethodInfo.invoker_method)));
-            bodyBuilder.Emit(OpCodes.Add);
-            bodyBuilder.Emit(OpCodes.Ldind_I);
-            bodyBuilder.Emit(OpCodes.Call, typeof(DelegateSupport).GetMethod(nameof(GetDelegate))!);
+            bodyBuilder.Emit(OpCodes.Ldarg_0);
+            bodyBuilder.Emit(OpCodes.Call, typeof(ClassInjector).GetMethod(nameof(ClassInjector.GetMonoObjectFromIl2CppPointer))!);
+            bodyBuilder.Emit(OpCodes.Castclass, typeof(Il2CppToMonoDelegateReference));
+            bodyBuilder.Emit(OpCodes.Ldfld, typeof(Il2CppToMonoDelegateReference).GetField(nameof(Il2CppToMonoDelegateReference.ReferencedDelegate)));
 
             for (var i = 0; i < managedParameters.Length; i++)
             {
                 var parameterType = managedParameters[i].ParameterType;
                 
-                bodyBuilder.Emit(OpCodes.Ldarg, i);
+                bodyBuilder.Emit(OpCodes.Ldarg, i + 1);
                 if (parameterType == typeof(string))
                 {
                     bodyBuilder.Emit(OpCodes.Call, typeof(IL2CPP).GetMethod(nameof(IL2CPP.Il2CppStringToManaged))!);
@@ -131,7 +131,7 @@ namespace UnhollowerRuntimeLib
                     var labelNull = bodyBuilder.DefineLabel();
                     var labelDone = bodyBuilder.DefineLabel();
                     bodyBuilder.Emit(OpCodes.Brfalse, labelNull);
-                    bodyBuilder.Emit(OpCodes.Ldarg, i);
+                    bodyBuilder.Emit(OpCodes.Ldarg, i + 1);
                     bodyBuilder.Emit(OpCodes.Newobj, parameterType.GetConstructor(new[] {typeof(IntPtr)})!);
                     bodyBuilder.Emit(OpCodes.Br, labelDone);
                     bodyBuilder.MarkLabel(labelNull);
@@ -191,13 +191,16 @@ namespace UnhollowerRuntimeLib
                 if (parameterType.IsGenericParameter)
                     throw new ArgumentException($"Delegate has unsubstituted generic parameter ({parameterType}) which is not supported");
                 
-                if (parameterType.BaseType == typeof(Il2CppSystem.ValueType))
+                if (parameterType.BaseType == typeof(ValueType))
                     throw new ArgumentException($"Delegate has parameter of type {parameterType} (non-blittable struct) which is not supported");
             }
 
             var classTypePtr = Il2CppClassPointerStore<TIl2Cpp>.NativeClassPtr;
             if (classTypePtr == IntPtr.Zero)
                 throw new ArgumentException($"Type {typeof(TIl2Cpp)} has uninitialized class pointer");
+            
+            if (Il2CppClassPointerStore<Il2CppToMonoDelegateReference>.NativeClassPtr == IntPtr.Zero)
+                ClassInjector.RegisterTypeInIl2Cpp<Il2CppToMonoDelegateReference>();
 
             var il2CppDelegateType = Il2CppSystem.Type.internal_from_handle(IL2CPP.il2cpp_class_get_type(classTypePtr));
             var nativeDelegateInvokeMethod = il2CppDelegateType.GetMethod("Invoke");
@@ -231,7 +234,7 @@ namespace UnhollowerRuntimeLib
                     throw new ArgumentException($"Parameter at {i} is passed by reference, this is not supported");
             }
 
-            var signature = new MethodSignature(nativeDelegateInvokeMethod);
+            var signature = new MethodSignature(nativeDelegateInvokeMethod, true);
             var managedTrampoline =
                 GetOrCreateNativeToManagedTrampoline(signature, nativeDelegateInvokeMethod, managedInvokeMethod);
 
@@ -240,79 +243,44 @@ namespace UnhollowerRuntimeLib
 
             converted.method_ptr = Marshal.GetFunctionPointerForDelegate(managedTrampoline);
             converted.method_info = nativeDelegateInvokeMethod; // todo: is this truly a good hack?
-            ourDelegates[ourCounter] = @delegate;
-            var methodInfoSize = Marshal.SizeOf<MethodInfo>();
+            var methodInfoSize = Marshal.SizeOf<Il2CppMethodInfo>();
             var methodInfoPointer = Marshal.AllocHGlobal(methodInfoSize);
-            var methodInfo = (MethodInfo*) methodInfoPointer;
+            var methodInfo = (Il2CppMethodInfo*) methodInfoPointer;
             *methodInfo = default; // zero out everything
             converted.method = methodInfoPointer;
 
-            methodInfo->flags = 0x10;
             methodInfo->methodPointer = converted.method_ptr;
-            methodInfo->invoker_method = ourCounter; // todo: use target instead of invoker_method, use that for gc too
+            methodInfo->invoker_method = IntPtr.Zero;
             methodInfo->parameters_count = (byte) parameterInfos.Length;
-            methodInfo->slot = 65535;
-            methodInfo->extra_flags = 0x8;
+            methodInfo->slot = ushort.MaxValue;
+            methodInfo->extra_flags = MethodInfoExtraFlags.is_marshalled_from_native;
             
-            /*
-            MethodInfo* newMethod = (MethodInfo*)IL2CPP_CALLOC(1, sizeof(MethodInfo));
-            newMethod->methodPointer = nativeFunctionPointer;
-            newMethod->invoker_method = NULL;
-            newMethod->parameters_count = invoke->parameters_count;
-            newMethod->slot = kInvalidIl2CppMethodSlot;
-            newMethod->is_marshaled_from_native = true;
-             */
-            
-            ourCounter = IntPtr.Add(ourCounter, 1);
+            converted.m_target = new Il2CppToMonoDelegateReference(@delegate, methodInfoPointer);
+
             return converted.Cast<TIl2Cpp>();
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        struct MethodInfo
+        internal class MethodSignature : IEquatable<MethodSignature>
         {
-            public IntPtr methodPointer;
-            public IntPtr invoker_method;
-            public IntPtr name; // const char*
-            public IntPtr klass; // il2cppclass
-            public IntPtr return_type; // il2cpptype
-            public IntPtr parameters; // parameterinfo*
-
-            public IntPtr someRtData;
-            /*union
-            {
-                const Il2CppRGCTXData* rgctx_data; /* is_inflated is true and is_generic is false, i.e. a generic instance method #1#
-                const Il2CppMethodDefinition* methodDefinition;
-            };*/
-
-            public IntPtr someGenericData;
-            /*/* note, when is_generic == true and is_inflated == true the method represents an uninflated generic method on an inflated type. #1#
-            union
-            {
-                const Il2CppGenericMethod* genericMethod; /* is_inflated is true #1#
-                const Il2CppGenericContainer* genericContainer; /* is_inflated is false and is_generic is true #1#
-            };*/
-
-            public uint token;
-            public ushort flags;
-            public ushort iflags;
-            public ushort slot;
-            public byte parameters_count;
-            public byte extra_flags;
-            /*uint8_t is_generic : 1; /* true if method is a generic method definition #1#
-            uint8_t is_inflated : 1; /* true if declaring_type is a generic instance or if method is a generic instance#1#
-            uint8_t wrapper_type : 1; /* always zero (MONO_WRAPPER_NONE) needed for the debugger #1#
-            uint8_t is_marshaled_from_native : 1*/
-        }
-
-        private class MethodSignature : IEquatable<MethodSignature>
-        {
+            public readonly bool HasThis;
+            public readonly bool ConstructedFromNative;
             private readonly IntPtr myReturnType;
             private readonly IntPtr[] myParameterTypes;
 
-            public MethodSignature(Il2CppSystem.Reflection.MethodInfo methodInfo)
+            public MethodSignature(Il2CppSystem.Reflection.MethodInfo methodInfo, bool hasThis)
             {
+                HasThis = hasThis;
                 myReturnType = methodInfo.ReturnType.IsValueType ? methodInfo.ReturnType._impl.value : IntPtr.Zero;
                 myParameterTypes = methodInfo.GetParameters().Select(it => it.ParameterType.IsValueType ? it.ParameterType._impl.value : IntPtr.Zero).ToArray();
+                ConstructedFromNative = true;
+            }
+            
+            public MethodSignature(MethodInfo methodInfo, bool hasThis)
+            {
+                HasThis = hasThis;
+                myReturnType = methodInfo.ReturnType.IsValueType ? methodInfo.ReturnType.TypeHandle.Value : IntPtr.Zero;
+                myParameterTypes = methodInfo.GetParameters().Select(it => it.ParameterType.IsValueType ? it.ParameterType.TypeHandle.Value : IntPtr.Zero).ToArray();
+                ConstructedFromNative = false;
             }
 
             public bool Equals(MethodSignature other)
@@ -320,6 +288,7 @@ namespace UnhollowerRuntimeLib
                 if (ReferenceEquals(null, other)) return false;
                 if (ReferenceEquals(this, other)) return true;
                 if (!myReturnType.Equals(other.myReturnType)) return false;
+                if (HasThis != other.HasThis) return false;
                 if (myParameterTypes.Length != other.myParameterTypes.Length) return false;
                 for (var i = 0; i < myParameterTypes.Length; i++)
                     if (myParameterTypes[i] != other.myParameterTypes[i])
@@ -332,7 +301,7 @@ namespace UnhollowerRuntimeLib
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
+                if (obj.GetType() != GetType()) return false;
                 return Equals((MethodSignature) obj);
             }
 
@@ -340,7 +309,7 @@ namespace UnhollowerRuntimeLib
             {
                 unchecked
                 {
-                    int hashCode = myReturnType.GetHashCode();
+                    int hashCode = myReturnType.GetHashCode() ^ HasThis.GetHashCode();
                     foreach (var parameterType in myParameterTypes)
                         hashCode = hashCode * 397 + parameterType.GetHashCode();
 
@@ -356,6 +325,33 @@ namespace UnhollowerRuntimeLib
             public static bool operator !=(MethodSignature left, MethodSignature right)
             {
                 return !Equals(left, right);
+            }
+        }
+
+        private class Il2CppToMonoDelegateReference : Object
+        {
+            public Delegate ReferencedDelegate;
+            public IntPtr MethodInfo;
+            
+            public Il2CppToMonoDelegateReference(IntPtr obj0) : base(obj0)
+            {
+            }
+
+            public Il2CppToMonoDelegateReference(Delegate referencedDelegate, IntPtr methodInfo) : base(IL2CPP.il2cpp_object_new(Il2CppClassPointerStore<Il2CppToMonoDelegateReference>.NativeClassPtr))
+            {
+                var ownGcHandle = GCHandle.Alloc(this, GCHandleType.Normal);
+                ClassInjector.AssignGcHandle(Pointer, ownGcHandle);
+                
+                ReferencedDelegate = referencedDelegate;
+                MethodInfo = methodInfo;
+            }
+
+            ~Il2CppToMonoDelegateReference()
+            {
+                LogSupport.Trace("Disposing delegate");
+                Marshal.FreeHGlobal(MethodInfo);
+                MethodInfo = IntPtr.Zero;
+                ReferencedDelegate = null;
             }
         }
     }

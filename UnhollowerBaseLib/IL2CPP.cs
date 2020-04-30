@@ -43,7 +43,10 @@ namespace UnhollowerBaseLib
         {
             if(clazz == IntPtr.Zero) return IntPtr.Zero;
 
-            return il2cpp_class_get_field_from_name(clazz, fieldName);
+            var field = il2cpp_class_get_field_from_name(clazz, fieldName);
+            if (field == IntPtr.Zero)
+                LogSupport.Error($"Field {fieldName} was not found on class {Marshal.PtrToStringAnsi(il2cpp_class_get_name(clazz))}");
+            return field;
         }
 
         public static IntPtr GetIl2CppMethod(IntPtr clazz, string methodName, params string[] argTypes)

@@ -24,4 +24,8 @@
     <ItemGroup>
       <None Remove="Libs\Il2Cppmscorlib.dll" />
     </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Iced" Version="1.6.0" />
+    </ItemGroup>
 </Project>

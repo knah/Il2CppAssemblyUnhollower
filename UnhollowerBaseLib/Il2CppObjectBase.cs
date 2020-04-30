@@ -5,16 +5,26 @@ namespace UnhollowerBaseLib
 {
     public class Il2CppObjectBase
     {
-        public IntPtr Pointer => IL2CPP.il2cpp_gchandle_get_target(myGcHandle);
-    
+        public IntPtr Pointer
+        {
+            get
+            {
+                var handleTarget = IL2CPP.il2cpp_gchandle_get_target(myGcHandle);
+                if (handleTarget == null) throw new ObjectCollectedException("Object was garbage collected in IL2CPP domain");
+                return handleTarget;
+            }
+        }
+
         private readonly uint myGcHandle;
 
         public Il2CppObjectBase(IntPtr pointer)
         {
             if (pointer == IntPtr.Zero)
                 throw new NullReferenceException();
-        
-            myGcHandle = IL2CPP.il2cpp_gchandle_new(pointer, false);
+
+            myGcHandle = RuntimeSpecificsStore.ShouldUseWeakRefs(IL2CPP.il2cpp_object_get_class(pointer))
+                ? IL2CPP.il2cpp_gchandle_new_weakref(pointer, false)
+                : IL2CPP.il2cpp_gchandle_new(pointer, false);
         }
 
         public T Cast<T>() where T: Il2CppObjectBase

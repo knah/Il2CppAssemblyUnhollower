@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using AssemblyUnhollower.Contexts;
 using AssemblyUnhollower.Passes;
+using Iced.Intel;
 using UnhollowerBaseLib;
 using UnhollowerRuntimeLib;
 
@@ -203,6 +204,7 @@ namespace AssemblyUnhollower
 
             File.Copy(typeof(IL2CPP).Assembly.Location, Path.Combine(options.OutputDir, typeof(IL2CPP).Assembly.GetName().Name + ".dll"), true);
             File.Copy(typeof(DelegateSupport).Assembly.Location, Path.Combine(options.OutputDir, typeof(DelegateSupport).Assembly.GetName().Name + ".dll"), true);
+            File.Copy(typeof(Decoder).Assembly.Location, Path.Combine(options.OutputDir, typeof(Decoder).Assembly.GetName().Name + ".dll"), true);
             
             Console.WriteLine("Done!");
         }
