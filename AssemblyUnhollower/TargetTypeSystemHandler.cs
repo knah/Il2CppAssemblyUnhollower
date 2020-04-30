@@ -14,6 +14,8 @@ namespace AssemblyUnhollower
         public static TypeReference Delegate { get; private set; }
         public static TypeReference MulticastDelegate { get; private set; }
         public static TypeReference DefaultMemberAttribute { get; private set; }
+        public static TypeReference FlagsAttribute { get; private set; }
+        public static TypeReference ObsoleteAttribute { get; private set; }
 
         public static void Init(AssemblyDefinition mscorlib)
         {
@@ -27,6 +29,8 @@ namespace AssemblyUnhollower
             Delegate = mscorlib.MainModule.GetType("System.Delegate");
             MulticastDelegate = mscorlib.MainModule.GetType("System.MulticastDelegate");
             DefaultMemberAttribute = mscorlib.MainModule.GetType("System.Reflection.DefaultMemberAttribute");
+            FlagsAttribute = mscorlib.MainModule.GetType("System.FlagsAttribute");
+            ObsoleteAttribute = mscorlib.MainModule.GetType("System.ObsoleteAttribute");
         }
     }
 }

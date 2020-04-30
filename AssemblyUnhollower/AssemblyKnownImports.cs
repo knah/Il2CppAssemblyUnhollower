@@ -92,6 +92,9 @@ namespace AssemblyUnhollower
         private readonly Lazy<MethodReference> myIl2CppMethodInfoToReflection;
         private readonly Lazy<MethodReference> myIl2CppMethodInfoFromReflection;
         
+        private readonly Lazy<MethodReference> myFlagsAttributeCtor;
+        private readonly Lazy<MethodReference> myObsoleteAttributeCtor;
+        
         public MethodReference FieldGetOffset => myFieldGetOffset.Value;
         public MethodReference FieldStaticGet => myFieldStaticGet.Value;
         public MethodReference FieldStaticSet => myFieldStaticSet.Value;
@@ -114,6 +117,9 @@ namespace AssemblyUnhollower
         public MethodReference Il2CppNewObject => myIl2CppNewObject.Value;
         public MethodReference Il2CppMethodInfoToReflection => myIl2CppMethodInfoToReflection.Value;
         public MethodReference Il2CppMethodInfoFromReflection => myIl2CppMethodInfoFromReflection.Value;
+        
+        public MethodReference FlagsAttributeCtor => myFlagsAttributeCtor.Value;
+        public MethodReference ObsoleteAttributeCtor => myObsoleteAttributeCtor.Value;
         
 
         public AssemblyKnownImports(ModuleDefinition module)
@@ -167,6 +173,11 @@ namespace AssemblyUnhollower
             myIl2CppNewObject = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_object_new))));
             myIl2CppMethodInfoFromReflection = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_method_get_from_reflection))));
             myIl2CppMethodInfoToReflection = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_method_get_object))));
+            
+            myFlagsAttributeCtor = new Lazy<MethodReference>(() => new MethodReference(".ctor", Void, Module.ImportReference(TargetTypeSystemHandler.FlagsAttribute)) { HasThis = true});
+            myObsoleteAttributeCtor = new Lazy<MethodReference>(() =>
+                new MethodReference(".ctor", Void, Module.ImportReference(TargetTypeSystemHandler.ObsoleteAttribute))
+                    {HasThis = true, Parameters = {new ParameterDefinition(String)}});
         }
     }
 }

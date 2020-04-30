@@ -1,3 +1,4 @@
+using System.Linq;
 using AssemblyUnhollower.Contexts;
 using Mono.Cecil;
 
@@ -13,10 +14,12 @@ namespace AssemblyUnhollower.Passes
                 {
                     if (!typeContext.OriginalType.IsEnum) continue;
 
-                    // todo: flags attribute
-                    
                     var type = typeContext.OriginalType;
                     var newType = typeContext.NewType;
+                    
+                    if (type.CustomAttributes.Any(it => it.AttributeType.FullName == "System.FlagsAttribute"))
+                        newType.CustomAttributes.Add(new CustomAttribute(assemblyContext.Imports.FlagsAttributeCtor));
+
                     foreach (var fieldDefinition in type.Fields)
                     {
                         var fieldName = fieldDefinition.Name;
