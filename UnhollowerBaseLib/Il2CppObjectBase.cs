@@ -21,6 +21,19 @@ namespace UnhollowerBaseLib
         {
             return TryCast<T>() ?? throw new InvalidCastException($"Can't cast object of type {Marshal.PtrToStringAnsi(IL2CPP.il2cpp_class_get_name(IL2CPP.il2cpp_object_get_class(Pointer)))} to type {typeof(T)}");
         }
+
+        public T Unbox<T>() where T : unmanaged
+        {
+            var nestedTypeClassPointer = Il2CppClassPointerStore<T>.NativeClassPtr;
+            if (nestedTypeClassPointer == IntPtr.Zero)
+                throw new ArgumentException($"{typeof(T)} is not al Il2Cpp reference type");
+            
+            var ownClass = IL2CPP.il2cpp_object_get_class(Pointer);
+            if (!IL2CPP.il2cpp_class_is_assignable_from(nestedTypeClassPointer, ownClass))
+                throw new InvalidCastException($"Can't cast object of type {Marshal.PtrToStringAnsi(IL2CPP.il2cpp_class_get_name(IL2CPP.il2cpp_object_get_class(Pointer)))} to type {typeof(T)}");
+
+            return Marshal.PtrToStructure<T>(IL2CPP.il2cpp_object_unbox(Pointer));
+        } 
         
         public T TryCast<T>() where T: Il2CppObjectBase
         {
