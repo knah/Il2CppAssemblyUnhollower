@@ -44,9 +44,7 @@ namespace UnhollowerBaseLib
         {
             if(size < 0)
                 throw new ArgumentOutOfRangeException(nameof(size), "Array size must not be negative");
-            
-            // todo: strings
-            
+
             var elementTypeClassPointer = Il2CppClassPointerStore<T>.NativeClassPtr;
             if(elementTypeClassPointer == IntPtr.Zero)
                 throw new ArgumentException($"{nameof(Il2CppStructArray<T>)} requires an Il2Cpp reference type, which {typeof(T)} isn't");

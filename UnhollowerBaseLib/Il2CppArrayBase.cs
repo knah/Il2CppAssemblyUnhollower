@@ -22,18 +22,18 @@ namespace UnhollowerBaseLib
             return new IndexEnumerator(this);
         }
 
-        public void Add(T item) => ThrowImmutableLength();
+        void ICollection<T>.Add(T item) => ThrowImmutableLength();
 
         private static bool ThrowImmutableLength() => throw new NotSupportedException("Arrays have immutable length");
 
-        public void Clear() => ThrowImmutableLength();
+        void ICollection<T>.Clear() => ThrowImmutableLength();
         public bool Contains(T item) => IndexOf(item) != -1;
         public void CopyTo(T[] array, int arrayIndex)
         {
             throw new NotImplementedException();
         }
 
-        public bool Remove(T item) => ThrowImmutableLength();
+        bool ICollection<T>.Remove(T item) => ThrowImmutableLength();
 
         public int Count => Length;
         public bool IsReadOnly => false;
@@ -47,8 +47,8 @@ namespace UnhollowerBaseLib
             return -1;
         }
 
-        public void Insert(int index, T item) => ThrowImmutableLength();
-        public void RemoveAt(int index) => ThrowImmutableLength();
+        void IList<T>.Insert(int index, T item) => ThrowImmutableLength();
+        void IList<T>.RemoveAt(int index) => ThrowImmutableLength();
 
         public static implicit operator T[](Il2CppArrayBase<T> il2CppArray)
         {
