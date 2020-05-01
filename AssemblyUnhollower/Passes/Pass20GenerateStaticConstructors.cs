@@ -98,10 +98,7 @@ namespace AssemblyUnhollower.Passes
                 ctorBuilder.Emit(OpCodes.Ldsfld, typeContext.ClassPointerFieldRef);
                 ctorBuilder.Emit(OpCodes.Ldstr, field.OriginalField.Name);
                 ctorBuilder.Emit(OpCodes.Call, assemblyContext.Imports.GetFieldPointer);
-                ctorBuilder.Emit(OpCodes.Dup);
                 ctorBuilder.Emit(OpCodes.Stsfld, field.PointerField);
-                ctorBuilder.Emit(OpCodes.Call, assemblyContext.Imports.FieldGetOffset);
-                ctorBuilder.Emit(OpCodes.Stsfld, field.OffsetField);
             }
 
             foreach (var method in typeContext.Methods)

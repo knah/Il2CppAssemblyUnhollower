@@ -10,7 +10,6 @@ namespace AssemblyUnhollower.Contexts
         public readonly string UnmangledName;
 
         public readonly FieldReference PointerField;
-        public readonly FieldReference OffsetField;
 
         public FieldRewriteContext(TypeRewriteContext declaringType, FieldDefinition originalField)
         {
@@ -19,13 +18,10 @@ namespace AssemblyUnhollower.Contexts
 
             UnmangledName = UnmangleFieldName(originalField);
             var pointerField = new FieldDefinition("NativeFieldInfoPtr_" + UnmangledName, FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, declaringType.AssemblyContext.Imports.IntPtr);
-            var offsetField = new FieldDefinition("NativeFieldOffset_" + UnmangledName, FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, declaringType.AssemblyContext.Imports.IntPtr);
             
             declaringType.NewType.Fields.Add(pointerField);
-            declaringType.NewType.Fields.Add(offsetField);
             
             PointerField = new FieldReference(pointerField.Name, pointerField.FieldType, DeclaringType.SelfSubstitutedRef);
-            OffsetField = new FieldReference(offsetField.Name, offsetField.FieldType, DeclaringType.SelfSubstitutedRef);
         }
 
         private static readonly string[] MethodAccessTypeLabels = { "CompilerControlled", "Private", "FamAndAssem", "Internal", "Protected", "FamOrAssem", "Public"};
