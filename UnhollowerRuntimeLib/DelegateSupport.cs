@@ -6,6 +6,7 @@ using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Text;
 using UnhollowerBaseLib;
+using UnhollowerBaseLib.Runtime;
 using Object = Il2CppSystem.Object;
 using ValueType = Il2CppSystem.ValueType;
 
@@ -113,7 +114,7 @@ namespace UnhollowerRuntimeLib
             var tryLabel = bodyBuilder.BeginExceptionBlock();
 
             bodyBuilder.Emit(OpCodes.Ldarg_0);
-            bodyBuilder.Emit(OpCodes.Call, typeof(ClassInjector).GetMethod(nameof(ClassInjector.GetMonoObjectFromIl2CppPointer))!);
+            bodyBuilder.Emit(OpCodes.Call, typeof(ClassInjectorBase).GetMethod(nameof(ClassInjectorBase.GetMonoObjectFromIl2CppPointer))!);
             bodyBuilder.Emit(OpCodes.Castclass, typeof(Il2CppToMonoDelegateReference));
             bodyBuilder.Emit(OpCodes.Ldfld, typeof(Il2CppToMonoDelegateReference).GetField(nameof(Il2CppToMonoDelegateReference.ReferencedDelegate)));
 
@@ -348,7 +349,6 @@ namespace UnhollowerRuntimeLib
 
             ~Il2CppToMonoDelegateReference()
             {
-                LogSupport.Trace("Disposing delegate");
                 Marshal.FreeHGlobal(MethodInfo);
                 MethodInfo = IntPtr.Zero;
                 ReferencedDelegate = null;

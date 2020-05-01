@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using UnhollowerBaseLib.Runtime;
 
 namespace UnhollowerBaseLib
 {
@@ -56,6 +57,9 @@ namespace UnhollowerBaseLib
             var ownClass = IL2CPP.il2cpp_object_get_class(Pointer);
             if (!IL2CPP.il2cpp_class_is_assignable_from(nestedTypeClassPointer, ownClass))
                 return null;
+
+            if (RuntimeSpecificsStore.IsInjected(ownClass))
+                return ClassInjectorBase.GetMonoObjectFromIl2CppPointer(Pointer) as T;
 
             return (T) Activator.CreateInstance(typeof(T), Pointer);
         }

@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using UnhollowerBaseLib;
+using UnhollowerBaseLib.Runtime;
 using ValueTuple = Il2CppSystem.ValueTuple;
 using Void = Il2CppSystem.Void;
 
@@ -51,21 +52,6 @@ namespace UnhollowerRuntimeLib
             var objectKlass = (Il2CppClass*) IL2CPP.il2cpp_object_get_class(pointer);
             var targetGcHandlePointer = IntPtr.Add(pointer, (int) objectKlass->instance_size - IntPtr.Size);
             *(IntPtr*) targetGcHandlePointer = handleAsPointer;
-        }
-
-        public static object GetMonoObjectFromIl2CppPointer(IntPtr pointer)
-        {
-            var gcHandle = GetGcHandlePtrFromIl2CppObject(pointer);
-            return GCHandle.FromIntPtr(gcHandle).Target;
-        }
-
-        private static IntPtr GetGcHandlePtrFromIl2CppObject(IntPtr pointer)
-        {
-            if (pointer == IntPtr.Zero) throw new NullReferenceException();
-            var objectKlass = (Il2CppClass*) IL2CPP.il2cpp_object_get_class(pointer);
-            var targetGcHandlePointer = IntPtr.Add(pointer, (int) objectKlass->instance_size - IntPtr.Size);
-            var gcHandle = *(IntPtr*) targetGcHandlePointer;
-            return gcHandle;
         }
 
         public static void RegisterTypeInIl2Cpp<T>() where T : class
@@ -155,7 +141,7 @@ namespace UnhollowerRuntimeLib
             FakeTokenClasses[newCounter] = (IntPtr) classPointer;
             classPointer->byval_arg.data = classPointer->this_arg.data = (IntPtr) newCounter;
 
-            RuntimeSpecificsStore.SetUseWeakRefs((IntPtr) classPointer, true);
+            RuntimeSpecificsStore.SetClassInfo((IntPtr) classPointer, true, true);
             Il2CppClassPointerStore<T>.NativeClassPtr = (IntPtr) classPointer;
             
             LogSupport.Info($"Registered mono type {typeof(T)} in il2cpp domain");
@@ -280,7 +266,7 @@ namespace UnhollowerRuntimeLib
 
         public static void Finalize(IntPtr ptr)
         {
-            var gcHandle = GetGcHandlePtrFromIl2CppObject(ptr);
+            var gcHandle = ClassInjectorBase.GetGcHandlePtrFromIl2CppObject(ptr);
             GCHandle.FromIntPtr(gcHandle).Free();
         }
 
@@ -357,7 +343,7 @@ namespace UnhollowerRuntimeLib
             body.BeginExceptionBlock();
             
             body.Emit(OpCodes.Ldarg_0);
-            body.Emit(OpCodes.Call, typeof(ClassInjector).GetMethod(nameof(GetMonoObjectFromIl2CppPointer))!);
+            body.Emit(OpCodes.Call, typeof(ClassInjectorBase).GetMethod(nameof(ClassInjectorBase.GetMonoObjectFromIl2CppPointer))!);
             body.Emit(OpCodes.Castclass, monoMethod.DeclaringType);
             
             for (var i = 1; i < managedParameters.Length; i++)

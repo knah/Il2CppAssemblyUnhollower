@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
 
-namespace UnhollowerRuntimeLib
+namespace UnhollowerBaseLib.Runtime
 {
     [Flags]
     public enum Il2CppMethodImplFlags : ushort
