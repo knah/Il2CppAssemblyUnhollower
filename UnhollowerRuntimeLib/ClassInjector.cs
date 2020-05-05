@@ -374,6 +374,7 @@ namespace UnhollowerRuntimeLib
             {
                 body.Emit(OpCodes.Call, typeof(IL2CPP).GetMethod(nameof(IL2CPP.Il2CppObjectBaseToPtr))!);
             }
+            body.Emit(OpCodes.Ret);
             
             var exceptionLocal = body.DeclareLocal(typeof(Exception));
             body.BeginCatchBlock(typeof(Exception));
@@ -386,6 +387,11 @@ namespace UnhollowerRuntimeLib
             
             body.EndExceptionBlock();
             
+            if (monoMethod.ReturnType != typeof(void))
+            {
+                body.Emit(OpCodes.Ldc_I4_0);
+                body.Emit(OpCodes.Conv_I);
+            }
             body.Emit(OpCodes.Ret);
 
             var @delegate = method.CreateDelegate(delegateType);

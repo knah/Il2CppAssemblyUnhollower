@@ -11,7 +11,7 @@ namespace UnhollowerBaseLib
             get
             {
                 var handleTarget = IL2CPP.il2cpp_gchandle_get_target(myGcHandle);
-                if (handleTarget == null) throw new ObjectCollectedException("Object was garbage collected in IL2CPP domain");
+                if (handleTarget == IntPtr.Zero) throw new ObjectCollectedException("Object was garbage collected in IL2CPP domain");
                 return handleTarget;
             }
         }
