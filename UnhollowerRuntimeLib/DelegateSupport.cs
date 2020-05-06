@@ -338,10 +338,9 @@ namespace UnhollowerRuntimeLib
             {
             }
 
-            public Il2CppToMonoDelegateReference(Delegate referencedDelegate, IntPtr methodInfo) : base(IL2CPP.il2cpp_object_new(Il2CppClassPointerStore<Il2CppToMonoDelegateReference>.NativeClassPtr))
+            public Il2CppToMonoDelegateReference(Delegate referencedDelegate, IntPtr methodInfo) : base(ClassInjector.DerivedConstructorPointer<Il2CppToMonoDelegateReference>())
             {
-                var ownGcHandle = GCHandle.Alloc(this, GCHandleType.Normal);
-                ClassInjector.AssignGcHandle(Pointer, ownGcHandle);
+                ClassInjector.DerivedConstructorBody(this);
                 
                 ReferencedDelegate = referencedDelegate;
                 MethodInfo = methodInfo;

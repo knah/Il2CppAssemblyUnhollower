@@ -44,6 +44,17 @@ namespace UnhollowerRuntimeLib
             var handle = GCHandle.Alloc(obj, GCHandleType.Normal);
             AssignGcHandle(pointer, handle);
         }
+
+        public static IntPtr DerivedConstructorPointer<T>()
+        {
+            return IL2CPP.il2cpp_object_new(Il2CppClassPointerStore<T>.NativeClassPtr); // todo: consider calling base constructor
+        }
+        
+        public static void DerivedConstructorBody(Il2CppObjectBase objectBase)
+        {
+            var ownGcHandle = GCHandle.Alloc(objectBase, GCHandleType.Normal);
+            AssignGcHandle(objectBase.Pointer, ownGcHandle);
+        }
         
         public static void AssignGcHandle(IntPtr pointer, GCHandle gcHandle)
         {
