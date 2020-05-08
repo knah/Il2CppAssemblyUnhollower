@@ -71,10 +71,10 @@ namespace AssemblyUnhollower
             Console.WriteLine($"\t{ParamInputDir}<directory path> - Required. Directory with Il2CppDumper's dummy assemblies");
             Console.WriteLine($"\t{ParamOutputDir}<directory path> - Required. Directory to put results into");
             Console.WriteLine($"\t{ParamMscorlibPath}<file path> - Required. mscorlib.dll of target runtime system (typically loader's)");
-            Console.WriteLine($"\t{ParamUnityDir}<directory path> - Optional. Directory with original Unity assemblies for unstripping. Not yet supported");
+            Console.WriteLine($"\t{ParamUnityDir}<directory path> - Optional. Directory with original Unity assemblies for unstripping");
             Console.WriteLine($"\t{ParamUniqChars}<number> - Optional. How many characters per unique token to use during deobfuscation");
             Console.WriteLine($"\t{ParamUniqMax}<number> - Optional. How many maximum unique tokens per type are allowed during deobfuscation");
-            Console.WriteLine($"\t{ParamAnalyze} - Optional. Analyze deobfuscation performance with different parameter values");
+            Console.WriteLine($"\t{ParamAnalyze} - Optional. Analyze deobfuscation performance with different parameter values. Will not generate assemblies.");
             Console.WriteLine($"\t{ParamBlacklistAssembly}<assembly name> - Optional. Don't write specified assembly to output. Can be used multiple times");
             Console.WriteLine($"\t{ParamVerbose} - Optional. Produce more console output");
             Console.WriteLine($"\t{ParamHelp}, {ParamHelpShort}, {ParamHelpShortSlash} - Optional. Show this help");
