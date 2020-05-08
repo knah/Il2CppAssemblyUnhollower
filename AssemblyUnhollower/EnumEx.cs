@@ -8,5 +8,10 @@ namespace AssemblyUnhollower
         {
             return fieldAttributes & ~FieldAttributes.FieldAccessMask | FieldAttributes.Public;
         }
+
+        public static GenericParameterAttributes StripValueTypeConstraint(this GenericParameterAttributes parameterAttributes)
+        {
+            return parameterAttributes & ~GenericParameterAttributes.NotNullableValueTypeConstraint;
+        }
     }
 }

@@ -15,7 +15,7 @@ namespace AssemblyUnhollower.Passes
                     {
                         var newParameter = new GenericParameter(originalParameter.Name, typeContext.NewType);
                         typeContext.NewType.GenericParameters.Add(newParameter);
-                        newParameter.Attributes = originalParameter.Attributes;
+                        newParameter.Attributes = originalParameter.Attributes.StripValueTypeConstraint();
                     }
 
                     if (typeContext.OriginalType.IsEnum)

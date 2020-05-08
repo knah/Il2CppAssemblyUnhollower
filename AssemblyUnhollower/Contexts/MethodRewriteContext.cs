@@ -33,6 +33,7 @@ namespace AssemblyUnhollower.Contexts
                 foreach (var oldParameter in genericParams)
                 {
                     var genericParameter = new GenericParameter(oldParameter.Name, newMethod);
+                    genericParameter.Attributes = oldParameter.Attributes.StripValueTypeConstraint();
                     newMethod.GenericParameters.Add(genericParameter);
                 }
             }
@@ -72,7 +73,16 @@ namespace AssemblyUnhollower.Contexts
                     var genericParameter = new GenericParameter(oldParameter.Name, genericMethodInfoStoreType);
                     genericMethodInfoStoreType.GenericParameters.Add(genericParameter);
                     selfSubstRef.GenericArguments.Add(genericParameter);
-                    selfSubstMethodRef.GenericArguments.Add(NewMethod.GenericParameters[index]);
+                    var newParameter = NewMethod.GenericParameters[index];
+                    selfSubstMethodRef.GenericArguments.Add(newParameter);
+                    
+                    foreach (var oldConstraint in oldParameter.Constraints)
+                    {
+                        if (oldConstraint.ConstraintType.FullName == "System.ValueType") continue;
+                        
+                        newParameter.Constraints.Add(new GenericParameterConstraint(
+                            DeclaringType.AssemblyContext.RewriteTypeRef(oldConstraint.ConstraintType)));
+                    }
                 }
 
                 var pointerField = new FieldDefinition("Pointer", FieldAttributes.Assembly | FieldAttributes.Static, DeclaringType.AssemblyContext.Imports.IntPtr);
