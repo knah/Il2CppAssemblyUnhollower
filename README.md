@@ -60,3 +60,10 @@ Limitations:
  * Unstripping engine code - restore more Unity methods using managed assemblies as reference
  * Proper interface support - IL2CPP interfaces will be generated as interfaces and properly implemented by IL2CPP types
  * Improve class injection to support virtual methods and interfaces
+
+## Used libraries
+Bundled into output files:
+ * [iced](https://github.com/0xd4d/iced) by 0xd4d, an x86 disassembler used for xref scanning and possibly more in the future
+
+Used by generator itself:
+ * [Mono.Cecil](https://github.com/jbevain/cecil) by jbevain, the main tool to produce assemblies
