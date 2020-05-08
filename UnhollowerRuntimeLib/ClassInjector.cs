@@ -207,7 +207,7 @@ namespace UnhollowerRuntimeLib
             converted->invoker_method = Marshal.GetFunctionPointerForDelegate(new InvokerDelegate(StaticVoidIntPtrInvoker));
             converted->methodPointer = Marshal.GetFunctionPointerForDelegate(voidCtor);
             converted->slot = ushort.MaxValue;
-            converted->return_type = (Il2CppType*) IL2CPP.il2cpp_class_get_type(Il2CppClassPointerStore<Void>.NativeClassPtr);
+            converted->return_type = (Il2CppTypeStruct*) IL2CPP.il2cpp_class_get_type(Il2CppClassPointerStore<Void>.NativeClassPtr);
 
             converted->flags = Il2CppMethodFlags.METHOD_ATTRIBUTE_PUBLIC |
                                Il2CppMethodFlags.METHOD_ATTRIBUTE_HIDE_BY_SIG | Il2CppMethodFlags.METHOD_ATTRIBUTE_SPECIAL_NAME | Il2CppMethodFlags.METHOD_ATTRIBUTE_RT_SPECIAL_NAME;
@@ -234,14 +234,14 @@ namespace UnhollowerRuntimeLib
                     paramsArray[i].name = Marshal.StringToHGlobalAnsi(parameterInfo.Name);
                     paramsArray[i].position = i;
                     paramsArray[i].token = 0;
-                    paramsArray[i].parameter_type = (Il2CppType*) IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(parameterInfo.ParameterType));
+                    paramsArray[i].parameter_type = (Il2CppTypeStruct*) IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(parameterInfo.ParameterType));
                 }
             }
 
             converted->invoker_method = Marshal.GetFunctionPointerForDelegate(GetOrCreateInvoker(monoMethod));
             converted->methodPointer = Marshal.GetFunctionPointerForDelegate(GetOrCreateTrampoline(monoMethod));
             converted->slot = ushort.MaxValue;
-            converted->return_type = (Il2CppType*) IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(monoMethod.ReturnType));
+            converted->return_type = (Il2CppTypeStruct*) IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(monoMethod.ReturnType));
 
             converted->flags = Il2CppMethodFlags.METHOD_ATTRIBUTE_PUBLIC |
                                Il2CppMethodFlags.METHOD_ATTRIBUTE_HIDE_BY_SIG;
@@ -270,7 +270,7 @@ namespace UnhollowerRuntimeLib
         private delegate IntPtr InvokerDelegate(IntPtr methodPointer, Il2CppMethodInfo* methodInfo, IntPtr obj, IntPtr* args);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate Il2CppClass* TypeToClassDelegate(Il2CppType* type);
+        private delegate Il2CppClass* TypeToClassDelegate(Il2CppTypeStruct* type);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void VoidCtorDelegate(IntPtr objectPointer);
@@ -457,7 +457,7 @@ namespace UnhollowerRuntimeLib
         private static TypeToClassDelegate ourOriginalTypeToClassMethod;
         private static readonly VoidCtorDelegate FinalizeDelegate = Finalize;
 
-        private static Il2CppClass* ClassFromTypePatch(Il2CppType* type)
+        private static Il2CppClass* ClassFromTypePatch(Il2CppTypeStruct* type)
         {
             if ((long) type->data < 0 && (type->type == Il2CppTypeEnum.IL2CPP_TYPE_CLASS || type->type == Il2CppTypeEnum.IL2CPP_TYPE_VALUETYPE))
             {

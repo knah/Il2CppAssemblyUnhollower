@@ -28,7 +28,7 @@ namespace AssemblyUnhollower.Passes
                         ConstructorArguments =
                         {
                             new CustomAttributeArgument(assemblyContext.Imports.String,
-                                "Use Il2CppTypeOf<T>.Type instead. This will be removed in a future version of unhollower.")
+                                "Use Il2CppType.Of<T>() instead. This will be removed in a future version of unhollower.")
                         }
                     });
                     

@@ -22,7 +22,7 @@ This includes generic types and methods, arrays, and new object creation. Some t
 
 ## Generated assemblies caveats
  * IL2CPP types must be cast using `.Cast<T>` or `.TryCast<T>` methods instead of C-style casts or `as`.
- * When IL2CPP code requires a `System.Type`, use `Il2CppTypeOf<T>.Type` instead of `typeof(T)`
+ * When IL2CPP code requires a `System.Type`, use `Il2CppType.Of<T>()` instead of `typeof(T)`
  * For IL2CPP delegate types, use the implicit conversion from `System.Action` or `System.Func`, like this: `UnityAction a = new Action(() => {})` or `var x = (UnityAction) new Action(() => {})`
  * IL2CPP assemblies are stripped, so some methods or even classes could be missing compared to pre-IL2CPP assemblies. This is mostly applicable to Unity assemblies.
  * Using generics with value types may lead to exceptions or crashes because of missing method bodies. If a specific value-typed generic signature was not used in original game code, it can't be used externally either.

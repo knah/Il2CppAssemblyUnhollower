@@ -3,7 +3,7 @@ using UnhollowerBaseLib;
 
 namespace UnhollowerRuntimeLib
 {
-    public static class Il2CppTypeOf
+    public static class Il2CppType
     {
         public static Il2CppSystem.Type TypeFromPointer(IntPtr classPointer, string typeName = "<unknown type>")
         {
@@ -12,17 +12,11 @@ namespace UnhollowerRuntimeLib
             if (il2CppType == IntPtr.Zero) throw new ArgumentException($"{typeName} does not have a corresponding IL2CPP type pointer");
             return Il2CppSystem.Type.internal_from_handle(il2CppType);
         }
-    }
-    
-    public static class Il2CppTypeOf<T>
-    {
-        public static Il2CppSystem.Type Type
+        
+        public static Il2CppSystem.Type Of<T>()
         {
-            get
-            {
-                var classPointer = Il2CppClassPointerStore<T>.NativeClassPtr;
-                return Il2CppTypeOf.TypeFromPointer(classPointer);
-            }
+            var classPointer = Il2CppClassPointerStore<T>.NativeClassPtr;
+            return TypeFromPointer(classPointer, typeof(T).Name);
         }
     }
 }

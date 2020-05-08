@@ -159,7 +159,7 @@ namespace UnhollowerBaseLib.Runtime
         public IntPtr invoker_method;
         public IntPtr name; // const char*
         public Il2CppClass* klass;
-        public Il2CppType* return_type;
+        public Il2CppTypeStruct* return_type;
         public Il2CppParameterInfo* parameters;
 
         public IntPtr someRtData;
@@ -208,7 +208,7 @@ namespace UnhollowerBaseLib.Runtime
     public unsafe struct FieldInfo
     {
         public IntPtr name; // const char*
-        public Il2CppType* type; // const
+        public Il2CppTypeStruct* type; // const
         public Il2CppClass* parent; // non-const?
         public int offset; // If offset is -1, then it's thread static
         public uint token;
@@ -229,7 +229,7 @@ namespace UnhollowerBaseLib.Runtime
     public unsafe struct EventInfo
     {
         public IntPtr name; // const char*
-        public Il2CppType* eventType; // const
+        public Il2CppTypeStruct* eventType; // const
         public Il2CppClass* parent; // non const
         public Il2CppMethodInfo* add; // const
         public Il2CppMethodInfo* remove; // const
@@ -243,11 +243,11 @@ namespace UnhollowerBaseLib.Runtime
         public IntPtr name; // const char*
         public int position;
         public uint token;
-        public Il2CppType* parameter_type; // const
+        public Il2CppTypeStruct* parameter_type; // const
     }
     
     [StructLayout(LayoutKind.Sequential)]
-    public struct Il2CppType
+    public struct Il2CppTypeStruct
     {
         /*union
         {
@@ -289,8 +289,8 @@ namespace UnhollowerBaseLib.Runtime
         public IntPtr gc_desc;
         public IntPtr name; // const char*
         public IntPtr namespaze; // const char*
-        public Il2CppType byval_arg; // not const, no ptr
-        public Il2CppType this_arg; // not const, no ptr
+        public Il2CppTypeStruct byval_arg; // not const, no ptr
+        public Il2CppTypeStruct this_arg; // not const, no ptr
         public Il2CppClass* element_class; // not const
         public Il2CppClass* castClass; // not const
         public Il2CppClass* declaringType; // not const
