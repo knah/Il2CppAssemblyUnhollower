@@ -20,6 +20,11 @@ namespace AssemblyUnhollower.Passes
             var oldType = typeContext.OriginalType;
             var newType = typeContext.NewType;
 
+            if (oldType.IsEnum)
+            {
+                return;
+            }
+
             var staticCtorMethod = new MethodDefinition(".cctor",
                 MethodAttributes.Static | MethodAttributes.Private | MethodAttributes.SpecialName |
                 MethodAttributes.HideBySig | MethodAttributes.RTSpecialName, assemblyContext.Imports.Void);

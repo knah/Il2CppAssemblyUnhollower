@@ -51,7 +51,10 @@ namespace AssemblyUnhollower.Passes
         {
             typeAttributes |= TypeAttributes.BeforeFieldInit;
             typeAttributes &= ~(TypeAttributes.Abstract | TypeAttributes.Interface);
-            
+
+            typeAttributes &= ~(TypeAttributes.LayoutMask);
+            typeAttributes |= TypeAttributes.AutoLayout;
+
             var visibility = typeAttributes & TypeAttributes.VisibilityMask;
             if (visibility == 0 || visibility == TypeAttributes.Public)
                 return typeAttributes | TypeAttributes.Public;
