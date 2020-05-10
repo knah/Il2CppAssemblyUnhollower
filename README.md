@@ -12,7 +12,6 @@ This includes generic types and methods, arrays, and new object creation. Some t
        
  Resulting assemblies may be used with your favorite loader that offers a Mono domain in the IL2CPP game process, such as [MelonLoader](https://github.com/HerpDerpinstine/MelonLoader).    
  This appears to be working reasonably well for Unity 2018.4.x games, but more extensive testing is required.  
- Generated assemblies appear to be invalid according to .NET Core/.NET Framework, but run fine on Mono.
 
 ## Known Issues
  * Non-blittable structs can't be used in delegates
