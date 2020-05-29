@@ -19,4 +19,11 @@ namespace UnhollowerRuntimeLib
             return TypeFromPointer(classPointer, typeof(T).Name);
         }
     }
+
+    [Obsolete("Use Il2CppType.Of<T>()", true)]
+    public static class Il2CppTypeOf<T>
+    {
+        [Obsolete("Use Il2CppType.Of<T>()", true)]
+        public static Il2CppSystem.Type Type => Il2CppType.Of<T>();
+    }
 }
