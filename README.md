@@ -14,9 +14,14 @@ This includes generic types and methods, arrays, and new object creation. Some t
  This appears to be working reasonably well for Unity 2018.4.x games, but more extensive testing is required.  
  Generated assemblies appear to be invalid according to .NET Core/.NET Framework, but run fine on Mono.
 
+## Required external setup
+Before certain features can be used (namely class injection and delegate conversion), some external setup is required.  
+ * Set `ClassInjector.DoHook` to an Action with same semantics as `DetourAttach` (signature `void**, void*`, first is a pointer to a variable containing pointer to hooked code start, second is a pointer to patch code start, a pointer to call-original code start is written to the first parameter)
+ * Call `UnityVersionHandler.Initialize` with appropriate Unity version (default is 2018.4.20)
+
 ## Known Issues
  * Non-blittable structs can't be used in delegates
- * Types implementing interfaces, particularly IEnumerable, may be arbitrarily janky with interface methods. Additionally, using them in foreach may result in implicit casts on managed side (instead of `Cast<T>`, see below), leading to exceptions. Use `for` instead of `foreach` when possible as a workaround, or cast them to the specific interface you want to use.
+ * Types implementing interfaces, particularly IEnumerable, may be arbitrarily janky with interface methods. Additionally, using them in foreach may result in implicit casts on managed side (instead of `Cast<T>`, see below), leading to exceptions. Use `var` in `foreach` or use `for` instead of `foreach` when possible as a workaround, or cast them to the specific interface you want to use.
  * in/out/ref parameters on generic parameter types (like `out T` in `Dictionary.TryGetValue`) are currently broken
  * Unity unstripping is currently limited to enums and InternalCall methods
 
