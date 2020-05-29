@@ -393,6 +393,7 @@ namespace AssemblyUnhollower
                 new MethodReference(".ctor", imports.Void, imports.Il2CppObjectBase)
                     {Parameters = {new ParameterDefinition(imports.IntPtr)}, HasThis = true});
 
+            if (extraDerefForNonValueTypes) body.Emit(OpCodes.Ldind_I);
             body.Emit(OpCodes.Dup);
             body.Emit(OpCodes.Brtrue_S, createRealObject);
             body.Emit(OpCodes.Pop);
@@ -404,6 +405,7 @@ namespace AssemblyUnhollower
             body.Emit(OpCodes.Br, finalNop);
             
             body.Append(stringNop);
+            if (extraDerefForNonValueTypes) body.Emit(OpCodes.Ldind_I);
             body.Emit(OpCodes.Call, imports.StringFromNative);
             body.Emit(OpCodes.Isinst, newReturnType); // satisfy the verifier
             body.Emit(OpCodes.Br_S, finalNop);
