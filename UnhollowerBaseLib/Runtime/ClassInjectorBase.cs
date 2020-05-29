@@ -15,7 +15,7 @@ namespace UnhollowerBaseLib.Runtime
         {
             if (pointer == IntPtr.Zero) throw new NullReferenceException();
             var objectKlass = (Il2CppClass*) IL2CPP.il2cpp_object_get_class(pointer);
-            var targetGcHandlePointer = IntPtr.Add(pointer, (int) objectKlass->instance_size - IntPtr.Size);
+            var targetGcHandlePointer = IntPtr.Add(pointer, (int) UnityVersionHandler.Wrap(objectKlass).Part2->instance_size - IntPtr.Size);
             var gcHandle = *(IntPtr*) targetGcHandlePointer;
             return gcHandle;
         }

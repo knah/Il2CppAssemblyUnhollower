@@ -61,7 +61,7 @@ namespace UnhollowerRuntimeLib
             var handleAsPointer = GCHandle.ToIntPtr(gcHandle);
             if (pointer == IntPtr.Zero) throw new NullReferenceException(nameof(pointer));
             var objectKlass = (Il2CppClass*) IL2CPP.il2cpp_object_get_class(pointer);
-            var targetGcHandlePointer = IntPtr.Add(pointer, (int) objectKlass->instance_size - IntPtr.Size);
+            var targetGcHandlePointer = IntPtr.Add(pointer, (int) UnityVersionHandler.Wrap(objectKlass).Part2->instance_size - IntPtr.Size);
             *(IntPtr*) targetGcHandlePointer = handleAsPointer;
         }
 
@@ -77,20 +77,20 @@ namespace UnhollowerRuntimeLib
                 throw new ArgumentException($"Type {type} is already registered in il2cpp");
 
             var baseType = type.BaseType;
-            var baseClassPointer = (Il2CppClass*) ReadClassPointerForType(baseType);
+            var baseClassPointer = UnityVersionHandler.Wrap((Il2CppClass*) ReadClassPointerForType(baseType));
             if (baseClassPointer == null)
                 throw new ArgumentException($"Base class {baseType} of class {type} is not registered in il2cpp");
             
-            if ((baseClassPointer->bitfield_1 & ClassBitfield1.valuetype) != 0 || (baseClassPointer->bitfield_1 & ClassBitfield1.enumtype) != 0)
+            if ((baseClassPointer.Part2->bitfield_1 & ClassBitfield1.valuetype) != 0 || (baseClassPointer.Part2->bitfield_1 & ClassBitfield1.enumtype) != 0)
                 throw new ArgumentException($"Base class {baseType} is value type and can't be inherited from");
             
-            if ((baseClassPointer->bitfield_1 & ClassBitfield1.is_generic) != 0)
+            if ((baseClassPointer.Part2->bitfield_1 & ClassBitfield1.is_generic) != 0)
                 throw new ArgumentException($"Base class {baseType} is generic and can't be inherited from");
             
-            if ((baseClassPointer->flags & Il2CppClassAttributes.TYPE_ATTRIBUTE_SEALED) != 0)
+            if ((baseClassPointer.Part2->flags & Il2CppClassAttributes.TYPE_ATTRIBUTE_SEALED) != 0)
                 throw new ArgumentException($"Base class {baseType} is sealed and can't be inherited from");
             
-            if ((baseClassPointer->flags & Il2CppClassAttributes.TYPE_ATTRIBUTE_INTERFACE) != 0)
+            if ((baseClassPointer.Part2->flags & Il2CppClassAttributes.TYPE_ATTRIBUTE_INTERFACE) != 0)
                 throw new ArgumentException($"Base class {baseType} is an interface and can't be inherited from");
             
             lock (InjectedTypes)
@@ -100,32 +100,30 @@ namespace UnhollowerRuntimeLib
             if (ourOriginalTypeToClassMethod == null)
                 HookClassFromType();
 
-            var allocSize = Marshal.SizeOf<Il2CppClass>() + baseClassPointer->vtable_count * IntPtr.Size * 2;
-            var classPointer = (Il2CppClass*) Marshal.AllocHGlobal(allocSize);
-            *classPointer = default;
+            var classPointer = UnityVersionHandler.NewClass(baseClassPointer.Part2->vtable_count);
 
-            classPointer->image = FakeImage;
-            classPointer->parent = baseClassPointer;
-            classPointer->element_class = classPointer->klass = classPointer->castClass = classPointer;
-            classPointer->native_size = -1;
-            classPointer->actualSize = classPointer->instance_size = baseClassPointer->instance_size + (uint) IntPtr.Size;
-            classPointer->bitfield_1 = ClassBitfield1.initialized | ClassBitfield1.initialized_and_no_error |
-                                       ClassBitfield1.size_inited;
-            classPointer->bitfield_2 = ClassBitfield2.has_finalize | ClassBitfield2.is_vtable_initialized;
-            classPointer->name = Marshal.StringToHGlobalAnsi(type.Name);
-            classPointer->namespaze = Marshal.StringToHGlobalAnsi(type.Namespace);
+            classPointer.Part1->image = FakeImage;
+            classPointer.Part1->parent = baseClassPointer.ClassPointer;
+            classPointer.Part1->element_class = classPointer.Part1->klass = classPointer.Part1->castClass = classPointer.ClassPointer;
+            classPointer.Part2->native_size = -1;
+            classPointer.Part2->actualSize = classPointer.Part2->instance_size = baseClassPointer.Part2->instance_size + (uint) IntPtr.Size;
+            classPointer.Part2->bitfield_1 = ClassBitfield1.initialized | ClassBitfield1.initialized_and_no_error |
+                                             ClassBitfield1.size_inited;
+            classPointer.Part2->bitfield_2 = ClassBitfield2.has_finalize | ClassBitfield2.is_vtable_initialized;
+            classPointer.Part1->name = Marshal.StringToHGlobalAnsi(type.Name);
+            classPointer.Part1->namespaze = Marshal.StringToHGlobalAnsi(type.Namespace);
             
-            classPointer->this_arg.type = classPointer->byval_arg.type = Il2CppTypeEnum.IL2CPP_TYPE_CLASS;
-            classPointer->this_arg.mods_byref_pin = 64;
+            classPointer.Part1->this_arg.type = classPointer.Part1->byval_arg.type = Il2CppTypeEnum.IL2CPP_TYPE_CLASS;
+            classPointer.Part1->this_arg.mods_byref_pin = 64;
 
-            classPointer->flags = baseClassPointer->flags; // todo: adjust flags?
+            classPointer.Part2->flags = baseClassPointer.Part2->flags; // todo: adjust flags?
 
             var eligibleMethods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly).Where(IsMethodEligible).ToArray();
             var methodCount = 2 + eligibleMethods.Length; // 1 is the finalizer, 1 is empty ctor
 
-            classPointer->method_count = (ushort) methodCount;
+            classPointer.Part2->method_count = (ushort) methodCount;
             var methodPointerArray = (Il2CppMethodInfo**) Marshal.AllocHGlobal(methodCount * IntPtr.Size);
-            classPointer->methods = methodPointerArray;
+            classPointer.Part1->methods = methodPointerArray;
 
             methodPointerArray[0] = ConvertStaticMethod(FinalizeDelegate, "Finalize", classPointer);
             methodPointerArray[1] = ConvertStaticMethod(CreateEmptyCtor(type), ".ctor", classPointer);
@@ -135,10 +133,10 @@ namespace UnhollowerRuntimeLib
                 methodPointerArray[i + 2] = ConvertMethodInfo(methodInfo, classPointer);
             }
 
-            var vTablePointer = (VirtualInvokeData*) IntPtr.Add((IntPtr) classPointer, Marshal.SizeOf<Il2CppClass>());
-            var baseVTablePointer = (VirtualInvokeData*) IntPtr.Add((IntPtr) baseClassPointer, Marshal.SizeOf<Il2CppClass>());
-            classPointer->vtable_count = baseClassPointer->vtable_count;
-            for (var i = 0; i < classPointer->vtable_count; i++)
+            var vTablePointer = (VirtualInvokeData*) classPointer.VTable;
+            var baseVTablePointer = (VirtualInvokeData*) baseClassPointer.VTable;
+            classPointer.Part2->vtable_count = baseClassPointer.Part2->vtable_count;
+            for (var i = 0; i < classPointer.Part2->vtable_count; i++)
             {
                 vTablePointer[i] = baseVTablePointer[i];
                 if (Marshal.PtrToStringAnsi(vTablePointer[i].method->name) == "Finalize") // slot number is not static
@@ -149,11 +147,11 @@ namespace UnhollowerRuntimeLib
             }
 
             var newCounter = Interlocked.Decrement(ref ourClassOverrideCounter);
-            FakeTokenClasses[newCounter] = (IntPtr) classPointer;
-            classPointer->byval_arg.data = classPointer->this_arg.data = (IntPtr) newCounter;
+            FakeTokenClasses[newCounter] = classPointer.Pointer;
+            classPointer.Part1->byval_arg.data = classPointer.Part1->this_arg.data = (IntPtr) newCounter;
 
-            RuntimeSpecificsStore.SetClassInfo((IntPtr) classPointer, true, true);
-            Il2CppClassPointerStore<T>.NativeClassPtr = (IntPtr) classPointer;
+            RuntimeSpecificsStore.SetClassInfo(classPointer.Pointer, true, true);
+            Il2CppClassPointerStore<T>.NativeClassPtr = classPointer.Pointer;
             
             LogSupport.Info($"Registered mono type {typeof(T)} in il2cpp domain");
         }
@@ -197,12 +195,12 @@ namespace UnhollowerRuntimeLib
             return true;
         }
         
-        private static Il2CppMethodInfo* ConvertStaticMethod(VoidCtorDelegate voidCtor, string methodName, Il2CppClass* declaringClass)
+        private static Il2CppMethodInfo* ConvertStaticMethod(VoidCtorDelegate voidCtor, string methodName, INativeClassStruct declaringClass)
         {
             var converted = (Il2CppMethodInfo*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfo>());
             *converted = default;
             converted->name = Marshal.StringToHGlobalAnsi(methodName);
-            converted->klass = declaringClass;
+            converted->klass = declaringClass.ClassPointer;
 
             converted->invoker_method = Marshal.GetFunctionPointerForDelegate(new InvokerDelegate(StaticVoidIntPtrInvoker));
             converted->methodPointer = Marshal.GetFunctionPointerForDelegate(voidCtor);
@@ -215,12 +213,12 @@ namespace UnhollowerRuntimeLib
             return converted;
         }
 
-        private static Il2CppMethodInfo* ConvertMethodInfo(MethodInfo monoMethod, Il2CppClass* declaringClass)
+        private static Il2CppMethodInfo* ConvertMethodInfo(MethodInfo monoMethod, INativeClassStruct declaringClass)
         {
             var converted = (Il2CppMethodInfo*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfo>());
             *converted = default;
             converted->name = Marshal.StringToHGlobalAnsi(monoMethod.Name);
-            converted->klass = declaringClass;
+            converted->klass = declaringClass.ClassPointer;
 
             var parameters = monoMethod.GetParameters();
             if (parameters.Length > 0)
