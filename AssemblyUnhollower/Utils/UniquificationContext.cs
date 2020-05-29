@@ -28,6 +28,12 @@ namespace AssemblyUnhollower.Utils
             var currentCount = myUniquifiersCount[stringPrefix] = myUniquifiersCount.GetOrCreate(stringPrefix, _ => 0) + 1;
             myPrefixes.Add((stringPrefix, myUniquifiersCount.Count + currentCount * 2 + myPrefixes.Count / 100f));
         }
+        
+        public void Push(List<string> strings, bool noSubstring = false)
+        {
+            foreach (var str in strings) 
+                Push(str, noSubstring);
+        }
 
         public string GetTop()
         {

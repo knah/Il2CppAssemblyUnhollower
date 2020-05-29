@@ -14,7 +14,7 @@ namespace AssemblyUnhollower.Passes
         {
             foreach (var assemblyContext in context.Assemblies)
             foreach (var originalType in assemblyContext.OriginalAssembly.MainModule.Types)
-                ProcessType(context, originalType);
+                ProcessType(context, originalType, false);
 
             var typesToRemove = context.RenameGroups.Where(it => it.Value.Count > 1).ToList();
             foreach (var keyValuePair in typesToRemove)
@@ -29,17 +29,17 @@ namespace AssemblyUnhollower.Passes
 
             foreach (var assemblyContext in context.Assemblies)
             foreach (var originalType in assemblyContext.OriginalAssembly.MainModule.Types)
-                ProcessType(context, originalType);
+                ProcessType(context, originalType, true);
         }
 
-        private static void ProcessType(RewriteGlobalContext context, TypeDefinition originalType)
+        private static void ProcessType(RewriteGlobalContext context, TypeDefinition originalType, bool allowExtraHeuristics)
         {
             foreach (var nestedType in originalType.NestedTypes) 
-                ProcessType(context, nestedType);
+                ProcessType(context, nestedType, allowExtraHeuristics);
 
             if (context.RenamedTypes.ContainsKey(originalType)) return;
             
-            var unobfuscatedName = GetUnobfuscatedNameBase(context, originalType);
+            var unobfuscatedName = GetUnobfuscatedNameBase(context, originalType, allowExtraHeuristics);
             if (unobfuscatedName == null) return;
                     
             context.RenameGroups.GetOrCreate(((object) originalType.DeclaringType ?? originalType.Namespace, unobfuscatedName, originalType.GenericParameters.Count), _ => new List<TypeDefinition>()).Add(originalType);
@@ -47,7 +47,7 @@ namespace AssemblyUnhollower.Passes
         }
 
         private static readonly string[] ClassAccessNames = { "Private", "Public", "NPublic", "NPrivate", "NProtected", "NInternal", "NFamAndAssem", "NFamOrAssem" };
-        private static string? GetUnobfuscatedNameBase(RewriteGlobalContext context, TypeDefinition typeDefinition)
+        private static string? GetUnobfuscatedNameBase(RewriteGlobalContext context, TypeDefinition typeDefinition, bool allowExtraHeuristics)
         {
             var options = context.Options;
             if (!typeDefinition.Name.IsObfuscated()) return null;
@@ -70,7 +70,7 @@ namespace AssemblyUnhollower.Passes
             var specialNameString = typeDefinition.IsSpecialName ? "SpecialName" : "";
 
             var nameBuilder = new StringBuilder();
-            nameBuilder.Append(firstUnobfuscatedType?.GenericNameToString(context) ?? classifier);
+            nameBuilder.Append(firstUnobfuscatedType?.GenericNameToStrings(context)?.ConcatAll() ?? classifier);
             if (inheritanceDepth > 0)
                 nameBuilder.Append(inheritanceDepth);
             nameBuilder.Append(compilerGenertaedString);
@@ -79,13 +79,13 @@ namespace AssemblyUnhollower.Passes
             nameBuilder.Append(sealedString);
             nameBuilder.Append(specialNameString);
             foreach (var interfaceRef in unobfuscatedInterfacesList) 
-                nameBuilder.Append(interfaceRef.GenericNameToString(context));
+                nameBuilder.Append(interfaceRef.GenericNameToStrings(context).ConcatAll());
 
             var uniqContext = new UniquificationContext(options);
             foreach (var fieldDef in typeDefinition.Fields)
             {
                 if (!typeDefinition.IsEnum)
-                    uniqContext.Push(fieldDef.FieldType.GenericNameToString(context));
+                    uniqContext.Push(fieldDef.FieldType.GenericNameToStrings(context));
                 
                 uniqContext.Push(fieldDef.Name);
                 
@@ -97,7 +97,7 @@ namespace AssemblyUnhollower.Passes
 
             foreach (var propertyDef in typeDefinition.Properties)
             {
-                uniqContext.Push(propertyDef.PropertyType.GenericNameToString(context));
+                uniqContext.Push(propertyDef.PropertyType.GenericNameToStrings(context));
                 uniqContext.Push(propertyDef.Name);
 
                 if (uniqContext.CheckFull()) break;
@@ -108,36 +108,39 @@ namespace AssemblyUnhollower.Passes
                 var invokeMethod = typeDefinition.Methods.SingleOrDefault(it => it.Name == "Invoke");
                 if (invokeMethod != null)
                 {
-                    uniqContext.Push(invokeMethod.ReturnType.GenericNameToString(context));
+                    uniqContext.Push(invokeMethod.ReturnType.GenericNameToStrings(context));
 
                     foreach (var parameterDef in invokeMethod.Parameters)
                     {
-                        uniqContext.Push(parameterDef.ParameterType.GenericNameToString(context));
+                        uniqContext.Push(parameterDef.ParameterType.GenericNameToStrings(context));
                         if (uniqContext.CheckFull()) break;
                     }
                 }
             }
             
-            foreach (var methodDefinition in typeDefinition.Methods)
-            {
-                uniqContext.Push(methodDefinition.Name);
-                uniqContext.Push(methodDefinition.ReturnType.GenericNameToString(context));
-
-                foreach (var parameter in methodDefinition.Parameters)
+            if (typeDefinition.IsInterface || allowExtraHeuristics) // method order on non-interface types appears to be unstable
+                foreach (var methodDefinition in typeDefinition.Methods)
                 {
-                    uniqContext.Push(parameter.Name);
-                    uniqContext.Push(parameter.ParameterType.GenericNameToString(context));
-                    
+                    uniqContext.Push(methodDefinition.Name);
+                    uniqContext.Push(methodDefinition.ReturnType.GenericNameToStrings(context));
+
+                    foreach (var parameter in methodDefinition.Parameters)
+                    {
+                        uniqContext.Push(parameter.Name);
+                        uniqContext.Push(parameter.ParameterType.GenericNameToStrings(context));
+
+                        if (uniqContext.CheckFull()) break;
+                    }
+
                     if (uniqContext.CheckFull()) break;
                 }
-                
-                if (uniqContext.CheckFull()) break;
-            }
 
             nameBuilder.Append(uniqContext.GetTop());
 
             return nameBuilder.ToString();
         }
+
+        private static string ConcatAll(this List<string> strings) => string.Concat(strings);
 
         private static string NameOrRename(this TypeReference typeRef, RewriteGlobalContext context)
         {
@@ -148,10 +151,10 @@ namespace AssemblyUnhollower.Passes
             return typeRef.Name;
         }
 
-        private static string GenericNameToString(this TypeReference typeRef, RewriteGlobalContext context)
+        private static List<string> GenericNameToStrings(this TypeReference typeRef, RewriteGlobalContext context)
         {
             if (typeRef is ArrayType arrayType)
-                return arrayType.ElementType.GenericNameToString(context);
+                return arrayType.ElementType.GenericNameToStrings(context);
 
             if (typeRef is GenericInstanceType genericInstance)
             {
@@ -159,19 +162,20 @@ namespace AssemblyUnhollower.Passes
                 var indexOfBacktick = baseTypeName.IndexOf('`');
                 if (indexOfBacktick >= 0)
                     baseTypeName = baseTypeName.Substring(0, indexOfBacktick);
+
+                var entries = new List<string>();
                 
-                var builder = new StringBuilder();
-                builder.Append(baseTypeName);
-                builder.Append(genericInstance.GenericArguments.Count);
+                entries.Add(baseTypeName);
+                entries.Add(genericInstance.GenericArguments.Count.ToString());
                 foreach (var genericArgument in genericInstance.GenericArguments) 
-                    builder.Append(genericArgument.GenericNameToString(context));
-                return builder.ToString();
+                    entries.AddRange(genericArgument.GenericNameToStrings(context));
+                return entries;
             }
 
             if (typeRef.NameOrRename(context).IsObfuscated())
-                return "Obf";
+                return new List<string> {"Obf"};
 
-            return typeRef.NameOrRename(context);
+            return new List<string> {typeRef.NameOrRename(context)};
         }
     }
 }
