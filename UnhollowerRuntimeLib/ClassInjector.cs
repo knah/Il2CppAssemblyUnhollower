@@ -168,7 +168,7 @@ namespace UnhollowerRuntimeLib
         private static bool IsTypeSupported(Type type)
         {
             if(type.IsValueType) return type == typeof(void);
-            if(typeof(ValueTuple).IsAssignableFrom(type)) return false;
+            if(typeof(Il2CppSystem.ValueType).IsAssignableFrom(type)) return false;
             
             return typeof(Il2CppObjectBase).IsAssignableFrom(type);
         }
