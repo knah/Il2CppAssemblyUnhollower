@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using UnhollowerBaseLib.Runtime;
 
 namespace UnhollowerBaseLib
 {
@@ -53,7 +54,7 @@ namespace UnhollowerBaseLib
 
         public static IntPtr GetIl2CppMethod(IntPtr clazz, string methodName, params string[] argTypes)
         {
-            if(clazz == IntPtr.Zero) return IntPtr.Zero;
+            if(clazz == IntPtr.Zero) return NativeStructUtils.GetMethodInfoForMissingMethod(methodName + "(" + string.Join(", ", argTypes) + ")");
 
             for (var index = 0; index < argTypes.Length; index++)
             {
@@ -93,11 +94,14 @@ namespace UnhollowerBaseLib
                 return method;
             }
 
-            if (methodsSeen == 1) return lastMethod; 
+            var className = Marshal.PtrToStringAnsi(il2cpp_class_get_name(clazz));
+            LogSupport.Trace($"Method {className}::{methodName} was stubbed with a random matching method of the same name");
             
-            LogSupport.Error($"Unable to find method {Marshal.PtrToStringAnsi(il2cpp_class_get_name(clazz))}::{methodName}; signature follows");
-            foreach (var argType in argTypes) LogSupport.Error($"    {argType}");
-            LogSupport.Error("Available methods of this name follow:");
+            if (methodsSeen == 1) return lastMethod;
+            
+            LogSupport.Trace($"Unable to find method {className}::{methodName}; signature follows");
+            foreach (var argType in argTypes) LogSupport.Trace($"    {argType}");
+            LogSupport.Trace("Available methods of this name follow:");
             iter = IntPtr.Zero;
             while ((method = il2cpp_class_get_methods(clazz, ref iter)) != IntPtr.Zero)
             {
@@ -105,18 +109,18 @@ namespace UnhollowerBaseLib
                     continue;
 
                 var nParams = il2cpp_method_get_param_count(method);
-                LogSupport.Error("Method starts");
+                LogSupport.Trace("Method starts");
                 for (var i = 0; i < nParams; i++)
                 {
                     var paramType = il2cpp_method_get_param(method, (uint) i);
                     var typeName = Marshal.PtrToStringAnsi(il2cpp_type_get_name(paramType));
-                    LogSupport.Error($"    {typeName}");
+                    LogSupport.Trace($"    {typeName}");
                 }
                 
                 return method;
             }
 
-            return IntPtr.Zero;
+            return NativeStructUtils.GetMethodInfoForMissingMethod(className + "::" + methodName + "(" + string.Join(", ", argTypes) + ")");
         }
 
         public static string Il2CppStringToManaged(IntPtr il2CppString)
