@@ -78,7 +78,7 @@ namespace AssemblyUnhollower.Contexts
                     
                     foreach (var oldConstraint in oldParameter.Constraints)
                     {
-                        if (oldConstraint.ConstraintType.FullName == "System.ValueType") continue;
+                        if (oldConstraint.ConstraintType.FullName == "System.ValueType" || oldConstraint.ConstraintType.Resolve()?.IsInterface == true) continue;
                         
                         newParameter.Constraints.Add(new GenericParameterConstraint(
                             DeclaringType.AssemblyContext.RewriteTypeRef(oldConstraint.ConstraintType)));

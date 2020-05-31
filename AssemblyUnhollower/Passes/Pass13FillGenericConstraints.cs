@@ -17,7 +17,7 @@ namespace AssemblyUnhollower.Passes
                         var newParameter = typeContext.NewType.GenericParameters[i];
                         foreach (var originalConstraint in originalParameter.Constraints)
                         {
-                            if (originalConstraint.ConstraintType.FullName == "System.ValueType") continue;
+                            if (originalConstraint.ConstraintType.FullName == "System.ValueType" || originalConstraint.ConstraintType.Resolve()?.IsInterface == true) continue;
                             
                             newParameter.Constraints.Add(
                                 new GenericParameterConstraint(
