@@ -8,7 +8,7 @@ namespace AssemblyUnhollower
     {
         public static string UnSystemify(this string str)
         {
-            if (str.StartsWith("System") || str.StartsWith("mscorlib") || str.StartsWith("Microsoft") || str.StartsWith("Mono"))
+            if (str.StartsWith("System") || str.StartsWith("mscorlib") || str.StartsWith("Microsoft") || str.StartsWith("Mono") || str.StartsWith("I18N"))
                 return "Il2Cpp" + str;
 
             return str;
