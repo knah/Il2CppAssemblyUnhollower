@@ -425,16 +425,14 @@ namespace UnhollowerRuntimeLib
 
         private static void HookClassFromType()
         {
-            LogSupport.Info("xref scanning type to class");
             var lib = LoadLibrary("GameAssembly.dll");
-            LogSupport.Info($"lib: {lib}");
             var classFromTypeEntryPoint = GetProcAddress(lib, nameof(IL2CPP.il2cpp_class_from_il2cpp_type));
-            LogSupport.Info($"hook_method: {classFromTypeEntryPoint}");
+            LogSupport.Trace($"il2cpp_class_from_il2cpp_type entry address: {classFromTypeEntryPoint}");
 
 
             var scanner = new XrefScanner(classFromTypeEntryPoint);
             var targetMethod = scanner.JumpTargets().Single();
-            LogSupport.Info($"target_method: {targetMethod}");
+            LogSupport.Trace($"Xref scan target: {targetMethod}");
 
             if (targetMethod == IntPtr.Zero)
                 return;
@@ -444,7 +442,7 @@ namespace UnhollowerRuntimeLib
                 Marshal.GetFunctionPointerForDelegate(new TypeToClassDelegate(ClassFromTypePatch)));
             ourOriginalTypeToClassMethod = Marshal.GetDelegateForFunctionPointer<TypeToClassDelegate>(targetMethod);
             
-            LogSupport.Info("patched");
+            LogSupport.Trace("il2cpp_class_from_il2cpp_type patched");
         }
 
         public static Action<IntPtr, IntPtr> DoHook;
