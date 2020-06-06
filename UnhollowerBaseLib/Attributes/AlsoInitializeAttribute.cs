@@ -1,7 +1,8 @@
 using System;
 
-namespace UnhollowerBaseLib
+namespace UnhollowerBaseLib.Attributes
 {
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
     public class AlsoInitializeAttribute : Attribute
     {
         public readonly Type LinkedType;

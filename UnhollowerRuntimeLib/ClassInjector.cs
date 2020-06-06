@@ -8,8 +8,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using UnhollowerBaseLib;
+using UnhollowerBaseLib.Attributes;
 using UnhollowerBaseLib.Runtime;
-using ValueTuple = Il2CppSystem.ValueTuple;
 using Void = Il2CppSystem.Void;
 
 namespace UnhollowerRuntimeLib
@@ -176,6 +176,8 @@ namespace UnhollowerRuntimeLib
             if (method.IsGenericMethod || method.IsGenericMethodDefinition) return false;
             if (method.Name == "Finalize") return false;
             if (method.IsStatic || method.IsAbstract) return false;
+            if (method.CustomAttributes.Any(it => it.AttributeType == typeof(HideFromIl2CppAttribute))) return false;
+            
             if (!IsTypeSupported(method.ReturnType))
             {
                 LogSupport.Warning($"Method {method} on type {method.DeclaringType} has unsupported return type {method.ReturnType}");
