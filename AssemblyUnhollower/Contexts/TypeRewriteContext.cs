@@ -76,6 +76,8 @@ namespace AssemblyUnhollower.Contexts
             foreach (var originalTypeMethod in OriginalType.Methods)
             {
                 if (originalTypeMethod.Name == ".cctor") continue;
+                if (originalTypeMethod.Name == ".ctor" && originalTypeMethod.Parameters.Count == 1 &&
+                    originalTypeMethod.Parameters[0].ParameterType.FullName == "System.IntPtr") continue;
 
                 var methodRewriteContext = new MethodRewriteContext(this, originalTypeMethod);
                 myMethodContexts[originalTypeMethod] = methodRewriteContext;
