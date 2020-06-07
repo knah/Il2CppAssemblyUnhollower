@@ -43,6 +43,9 @@ How-to:
  * Call `ClassInjector.RegisterTypeInIl2Cpp<T>()` before first use of class to be injected
  * The injected class can be used normally afterwards, for example a custom MonoBehavior implementation would work with `AddComponent<T>`
  
+ Fine-tuning:
+  * `[HideFromIl2Cpp]` can be used to prevent a method from being exposed to il2cpp
+ 
 Caveats:
  * Injected class instances are handled by IL2CPP garbage collection. This means that an object may be collected even if it's referenced from managed domain. Attempting to use that object afterwards will result in `ObjectCollectedException`. Conversely, managed representation of injected object will not be garbage collected as long as it's referenced from IL2CPP domain.
  * It might be possible to create a cross-domain reference loop that will prevent objects from being garbage collected. Avoid doing anything that will result in injected class instances (indirectly) storing references to itself. The simplest example of how to leak memory is this:
