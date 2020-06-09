@@ -16,6 +16,7 @@ namespace AssemblyUnhollower.Passes
                 AssemblyDefinition.ReadAssembly(it, new ReaderParameters(ReadingMode.Deferred))).ToList();
 
             int methodsUnstripped = 0;
+            int methodsIgnored = 0;
             
             foreach (var unityAssembly in loadedAssemblies)
             {
@@ -30,7 +31,8 @@ namespace AssemblyUnhollower.Passes
                     
                     foreach (var unityMethod in unityType.Methods)
                     {
-                        if ((unityMethod.ImplAttributes & MethodImplAttributes.InternalCall) == 0) continue;
+                        if (unityMethod.Name == ".cctor" || unityMethod.Name == ".ctor") continue;
+                        
                         var processedMethod = processedType.TryGetMethodByName(unityMethod.Name);
                         if (processedMethod != null) continue;
 
@@ -38,6 +40,7 @@ namespace AssemblyUnhollower.Passes
                         if (returnType == null)
                         {
                             LogSupport.Trace($"Method {unityMethod} has unsupported return type {unityMethod.ReturnType}");
+                            methodsIgnored++;
                             continue;
                         }
                         
@@ -56,15 +59,45 @@ namespace AssemblyUnhollower.Passes
                             newMethod.Parameters.Add(new ParameterDefinition(unityMethodParameter.Name, unityMethodParameter.Attributes, convertedType));
                         }
 
-                        if (hadBadParameter) continue;
-                        var delegateType = UnstripGenerator.CreateDelegateTypeForICallMethod(unityMethod, newMethod, imports);
-                        processedType.NewType.NestedTypes.Add(delegateType);
-                        delegateType.DeclaringType = processedType.NewType;
+                        if (hadBadParameter)
+                        {
+                            methodsIgnored++;
+                            continue;
+                        }
                         
-                        processedType.NewType.Methods.Add(newMethod);
+                        foreach (var unityMethodGenericParameter in unityMethod.GenericParameters)
+                        {
+                            var newParameter = new GenericParameter(unityMethodGenericParameter.Name, newMethod);
+                            newParameter.Attributes = unityMethodGenericParameter.Attributes;
+                            foreach (var genericParameterConstraint in unityMethodGenericParameter.Constraints)
+                            {
+                                if (genericParameterConstraint.ConstraintType.FullName == "System.ValueType") continue;
+                                if (genericParameterConstraint.ConstraintType.Resolve().IsInterface) continue;
 
-                        var delegateField = UnstripGenerator.GenerateStaticCtorSuffix(processedType.NewType, delegateType, unityMethod, imports);
-                        UnstripGenerator.GenerateInvokerMethodBody(newMethod, delegateField, delegateType, processedType, imports);
+                                var newType = ResolveTypeInNewAssemblies(context, genericParameterConstraint.ConstraintType, imports);
+                                if (newType != null)
+                                    newParameter.Constraints.Add(new GenericParameterConstraint(newType));
+                            }
+                            
+                            newMethod.GenericParameters.Add(newParameter);
+                        }
+
+                        if ((unityMethod.ImplAttributes & MethodImplAttributes.InternalCall) != 0)
+                        {
+                            var delegateType = UnstripGenerator.CreateDelegateTypeForICallMethod(unityMethod, newMethod, imports);
+                            processedType.NewType.NestedTypes.Add(delegateType);
+                            delegateType.DeclaringType = processedType.NewType;
+                        
+                            processedType.NewType.Methods.Add(newMethod);
+
+                            var delegateField = UnstripGenerator.GenerateStaticCtorSuffix(processedType.NewType, delegateType, unityMethod, imports);
+                            UnstripGenerator.GenerateInvokerMethodBody(newMethod, delegateField, delegateType, processedType, imports);
+                        }
+                        else
+                        {
+                            Pass81FillUnstrippedMethodBodies.PushMethod(unityMethod, newMethod, processedType, imports);
+                            processedType.NewType.Methods.Add(newMethod);
+                        }
 
                         if (unityMethod.IsGetter)
                             GetOrCreateProperty(unityMethod, newMethod).GetMethod = newMethod;
@@ -76,8 +109,9 @@ namespace AssemblyUnhollower.Passes
                 }
             }
             
-            LogSupport.Trace(""); // finish the progress line
-            LogSupport.Trace($"{methodsUnstripped} methods restored");
+            LogSupport.Info(""); // finish the progress line
+            LogSupport.Info($"{methodsUnstripped} methods restored");
+            LogSupport.Info($"{methodsIgnored} methods failed to restore");
         }
 
         private static PropertyDefinition GetOrCreateProperty(MethodDefinition unityMethod, MethodDefinition newMethod)
@@ -93,20 +127,23 @@ namespace AssemblyUnhollower.Passes
             return newProperty;
         } 
 
-        private static TypeReference? ResolveTypeInNewAssemblies(RewriteGlobalContext context, TypeReference unityType,
+        internal static TypeReference? ResolveTypeInNewAssemblies(RewriteGlobalContext context, TypeReference unityType,
             AssemblyKnownImports imports)
         {
             var resolved = ResolveTypeInNewAssembliesRaw(context, unityType, imports);
             return resolved != null ? imports.Module.ImportReference(resolved) : null;
         }
 
-        private static TypeReference? ResolveTypeInNewAssembliesRaw(RewriteGlobalContext context, TypeReference unityType, AssemblyKnownImports imports)
+        internal static TypeReference? ResolveTypeInNewAssembliesRaw(RewriteGlobalContext context, TypeReference unityType, AssemblyKnownImports imports)
         {
             if (unityType is ByReferenceType)
             {
                 var resolvedElementType = ResolveTypeInNewAssemblies(context, unityType.GetElementType(), imports);
                 return resolvedElementType == null ? null : new ByReferenceType(resolvedElementType);
             }
+
+            if (unityType is GenericParameter)
+                return null;
 
             if (unityType is ArrayType arrayType)
             {

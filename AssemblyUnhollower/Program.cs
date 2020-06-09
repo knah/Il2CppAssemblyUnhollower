@@ -195,6 +195,8 @@ namespace AssemblyUnhollower
                     Pass79UnstripTypes.DoPass(rewriteContext);
                 using (new TimingCookie("Unstripping methods"))
                     Pass80UnstripMethods.DoPass(rewriteContext);
+                using (new TimingCookie("Unstripping method bodies"))
+                    Pass81FillUnstrippedMethodBodies.DoPass(rewriteContext);
             }
             else
                 Console.WriteLine("Not performing unstripping as unity libs are not specified");
