@@ -61,6 +61,7 @@ namespace AssemblyUnhollower
         public MethodReference StringToNative => myStringToNative.Value;
         public MethodReference StringFromNative => myStringFromNative.Value;
         public MethodReference Il2CppObjectCast => myIl2CppObjectCast.Value;
+        public MethodReference Il2CppObjectTryCast => myIl2CppObjectTryCast.Value;
         public MethodReference Il2CppResolveICall => myIl2CppResolveICall.Value;
 
         private readonly Lazy<MethodReference> myIl2CppObjectToPointer;
@@ -68,6 +69,7 @@ namespace AssemblyUnhollower
         private readonly Lazy<MethodReference> myStringToNative;
         private readonly Lazy<MethodReference> myStringFromNative;
         private readonly Lazy<MethodReference> myIl2CppObjectCast;
+        private readonly Lazy<MethodReference> myIl2CppObjectTryCast;
         private readonly Lazy<MethodReference> myIl2CppResolveICall;
         
         private readonly Lazy<MethodReference> myFieldGetOffset;
@@ -156,6 +158,7 @@ namespace AssemblyUnhollower
             myStringFromNative = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("Il2CppStringToManaged")));
             myStringToNative = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("ManagedStringToIl2Cpp")));
             myIl2CppObjectCast = new Lazy<MethodReference>(() => Module.ImportReference(typeof(Il2CppObjectBase).GetMethod("Cast")));
+            myIl2CppObjectTryCast = new Lazy<MethodReference>(() => Module.ImportReference(typeof(Il2CppObjectBase).GetMethod("TryCast")));
             myIl2CppResolveICall = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.ResolveICall))));
             
             myFieldGetOffset = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("il2cpp_field_get_offset")));

@@ -74,11 +74,31 @@ namespace AssemblyUnhollower.Utils
                     targetBuilder.Emit(bodyInstruction.OpCode, imports.Module.ImportReference(newMethod));
                 } else if (bodyInstruction.OpCode.OperandType == OperandType.InlineType)
                 {
-                    var typeArg = (TypeReference) bodyInstruction.Operand;
-                    var newType = Pass80UnstripMethods.ResolveTypeInNewAssemblies(globalContext, typeArg, imports);
-                    if (newType == null) return false;
-                    
-                    targetBuilder.Emit(bodyInstruction.OpCode, newType); // todo: special case for castclass, isclass?
+                    var targetType = (TypeReference) bodyInstruction.Operand;
+                    if (targetType is GenericParameter genericParam)
+                    {
+                        if (genericParam.Owner is TypeReference paramOwner)
+                        {
+                            var newTypeOwner = Pass80UnstripMethods.ResolveTypeInNewAssemblies(globalContext, paramOwner, imports);
+                            if (newTypeOwner == null) return false;
+                            targetType = newTypeOwner.GenericParameters.Single(it => it.Name == targetType.Name);
+                        } else
+                            targetType = target.GenericParameters.Single(it => it.Name == targetType.Name);
+                    }
+                    else
+                    {
+                        targetType = Pass80UnstripMethods.ResolveTypeInNewAssemblies(globalContext, targetType, imports);
+                        if (targetType == null) return false;
+                    }
+
+                    if (bodyInstruction.OpCode == OpCodes.Castclass && !targetType.IsValueType)
+                    {
+                        targetBuilder.Emit(OpCodes.Call, imports.Module.ImportReference(new GenericInstanceMethod(imports.Il2CppObjectCast) { GenericArguments = { targetType }}));
+                    } else if (bodyInstruction.OpCode == OpCodes.Isinst && !targetType.IsValueType)
+                    {
+                        targetBuilder.Emit(OpCodes.Call, imports.Module.ImportReference(new GenericInstanceMethod(imports.Il2CppObjectTryCast) { GenericArguments = { targetType }}));
+                    } else
+                        targetBuilder.Emit(bodyInstruction.OpCode, targetType);
                 } else if (bodyInstruction.OpCode.OperandType == OperandType.InlineSig)
                 {
                     // todo: rewrite sig if this ever happens in unity types
