@@ -57,7 +57,7 @@ namespace AssemblyUnhollower.Utils
                 {
                     body.EmitObjectToPointer(param.ParameterType, param.ParameterType, enclosingType, i + argOffset, false, true, true, out var refVar);
                     if (refVar != null)
-                        LogSupport.Warning($"Method {newMethod} has a reference-typed ref parameter, this will be ignored");
+                        LogSupport.Trace($"Method {newMethod} has a reference-typed ref parameter, this will be ignored");
                 }
             }
 

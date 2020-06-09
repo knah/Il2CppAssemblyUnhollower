@@ -23,7 +23,10 @@ Before certain features can be used (namely class injection and delegate convers
  * Non-blittable structs can't be used in delegates
  * Types implementing interfaces, particularly IEnumerable, may be arbitrarily janky with interface methods. Additionally, using them in foreach may result in implicit casts on managed side (instead of `Cast<T>`, see below), leading to exceptions. Use `var` in `foreach` or use `for` instead of `foreach` when possible as a workaround, or cast them to the specific interface you want to use.
  * in/out/ref parameters on generic parameter types (like `out T` in `Dictionary.TryGetValue`) are currently broken
- * Unity unstripping is currently limited to enums and InternalCall methods
+ * Unity unstripping currently doesn't restore types (except for enums), and certain methods can't be unstripped still
+ * Unstripped methods with array operations inside contain invalid bytecode
+ * Unstripped methods with cases inside will likely throw invalid cast exceptions or produce nulls
+ * Some unstripped methods are stubbed with `NotSupportedException` in cases where rewrite failed
 
 ## Generated assemblies caveats
  * IL2CPP types must be cast using `.Cast<T>` or `.TryCast<T>` methods instead of C-style casts or `as`.
@@ -65,7 +68,7 @@ Limitations:
  * Only a limited set of types is supported for method signatures
  
 ## Upcoming features (aka TODO list)
- * Unstripping engine code - restore more Unity methods using managed assemblies as reference
+ * Unstripping engine code - fix current issues with unstripping failing or generating invalid bytecode
  * Proper interface support - IL2CPP interfaces will be generated as interfaces and properly implemented by IL2CPP types
  * Improve class injection to support virtual methods and interfaces
 
