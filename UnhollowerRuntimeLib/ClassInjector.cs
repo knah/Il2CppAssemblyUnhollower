@@ -10,6 +10,7 @@ using System.Threading;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Attributes;
 using UnhollowerBaseLib.Runtime;
+using UnhollowerRuntimeLib.XrefScans;
 using Void = Il2CppSystem.Void;
 
 namespace UnhollowerRuntimeLib
@@ -431,9 +432,7 @@ namespace UnhollowerRuntimeLib
             var classFromTypeEntryPoint = GetProcAddress(lib, nameof(IL2CPP.il2cpp_class_from_il2cpp_type));
             LogSupport.Trace($"il2cpp_class_from_il2cpp_type entry address: {classFromTypeEntryPoint}");
 
-
-            var scanner = new XrefScanner(classFromTypeEntryPoint);
-            var targetMethod = scanner.JumpTargets().Single();
+            var targetMethod = XrefScannerLowLevel.JumpTargets(classFromTypeEntryPoint).Single();
             LogSupport.Trace($"Xref scan target: {targetMethod}");
 
             if (targetMethod == IntPtr.Zero)

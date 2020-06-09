@@ -1,29 +1,20 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using Iced.Intel;
 using UnhollowerBaseLib;
 using Decoder = Iced.Intel.Decoder;
 
-namespace UnhollowerRuntimeLib
+namespace UnhollowerRuntimeLib.XrefScans
 {
-    public class XrefScanner : IDisposable
+    public static class XrefScannerLowLevel
     {
-        private readonly Decoder myDecoder;
-        private readonly UnmanagedMemoryStream myUnmanagedMemoryStream;
-
-        public unsafe XrefScanner(IntPtr codeStart, int lengthLimit = 1000)
+        public static IEnumerable<IntPtr> JumpTargets(IntPtr codeStart)
         {
-            if (codeStart == IntPtr.Zero) throw new NullReferenceException(nameof(codeStart));
-
-            myUnmanagedMemoryStream = new UnmanagedMemoryStream((byte*) codeStart, lengthLimit, lengthLimit, FileAccess.Read);
-            var codeReader = new StreamCodeReader(myUnmanagedMemoryStream);
-            myDecoder = Decoder.Create(IntPtr.Size * 8, codeReader);
-            myDecoder.IP = (ulong) codeStart;
+            return JumpTargetsImpl(XrefScanner.DecoderForAddress(codeStart));
         }
 
-        public IEnumerable<IntPtr> JumpTargets()
+        private static IEnumerable<IntPtr> JumpTargetsImpl(Decoder myDecoder)
         {
             var formatter = new IntelFormatter();
             var builder = new StringBuilder();
@@ -62,11 +53,6 @@ namespace UnhollowerRuntimeLib
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-        }
-
-        public void Dispose()
-        {
-            myUnmanagedMemoryStream?.Dispose();
         }
     }
 }
