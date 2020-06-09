@@ -104,7 +104,9 @@ namespace AssemblyUnhollower.Passes
             foreach (var method in typeContext.Methods)
             {
                 ctorBuilder.Emit(OpCodes.Ldsfld, typeContext.ClassPointerFieldRef);
+                ctorBuilder.Emit(method.OriginalMethod.GenericParameters.Count > 0 ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
                 ctorBuilder.Emit(OpCodes.Ldstr, method.OriginalMethod.Name);
+                ctorBuilder.Emit(OpCodes.Ldstr, method.OriginalMethod.ReturnType.FullName);
                 ctorBuilder.Emit(OpCodes.Ldc_I4, method.OriginalMethod.Parameters.Count);
                 ctorBuilder.Emit(OpCodes.Newarr, assemblyContext.Imports.String);
 

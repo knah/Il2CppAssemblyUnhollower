@@ -52,7 +52,7 @@ namespace UnhollowerBaseLib
             return field;
         }
 
-        public static IntPtr GetIl2CppMethod(IntPtr clazz, string methodName, params string[] argTypes)
+        public static IntPtr GetIl2CppMethod(IntPtr clazz, bool isGeneric, string methodName, string returnTypeName, params string[] argTypes)
         {
             if(clazz == IntPtr.Zero) return NativeStructUtils.GetMethodInfoForMissingMethod(methodName + "(" + string.Join(", ", argTypes) + ")");
 
@@ -72,6 +72,14 @@ namespace UnhollowerBaseLib
                     continue;
                 
                 if(il2cpp_method_get_param_count(method) != argTypes.Length)
+                    continue;
+                
+                if(il2cpp_method_is_generic(method) != isGeneric) 
+                    continue;
+
+                var returnType = il2cpp_method_get_return_type(method);
+                var returnTypeNameActual = Marshal.PtrToStringAnsi(il2cpp_type_get_name(returnType));
+                if (returnTypeNameActual != returnTypeName)
                     continue;
                 
                 methodsSeen++;
