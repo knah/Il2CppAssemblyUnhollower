@@ -177,7 +177,7 @@ namespace AssemblyUnhollower
                     body.Body.Variables.Add(pointerVar);
                     body.Emit(OpCodes.Ldarg, argumentIndex);
                     body.Emit(OpCodes.Ldind_Ref);
-                    if (originalType.FullName == "System.String")
+                    if (originalType.GetElementType().FullName == "System.String")
                         body.Emit(OpCodes.Call, imports.StringToNative);
                     else
                         body.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointer);
