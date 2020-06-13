@@ -126,7 +126,7 @@ namespace AssemblyUnhollower
         public MethodReference Il2CppMethodInfoFromReflection => myIl2CppMethodInfoFromReflection.Value;
         public MethodReference Il2CppPointerToGeneric => myIl2CppPointerToGeneric.Value;
         
-        public MethodReference LdTokUnstrippedImpl => myIl2CppMethodInfoFromReflection.Value;
+        public MethodReference LdTokUnstrippedImpl => myLdTokUnstrippedImpl.Value;
         
         public MethodReference FlagsAttributeCtor => myFlagsAttributeCtor.Value;
         public MethodReference ObsoleteAttributeCtor => myObsoleteAttributeCtor.Value;
