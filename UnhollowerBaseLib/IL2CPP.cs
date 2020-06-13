@@ -212,6 +212,33 @@ namespace UnhollowerBaseLib
             return Marshal.GetDelegateForFunctionPointer<T>(icallPtr);
         }
 
+        private static readonly MethodInfo UnboxMethod = typeof(Il2CppObjectBase).GetMethod(nameof(Il2CppObjectBase.Unbox));
+        private static readonly MethodInfo CastMethod = typeof(Il2CppObjectBase).GetMethod(nameof(Il2CppObjectBase.Cast));
+        public static T PointerToValueGeneric<T>(IntPtr objectPointer, bool isFieldPointer, bool valueTypeWouldBeBoxed)
+        {
+            if (isFieldPointer)
+            {
+                if (il2cpp_class_is_valuetype(Il2CppClassPointerStore<T>.NativeClassPtr))
+                    objectPointer = il2cpp_value_box(Il2CppClassPointerStore<T>.NativeClassPtr, objectPointer);
+                else
+                    objectPointer = *(IntPtr*) objectPointer;
+            }
+            
+            if (!valueTypeWouldBeBoxed && il2cpp_class_is_valuetype(Il2CppClassPointerStore<T>.NativeClassPtr))
+                objectPointer = il2cpp_value_box(Il2CppClassPointerStore<T>.NativeClassPtr, objectPointer);
+
+            if (typeof(T) == typeof(string))
+                return (T) (object) Il2CppStringToManaged(objectPointer);
+
+            if (objectPointer == IntPtr.Zero)
+                return default;
+            
+            var nativeObject = new Il2CppObjectBase(objectPointer);
+            if (typeof(T).IsValueType)
+                return (T) UnboxMethod.MakeGenericMethod(typeof(T)).Invoke(nativeObject, new object[0]);
+            return (T) CastMethod.MakeGenericMethod(typeof(T)).Invoke(nativeObject, new object[0]);
+        }
+
         // IL2CPP Functions
         [DllImport("GameAssembly", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern void il2cpp_init(IntPtr domain_name);

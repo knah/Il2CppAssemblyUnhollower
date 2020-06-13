@@ -352,70 +352,9 @@ namespace AssemblyUnhollower
             
             body.Append(loadPointer);
             
-            body.Emit(OpCodes.Ldtoken, newReturnType);
-            body.Emit(OpCodes.Call, enclosingType.NewType.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == nameof(Type.GetTypeFromHandle))));
-            body.Emit(OpCodes.Dup);
-            body.Emit(OpCodes.Callvirt, enclosingType.NewType.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == typeof(Type).GetProperty(nameof(Type.IsValueType))!.GetMethod!.Name)));
-
-            var finalNop = body.Create(OpCodes.Nop);
-            var valueTypeNop = body.Create(OpCodes.Nop);
-            var stringNop = body.Create(OpCodes.Nop);
-            var normalRefTypeNop = body.Create(OpCodes.Nop);
-            
-            body.Emit(OpCodes.Brtrue, valueTypeNop);
-            
-            body.Emit(OpCodes.Callvirt, enclosingType.NewType.Module.ImportReference(imports.Type.Methods.Single(it => it.Name == typeof(Type).GetProperty(nameof(Type.FullName))!.GetMethod!.Name)));
-            body.Emit(OpCodes.Ldstr, "System.String");
-            body.Emit(OpCodes.Call, enclosingType.NewType.Module.ImportReference(TargetTypeSystemHandler.String.Methods.Single(it => it.Name == nameof(String.Equals) && it.IsStatic && it.Parameters.Count == 2)));
-            body.Emit(OpCodes.Brtrue_S, stringNop);
-            
-            if (!unboxValueType)
-            {
-                var loadClassPointer = body.Create(OpCodes.Ldsfld,
-                    new FieldReference(nameof(Il2CppClassPointerStore<int>.NativeClassPtr), imports.IntPtr,
-                        enclosingType.NewType.Module.ImportReference(
-                            new GenericInstanceType(imports.Il2CppClassPointerStore)
-                                {GenericArguments = {newReturnType}})));
-                
-                body.Append(loadClassPointer);
-                body.Emit(OpCodes.Call, imports.ClassIsValueType);
-                body.Emit(OpCodes.Brfalse, normalRefTypeNop);
-                
-                body.Emit(OpCodes.Pop); // pop object pointer
-                body.Append(loadClassPointer);
-                body.Append(loadPointer);
-                body.Emit(OpCodes.Call, imports.ObjectBox);
-
-                body.Append(normalRefTypeNop);
-            }
-
-            var createRealObject = body.Create(OpCodes.Newobj,
-                new MethodReference(".ctor", imports.Void, imports.Il2CppObjectBase)
-                    {Parameters = {new ParameterDefinition(imports.IntPtr)}, HasThis = true});
-
-            if (extraDerefForNonValueTypes) body.Emit(OpCodes.Ldind_I);
-            body.Emit(OpCodes.Dup);
-            body.Emit(OpCodes.Brtrue_S, createRealObject);
-            body.Emit(OpCodes.Pop);
-            body.Emit(OpCodes.Ldnull);
-            body.Emit(OpCodes.Br, finalNop);
-
-            body.Append(createRealObject);
-            body.Emit(OpCodes.Call, enclosingType.NewType.Module.ImportReference(new GenericInstanceMethod(imports.Il2CppObjectCast) { GenericArguments = { newReturnType }}));
-            body.Emit(OpCodes.Br, finalNop);
-            
-            body.Append(stringNop);
-            if (extraDerefForNonValueTypes) body.Emit(OpCodes.Ldind_I);
-            body.Emit(OpCodes.Call, imports.StringFromNative);
-            body.Emit(OpCodes.Isinst, newReturnType); // satisfy the verifier
-            body.Emit(OpCodes.Br_S, finalNop);
-            
-            body.Append(valueTypeNop);
-            body.Emit(OpCodes.Pop); // pop extra typeof(T)
-            if(unboxValueType) body.Emit(OpCodes.Call, imports.ObjectUnbox);
-            body.Emit(OpCodes.Ldobj, newReturnType);
-            
-            body.Append(finalNop);
+            body.Emit(extraDerefForNonValueTypes ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
+            body.Emit(unboxValueType ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
+            body.Emit(OpCodes.Call, imports.Module.ImportReference(new GenericInstanceMethod(imports.Il2CppPointerToGeneric) { GenericArguments = { newReturnType }}));
         }
 
         public static void GenerateBoxMethod(TypeDefinition targetType, FieldReference classHandle, TypeReference il2CppObjectTypeDef)

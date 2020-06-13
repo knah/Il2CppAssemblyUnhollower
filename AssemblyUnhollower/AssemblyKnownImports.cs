@@ -94,6 +94,7 @@ namespace AssemblyUnhollower
         private readonly Lazy<MethodReference> myIl2CppNewObject;
         private readonly Lazy<MethodReference> myIl2CppMethodInfoToReflection;
         private readonly Lazy<MethodReference> myIl2CppMethodInfoFromReflection;
+        private readonly Lazy<MethodReference> myIl2CppPointerToGeneric;
         
         private readonly Lazy<MethodReference> myLdTokUnstrippedImpl;
         
@@ -123,6 +124,7 @@ namespace AssemblyUnhollower
         public MethodReference Il2CppNewObject => myIl2CppNewObject.Value;
         public MethodReference Il2CppMethodInfoToReflection => myIl2CppMethodInfoToReflection.Value;
         public MethodReference Il2CppMethodInfoFromReflection => myIl2CppMethodInfoFromReflection.Value;
+        public MethodReference Il2CppPointerToGeneric => myIl2CppPointerToGeneric.Value;
         
         public MethodReference LdTokUnstrippedImpl => myIl2CppMethodInfoFromReflection.Value;
         
@@ -183,6 +185,7 @@ namespace AssemblyUnhollower
             myIl2CppNewObject = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_object_new))));
             myIl2CppMethodInfoFromReflection = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_method_get_from_reflection))));
             myIl2CppMethodInfoToReflection = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_method_get_object))));
+            myIl2CppPointerToGeneric = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.PointerToValueGeneric))));
             
             myLdTokUnstrippedImpl = new Lazy<MethodReference>(() => Module.ImportReference(typeof(RuntimeReflectionHelper).GetMethod(nameof(RuntimeReflectionHelper.GetRuntimeTypeHandle))));
             
