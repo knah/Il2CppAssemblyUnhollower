@@ -25,7 +25,7 @@ Before certain features can be used (namely class injection and delegate convers
  * in/out/ref parameters on generic parameter types (like `out T` in `Dictionary.TryGetValue`) are currently broken
  * Unity unstripping currently doesn't restore types (except for enums), and certain methods can't be unstripped still
  * Unstripped methods with array operations inside contain invalid bytecode
- * Unstripped methods with cases inside will likely throw invalid cast exceptions or produce nulls
+ * Unstripped methods with casts inside will likely throw invalid cast exceptions or produce nulls
  * Some unstripped methods are stubbed with `NotSupportedException` in cases where rewrite failed
 
 ## Generated assemblies caveats
