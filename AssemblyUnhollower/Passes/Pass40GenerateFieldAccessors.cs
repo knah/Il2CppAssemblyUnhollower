@@ -22,8 +22,8 @@ namespace AssemblyUnhollower.Passes
                             assemblyContext.RewriteTypeRef(fieldContext.OriginalField.FieldType));
                         typeContext.NewType.Properties.Add(property);
 
-                        FieldAccessorGenerator.MakeGetter(field, fieldContext, property);
-                        FieldAccessorGenerator.MakeSetter(field, fieldContext, property);
+                        FieldAccessorGenerator.MakeGetter(field, fieldContext, property, assemblyContext.Imports);
+                        FieldAccessorGenerator.MakeSetter(field, fieldContext, property, assemblyContext.Imports);
                     }
                 }
             }

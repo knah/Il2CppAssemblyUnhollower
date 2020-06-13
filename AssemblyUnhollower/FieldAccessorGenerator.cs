@@ -7,10 +7,8 @@ namespace AssemblyUnhollower
 {
     public static class FieldAccessorGenerator
     {
-        public static void MakeGetter(FieldDefinition field, FieldRewriteContext fieldContext, PropertyDefinition property)
+        public static void MakeGetter(FieldDefinition field, FieldRewriteContext fieldContext, PropertyDefinition property, AssemblyKnownImports imports)
         {
-            var imports = AssemblyKnownImports.For(property);
-
             var getter = new MethodDefinition("get_" + property.Name, Field2MethodAttrs(field.Attributes) | MethodAttributes.SpecialName | MethodAttributes.HideBySig, property.PropertyType);
             
             var getterBody = getter.Body.GetILProcessor();
@@ -74,10 +72,8 @@ namespace AssemblyUnhollower
             property.GetMethod = getter;
         }
         
-        public static void MakeSetter(FieldDefinition field, FieldRewriteContext fieldContext, PropertyDefinition property)
+        public static void MakeSetter(FieldDefinition field, FieldRewriteContext fieldContext, PropertyDefinition property, AssemblyKnownImports imports)
         {
-            var imports = AssemblyKnownImports.For(property);
-
             var setter = new MethodDefinition("set_" + property.Name, Field2MethodAttrs(field.Attributes) | MethodAttributes.SpecialName | MethodAttributes.HideBySig, imports.Void);
             setter.Parameters.Add(new ParameterDefinition(property.PropertyType));
             property.DeclaringType.Methods.Add(setter);

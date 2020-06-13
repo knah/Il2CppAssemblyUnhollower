@@ -25,7 +25,7 @@ namespace AssemblyUnhollower.Contexts
             NewAssembly = newAssembly;
             GlobalContext = globalContext;
 
-            Imports = AssemblyKnownImports.For(newAssembly.MainModule);
+            Imports = AssemblyKnownImports.For(newAssembly.MainModule, globalContext);
         }
 
         public TypeRewriteContext GetContextForOriginalType(TypeDefinition type) => myOldTypeMap[type];

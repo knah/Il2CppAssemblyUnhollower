@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using AssemblyUnhollower.Contexts;
 using Mono.Cecil;
 using UnhollowerBaseLib;
+using UnhollowerBaseLib.Attributes;
 using UnhollowerRuntimeLib;
 
 namespace AssemblyUnhollower
@@ -10,15 +12,13 @@ namespace AssemblyUnhollower
     {
         private static readonly Dictionary<ModuleDefinition, AssemblyKnownImports> AssemblyMap = new Dictionary<ModuleDefinition, AssemblyKnownImports>();
 
-        public static AssemblyKnownImports For(ModuleDefinition module)
+        public static AssemblyKnownImports For(ModuleDefinition module, RewriteGlobalContext context)
         {
-            return AssemblyMap.GetOrCreate(module, mod => new AssemblyKnownImports(mod));
+            return AssemblyMap.GetOrCreate(module, mod => new AssemblyKnownImports(mod, context));
         }
 
-        public static AssemblyKnownImports For(TypeDefinition type) => For(type.Module);
-        public static AssemblyKnownImports For(IMemberDefinition type) => For(type.DeclaringType.Module);
-        
         public readonly ModuleDefinition Module;
+        private readonly RewriteGlobalContext myContext;
 
         private readonly Lazy<TypeReference> myVoidReference;
         private readonly Lazy<TypeReference> myIntPtrReference;
@@ -95,12 +95,14 @@ namespace AssemblyUnhollower
         private readonly Lazy<MethodReference> myIl2CppMethodInfoToReflection;
         private readonly Lazy<MethodReference> myIl2CppMethodInfoFromReflection;
         private readonly Lazy<MethodReference> myIl2CppPointerToGeneric;
+        private readonly Lazy<MethodReference> myIl2CppRenderTypeNameGeneric;
         
         private readonly Lazy<MethodReference> myLdTokUnstrippedImpl;
         
         private readonly Lazy<MethodReference> myFlagsAttributeCtor;
         private readonly Lazy<MethodReference> myObsoleteAttributeCtor;
         private readonly Lazy<MethodReference> myNotSupportedExceptionCtor;
+        private readonly Lazy<MethodReference> myObfuscatedNameAttributeCtor;
         
         public MethodReference FieldGetOffset => myFieldGetOffset.Value;
         public MethodReference FieldStaticGet => myFieldStaticGet.Value;
@@ -125,17 +127,21 @@ namespace AssemblyUnhollower
         public MethodReference Il2CppMethodInfoToReflection => myIl2CppMethodInfoToReflection.Value;
         public MethodReference Il2CppMethodInfoFromReflection => myIl2CppMethodInfoFromReflection.Value;
         public MethodReference Il2CppPointerToGeneric => myIl2CppPointerToGeneric.Value;
+        public MethodReference Il2CppRenderTypeNameGeneric => myIl2CppRenderTypeNameGeneric.Value;
         
         public MethodReference LdTokUnstrippedImpl => myLdTokUnstrippedImpl.Value;
         
         public MethodReference FlagsAttributeCtor => myFlagsAttributeCtor.Value;
         public MethodReference ObsoleteAttributeCtor => myObsoleteAttributeCtor.Value;
         public MethodReference NotSupportedExceptionCtor => myNotSupportedExceptionCtor.Value;
+        public MethodReference ObfuscatedNameAttributeCtor => myObfuscatedNameAttributeCtor.Value;
         
 
-        public AssemblyKnownImports(ModuleDefinition module)
+        public AssemblyKnownImports(ModuleDefinition module, RewriteGlobalContext context)
         {
             Module = module;
+            myContext = context;
+            
             myVoidReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.Void));
             myIntPtrReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.IntPtr));
             myStringReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.String));
@@ -186,8 +192,16 @@ namespace AssemblyUnhollower
             myIl2CppMethodInfoFromReflection = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_method_get_from_reflection))));
             myIl2CppMethodInfoToReflection = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_method_get_object))));
             myIl2CppPointerToGeneric = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.PointerToValueGeneric))));
+            myIl2CppRenderTypeNameGeneric = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.RenderTypeName), new [] {typeof(bool)})));
             
-            myLdTokUnstrippedImpl = new Lazy<MethodReference>(() => Module.ImportReference(typeof(RuntimeReflectionHelper).GetMethod(nameof(RuntimeReflectionHelper.GetRuntimeTypeHandle))));
+            myLdTokUnstrippedImpl = new Lazy<MethodReference>(() =>
+            {
+                var declaringTypeRef = Module.ImportReference(typeof(RuntimeReflectionHelper));
+                var returnTypeRef = Module.ImportReference(myContext.GetAssemblyByName("mscorlib").NewAssembly.MainModule.GetType("Il2CppSystem.RuntimeTypeHandle"));
+                var methodReference = new MethodReference("GetRuntimeTypeHandle", returnTypeRef, declaringTypeRef) { HasThis = false };
+                methodReference.GenericParameters.Add(new GenericParameter("T", methodReference));
+                return Module.ImportReference(methodReference);
+            });
             
             myFlagsAttributeCtor = new Lazy<MethodReference>(() => new MethodReference(".ctor", Void, Module.ImportReference(TargetTypeSystemHandler.FlagsAttribute)) { HasThis = true});
             myObsoleteAttributeCtor = new Lazy<MethodReference>(() =>
@@ -196,6 +210,10 @@ namespace AssemblyUnhollower
             
             myNotSupportedExceptionCtor = new Lazy<MethodReference>(() =>
                 new MethodReference(".ctor", Void, Module.ImportReference(TargetTypeSystemHandler.NotSupportedException))
+                    {HasThis = true, Parameters = {new ParameterDefinition(String)}});
+            
+            myObfuscatedNameAttributeCtor = new Lazy<MethodReference>(() =>
+                new MethodReference(".ctor", Void, Module.ImportReference(typeof(ObfuscatedNameAttribute)))
                     {HasThis = true, Parameters = {new ParameterDefinition(String)}});
         }
     }

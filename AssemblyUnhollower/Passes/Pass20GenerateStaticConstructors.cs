@@ -106,7 +106,7 @@ namespace AssemblyUnhollower.Passes
                 ctorBuilder.Emit(OpCodes.Ldsfld, typeContext.ClassPointerFieldRef);
                 ctorBuilder.Emit(method.OriginalMethod.GenericParameters.Count > 0 ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
                 ctorBuilder.Emit(OpCodes.Ldstr, method.OriginalMethod.Name);
-                ctorBuilder.Emit(OpCodes.Ldstr, method.OriginalMethod.ReturnType.FullName);
+                ctorBuilder.EmitLoadTypeNameString(assemblyContext.Imports, method.OriginalMethod, method.OriginalMethod.ReturnType, method.NewMethod.ReturnType);
                 ctorBuilder.Emit(OpCodes.Ldc_I4, method.OriginalMethod.Parameters.Count);
                 ctorBuilder.Emit(OpCodes.Newarr, assemblyContext.Imports.String);
 
@@ -114,7 +114,7 @@ namespace AssemblyUnhollower.Passes
                 {
                     ctorBuilder.Emit(OpCodes.Dup);
                     ctorBuilder.EmitLdcI4(i);
-                    ctorBuilder.Emit(OpCodes.Ldstr, method.OriginalMethod.Parameters[i].ParameterType.FullName);
+                    ctorBuilder.EmitLoadTypeNameString(assemblyContext.Imports, method.OriginalMethod, method.OriginalMethod.Parameters[i].ParameterType, method.NewMethod.Parameters[i].ParameterType);
                     ctorBuilder.Emit(OpCodes.Stelem_Ref);
                 }
 
@@ -124,7 +124,16 @@ namespace AssemblyUnhollower.Passes
             
             ctorBuilder.Emit(OpCodes.Ret);
         }
-        
-        
+
+        private static void EmitLoadTypeNameString(this ILProcessor ctorBuilder, AssemblyKnownImports imports, MethodDefinition originalMethod, TypeReference originalTypeReference, TypeReference newTypeReference)
+        {
+            if (originalMethod.HasGenericParameters || originalTypeReference.FullName == "System.Void")
+                ctorBuilder.Emit(OpCodes.Ldstr, originalTypeReference.FullName);
+            else
+            {
+                ctorBuilder.Emit(newTypeReference.IsByReference ? OpCodes.Ldc_I4_1 :  OpCodes.Ldc_I4_0);
+                ctorBuilder.Emit(OpCodes.Call, imports.Module.ImportReference(new GenericInstanceMethod(imports.Il2CppRenderTypeNameGeneric) {GenericArguments = {newTypeReference}}));
+            }
+        }
     }
 }

@@ -13,6 +13,7 @@
 
     <ItemGroup>
       <Reference Include="Il2Cppmscorlib, Version=3.7.1.6, Culture=neutral, PublicKeyToken=null">
+          <Private>false</Private>
         <HintPath>Libs\Il2Cppmscorlib.dll</HintPath>
       </Reference>
     </ItemGroup>

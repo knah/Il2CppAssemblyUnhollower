@@ -164,6 +164,8 @@ namespace AssemblyUnhollower
                 Pass13FillGenericConstraints.DoPass(rewriteContext);
             using(new TimingCookie("Creating members"))
                 Pass15GenerateMemberContexts.DoPass(rewriteContext);
+            using(new TimingCookie("Filling method parameters"))
+                Pass19CopyMethodParameters.DoPass(rewriteContext);
             
             using(new TimingCookie("Creating static constructors"))
                 Pass20GenerateStaticConstructors.DoPass(rewriteContext);

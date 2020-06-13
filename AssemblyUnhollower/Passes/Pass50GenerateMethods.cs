@@ -18,20 +18,6 @@ namespace AssemblyUnhollower.Passes
                         var originalMethod = methodRewriteContext.OriginalMethod;
                         var newMethod = methodRewriteContext.NewMethod;
                         var imports = assemblyContext.Imports;
-                        
-                        foreach (var originalMethodParameter in originalMethod.Parameters)
-                        {
-                            var newParameter = new ParameterDefinition(originalMethodParameter.Name,
-                                originalMethodParameter.Attributes & ~ParameterAttributes.HasFieldMarshal,
-                                assemblyContext.RewriteTypeRef(originalMethodParameter.ParameterType));
-                            
-                            if (originalMethodParameter.HasConstant && (originalMethodParameter.Constant == null || originalMethodParameter.Constant is string || originalMethodParameter.Constant is bool))
-                                newParameter.Constant = originalMethodParameter.Constant;
-                            else
-                                newParameter.Attributes &= ~ParameterAttributes.HasDefault;
-                            
-                            newMethod.Parameters.Add(newParameter);
-                        }
 
                         var bodyBuilder = newMethod.Body.GetILProcessor();
                         var exceptionLocal = new VariableDefinition(imports.IntPtr);

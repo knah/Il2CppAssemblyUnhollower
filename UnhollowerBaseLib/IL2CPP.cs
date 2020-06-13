@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
+using UnhollowerBaseLib.Attributes;
 using UnhollowerBaseLib.Runtime;
 
 namespace UnhollowerBaseLib
@@ -56,10 +58,11 @@ namespace UnhollowerBaseLib
         {
             if(clazz == IntPtr.Zero) return NativeStructUtils.GetMethodInfoForMissingMethod(methodName + "(" + string.Join(", ", argTypes) + ")");
 
+            returnTypeName = Regex.Replace(returnTypeName, "\\`\\d+", "").Replace('/', '.').Replace('+', '.');
             for (var index = 0; index < argTypes.Length; index++)
             {
                 var argType = argTypes[index];
-                argTypes[index] = Regex.Replace(argType, "\\`\\d+", "").Replace('/', '.');
+                argTypes[index] = Regex.Replace(argType, "\\`\\d+", "").Replace('/', '.').Replace('+', '.');
             }
 
             var methodsSeen = 0;
@@ -103,11 +106,24 @@ namespace UnhollowerBaseLib
             }
 
             var className = Marshal.PtrToStringAnsi(il2cpp_class_get_name(clazz));
-            LogSupport.Trace($"Method {className}::{methodName} was stubbed with a random matching method of the same name");
-            
-            if (methodsSeen == 1) return lastMethod;
+
+            if (methodsSeen == 1)
+            {
+                LogSupport.Trace($"Method {className}::{methodName} was stubbed with a random matching method of the same name");
+                LogSupport.Trace($"Stubby return type/target: {Marshal.PtrToStringAnsi(il2cpp_type_get_name(il2cpp_method_get_return_type(lastMethod)))} / {returnTypeName}");
+                LogSupport.Trace("Stubby parameter types/targets follow:");
+                for (var i = 0; i < argTypes.Length; i++)
+                {
+                    var paramType = il2cpp_method_get_param(lastMethod, (uint) i);
+                    var typeName = Marshal.PtrToStringAnsi(il2cpp_type_get_name(paramType));
+                    LogSupport.Trace($"    {typeName} / {argTypes[i]}");
+                }
+                
+                return lastMethod;
+            }
             
             LogSupport.Trace($"Unable to find method {className}::{methodName}; signature follows");
+            LogSupport.Trace($"    return {returnTypeName}");
             foreach (var argType in argTypes) LogSupport.Trace($"    {argType}");
             LogSupport.Trace("Available methods of this name follow:");
             iter = IntPtr.Zero;
@@ -118,6 +134,7 @@ namespace UnhollowerBaseLib
 
                 var nParams = il2cpp_method_get_param_count(method);
                 LogSupport.Trace("Method starts");
+                LogSupport.Trace($"     return {Marshal.PtrToStringAnsi(il2cpp_type_get_name(il2cpp_method_get_return_type(method)))}");
                 for (var i = 0; i < nParams; i++)
                 {
                     var paramType = il2cpp_method_get_param(method, (uint) i);
@@ -237,6 +254,63 @@ namespace UnhollowerBaseLib
             if (typeof(T).IsValueType)
                 return (T) UnboxMethod.MakeGenericMethod(typeof(T)).Invoke(nativeObject, new object[0]);
             return (T) CastMethod.MakeGenericMethod(typeof(T)).Invoke(nativeObject, new object[0]);
+        }
+
+        public static string RenderTypeName<T>(bool addRefMarker = false)
+        {
+            return RenderTypeName(typeof(T), addRefMarker);
+        }
+
+        public static string RenderTypeName(Type t, bool addRefMarker = false)
+        {
+            if (addRefMarker) return RenderTypeName(t) + "&";
+            if (t.IsArray) return RenderTypeName(t.GetElementType()) + "[]";
+            if (t.IsByRef) return RenderTypeName(t.GetElementType()) + "&";
+            if (t.IsPointer) return RenderTypeName(t.GetElementType()) + "*";
+            if (t.IsGenericParameter) return t.Name;
+
+            if (t.IsGenericType)
+            {
+                if (t.TypeHasIl2CppArrayBase())
+                    return RenderTypeName(t.GetGenericArguments()[0]) + "[]";
+                
+                var builder = new StringBuilder();
+                builder.Append(t.GetGenericTypeDefinition().FullNameObfuscated().TrimIl2CppPrefix());
+                builder.Append('<');
+                var genericArguments = t.GetGenericArguments();
+                for (var i = 0; i < genericArguments.Length; i++)
+                {
+                    if (i != 0) builder.Append(',');
+                    builder.Append(RenderTypeName(genericArguments[i]));
+                }
+                builder.Append('>');
+                return builder.ToString();
+            }
+
+            if (t == typeof(Il2CppStringArray))
+                return "System.String[]";
+
+            return t.FullNameObfuscated().TrimIl2CppPrefix();
+        }
+
+        private static string FullNameObfuscated(this Type t)
+        {
+            var obfuscatedNameAnnotations = t.GetCustomAttribute<ObfuscatedNameAttribute>();
+            if (obfuscatedNameAnnotations == null) return t.FullName;
+            return obfuscatedNameAnnotations.ObfuscatedName;
+        }
+
+        private static string TrimIl2CppPrefix(this string s)
+        {
+            return s.StartsWith("Il2Cpp") ? s.Substring("Il2Cpp".Length) : s;
+        }
+
+        private static bool TypeHasIl2CppArrayBase(this Type type)
+        {
+            if (type == null) return false;
+            if (type.IsConstructedGenericType) type = type.GetGenericTypeDefinition();
+            if (type == typeof(Il2CppArrayBase<>)) return true;
+            return TypeHasIl2CppArrayBase(type.BaseType);
         }
 
         // IL2CPP Functions
