@@ -379,9 +379,22 @@ namespace AssemblyUnhollower
             if (newMethodParameter.ParameterType.GetElementType().FullName == "System.String")
                 body.Emit(OpCodes.Call, imports.StringFromNative);
             else
+            {
+                body.Emit(OpCodes.Dup);
+                var nullbr = body.Create(OpCodes.Pop);
+                var stnop = body.Create(OpCodes.Nop);
+                body.Emit(OpCodes.Brfalse_S, nullbr);
+                
                 body.Emit(OpCodes.Newobj,
                     new MethodReference(".ctor", imports.Void, newMethodParameter.ParameterType.GetElementType())
                         {HasThis = true, Parameters = {new ParameterDefinition(imports.IntPtr)}});
+                body.Emit(OpCodes.Br_S, stnop);
+                
+                body.Append(nullbr);
+                body.Emit(OpCodes.Ldnull);
+                body.Append(stnop);
+            }
+
             body.Emit(OpCodes.Stind_Ref);
         }
     }
