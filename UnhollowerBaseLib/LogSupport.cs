@@ -5,10 +5,10 @@ namespace UnhollowerBaseLib
 {
     public static class LogSupport
     {
-        public static event Action<string> ErrorHandler;
-        public static event Action<string> WarningHandler;
-        public static event Action<string> InfoHandler;
-        public static event Action<string> TraceHandler;
+        public static Action<string> ErrorHandler;
+        public static Action<string> WarningHandler;
+        public static Action<string> InfoHandler;
+        public static Action<string> TraceHandler;
 
         public static void InstallConsoleHandlers()
         {
