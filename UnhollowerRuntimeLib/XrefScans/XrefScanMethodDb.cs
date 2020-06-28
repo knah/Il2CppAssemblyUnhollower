@@ -40,9 +40,10 @@ namespace UnhollowerRuntimeLib.XrefScans
 
                     void ProcessMethod(MethodBase method)
                     {
+                        if (method.IsGenericMethod || method.IsGenericMethodDefinition) return;
                         if (method.GetMethodBody() == null) return;
                         var pointerField = UnhollowerUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(method);
-                        if (pointerField == null) return;
+                        if (pointerField == null || pointerField.DeclaringType?.IsGenericTypeDefinition == true) return;
                         MethodMap[*(IntPtr*) (IntPtr) pointerField.GetValue(null)] = method;
                     }
 
