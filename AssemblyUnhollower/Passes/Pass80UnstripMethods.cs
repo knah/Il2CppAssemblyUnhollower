@@ -32,6 +32,7 @@ namespace AssemblyUnhollower.Passes
                     foreach (var unityMethod in unityType.Methods)
                     {
                         if (unityMethod.Name == ".cctor" || unityMethod.Name == ".ctor") continue;
+                        if (unityMethod.IsAbstract) continue;
                         
                         var processedMethod = processedType.TryGetMethodByName(unityMethod.Name);
                         if (processedMethod != null) continue;
