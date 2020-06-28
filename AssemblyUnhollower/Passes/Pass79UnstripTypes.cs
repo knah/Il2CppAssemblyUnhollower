@@ -55,13 +55,28 @@ namespace AssemblyUnhollower.Passes
                 return;
             }
 
+            if (unityType.IsSealed && unityType.IsAbstract && processedType == null) // aka static
+            {
+                typesUnstripped++;
+                var clonedType = CloneStatic(unityType, imports);
+                if (enclosingNewType == null)
+                    processedAssembly.NewAssembly.MainModule.Types.Add(clonedType);
+                else
+                {
+                    enclosingNewType.NestedTypes.Add(clonedType);
+                    clonedType.DeclaringType = enclosingNewType;
+                }
+
+                processedAssembly.RegisterTypeRewrite(new TypeRewriteContext(processedAssembly, null, clonedType));
+            }
+
             foreach (var nestedUnityType in unityType.NestedTypes)
                 ProcessType(processedAssembly, nestedUnityType, processedType, imports, ref typesUnstripped);
         }
 
         private static TypeDefinition CloneEnum(TypeDefinition sourceEnum, AssemblyKnownImports imports)
         {
-            var newType = new TypeDefinition(sourceEnum.Namespace, sourceEnum.Name, sourceEnum.Attributes, imports.Enum);
+            var newType = new TypeDefinition(sourceEnum.Namespace, sourceEnum.Name, ForcePublic(sourceEnum.Attributes), imports.Enum);
             foreach (var sourceEnumField in sourceEnum.Fields)
             {
                 var newField = new FieldDefinition(sourceEnumField.Name, sourceEnumField.Attributes, sourceEnumField.Name == "value__" ? TargetTypeSystemHandler.String.Module.GetType(sourceEnumField.FieldType.FullName) : newType);
@@ -70,6 +85,21 @@ namespace AssemblyUnhollower.Passes
             }
 
             return newType;
+        }
+        
+        private static TypeDefinition CloneStatic(TypeDefinition sourceEnum, AssemblyKnownImports imports)
+        {
+            var newType = new TypeDefinition(sourceEnum.Namespace, sourceEnum.Name, ForcePublic(sourceEnum.Attributes), imports.Object);
+            return newType;
+        }
+
+        private static TypeAttributes ForcePublic(TypeAttributes typeAttributes)
+        {
+            var visibility = typeAttributes & TypeAttributes.VisibilityMask;
+            if (visibility == 0 || visibility == TypeAttributes.Public)
+                return typeAttributes | TypeAttributes.Public;
+            
+            return typeAttributes & ~(TypeAttributes.VisibilityMask) | TypeAttributes.NestedPublic;
         }
     }
 }

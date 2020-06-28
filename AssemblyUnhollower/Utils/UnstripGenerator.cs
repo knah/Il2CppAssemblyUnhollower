@@ -78,7 +78,15 @@ namespace AssemblyUnhollower.Utils
             var delegateField = new FieldDefinition(delegateType.Name + "Field", FieldAttributes.Static | FieldAttributes.Private | FieldAttributes.InitOnly, delegateType);
             enclosingType.Fields.Add(delegateField);
             
-            var staticCtor = enclosingType.Methods.Single(it => it.Name == ".cctor");
+            var staticCtor = enclosingType.Methods.SingleOrDefault(it => it.Name == ".cctor");
+            if (staticCtor == null)
+            {
+                staticCtor = new MethodDefinition(".cctor",
+                    MethodAttributes.Static | MethodAttributes.Private | MethodAttributes.SpecialName |
+                    MethodAttributes.HideBySig | MethodAttributes.RTSpecialName, imports.Void);
+                staticCtor.Body.GetILProcessor().Emit(OpCodes.Ret);
+                enclosingType.Methods.Add(staticCtor);
+            }
             var bodyProcessor = staticCtor.Body.GetILProcessor();
 
             bodyProcessor.Remove(staticCtor.Body.Instructions.Last()); // remove ret
