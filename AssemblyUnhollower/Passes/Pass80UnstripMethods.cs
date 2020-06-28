@@ -34,7 +34,7 @@ namespace AssemblyUnhollower.Passes
                         if (unityMethod.Name == ".cctor" || unityMethod.Name == ".ctor") continue;
                         if (unityMethod.IsAbstract) continue;
                         
-                        var processedMethod = processedType.TryGetMethodByName(unityMethod.Name);
+                        var processedMethod = processedType.TryGetMethodByUnityAssemblyMethod(unityMethod);
                         if (processedMethod != null) continue;
 
                         var returnType = ResolveTypeInNewAssemblies(context, unityMethod.ReturnType, imports);

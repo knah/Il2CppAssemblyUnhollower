@@ -93,6 +93,29 @@ namespace AssemblyUnhollower.Contexts
         public MethodRewriteContext GetMethodByOldMethod(MethodDefinition method) => myMethodContexts[method];
         public MethodRewriteContext? TryGetMethodByOldMethod(MethodDefinition method) => myMethodContexts.TryGetValue(method, out var result) ? result : null;
         public MethodRewriteContext? TryGetMethodByName(string name) => myMethodContextsByName.TryGetValue(name, out var result) ? result : null;
+        public MethodRewriteContext? TryGetMethodByUnityAssemblyMethod(MethodDefinition method)
+        {
+            foreach (var methodRewriteContext in myMethodContexts)
+            {
+                var originalMethod = methodRewriteContext.Value.OriginalMethod;
+                if (originalMethod.Name != method.Name) continue;
+                if (originalMethod.Parameters.Count != method.Parameters.Count) continue;
+                var badMethod = false;
+                for (var i = 0; i < originalMethod.Parameters.Count; i++)
+                {
+                    if (originalMethod.Parameters[i].ParameterType.FullName != method.Parameters[i].ParameterType.FullName)
+                    {
+                        badMethod = true;
+                        break;
+                    }
+                }
+                if (badMethod) continue;
+
+                return methodRewriteContext.Value;
+            }
+
+            return null;
+        }
 
         public enum TypeSpecifics
         {
