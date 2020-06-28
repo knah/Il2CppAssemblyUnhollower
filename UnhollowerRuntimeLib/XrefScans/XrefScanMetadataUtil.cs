@@ -35,8 +35,8 @@ namespace UnhollowerRuntimeLib.XrefScans
             if (nativeMethodInfoObject == null) return false;
             var nativeMethodInfo = (IntPtr) nativeMethodInfoObject;
             var codeStart = *(IntPtr*) nativeMethodInfo;
-            var firstCall = XrefScannerLowLevel.JumpTargets(codeStart).First();
-            if (firstCall != ourMetadataInitForMethodPointer) return false;
+            var firstCall = XrefScannerLowLevel.JumpTargets(codeStart).FirstOrDefault();
+            if (firstCall != ourMetadataInitForMethodPointer || firstCall == IntPtr.Zero) return false;
 
             var tokenPointer = XrefScanUtilFinder.FindLastRcxReadAddressBeforeCallTo(codeStart, ourMetadataInitForMethodPointer);
             var initFlagPointer = XrefScanUtilFinder.FindByteWriteTargetRightAfterCallTo(codeStart, ourMetadataInitForMethodPointer);
