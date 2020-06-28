@@ -56,7 +56,7 @@ namespace AssemblyUnhollower.Contexts
                 if (arrayType.Rank != 1)
                     return Imports.Il2CppObjectBase;
                 
-                var elementType = typeRef.GetElementType();
+                var elementType = arrayType.ElementType;
                 if (elementType.FullName == "System.String")
                     return sourceModule.ImportReference(typeof(Il2CppStringArray));
 
