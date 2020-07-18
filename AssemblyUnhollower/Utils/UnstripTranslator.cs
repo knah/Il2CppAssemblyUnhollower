@@ -105,7 +105,9 @@ namespace AssemblyUnhollower.Utils
                     return false;
                 } else if (bodyInstruction.OpCode.OperandType == OperandType.InlineTok)
                 {
-                    var targetTok = (TypeReference) bodyInstruction.Operand;
+                    var targetTok = bodyInstruction.Operand as TypeReference;
+                    if (targetTok == null) 
+                        return false;
                     if (targetTok is GenericParameter genericParam)
                     {
                         if (genericParam.Owner is TypeReference paramOwner)
