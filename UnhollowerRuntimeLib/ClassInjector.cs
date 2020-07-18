@@ -157,7 +157,7 @@ namespace UnhollowerRuntimeLib
             LogSupport.Info($"Registered mono type {typeof(T)} in il2cpp domain");
         }
 
-        private static IntPtr ReadClassPointerForType(Type type)
+        internal static IntPtr ReadClassPointerForType(Type type)
         {
             if (type == typeof(void)) return Il2CppClassPointerStore<Void>.NativeClassPtr;
             return (IntPtr) typeof(Il2CppClassPointerStore<>).MakeGenericType(type)

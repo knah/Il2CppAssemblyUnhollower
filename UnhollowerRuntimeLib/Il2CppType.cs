@@ -12,6 +12,12 @@ namespace UnhollowerRuntimeLib
             if (il2CppType == IntPtr.Zero) throw new ArgumentException($"{typeName} does not have a corresponding IL2CPP type pointer");
             return Il2CppSystem.Type.internal_from_handle(il2CppType);
         }
+
+        public static Il2CppSystem.Type From(Type type)
+        {
+            var pointer = ClassInjector.ReadClassPointerForType(type);
+            return TypeFromPointer(pointer, type.Name);
+        }
         
         public static Il2CppSystem.Type Of<T>()
         {
