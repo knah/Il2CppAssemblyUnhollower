@@ -451,7 +451,7 @@ namespace UnhollowerRuntimeLib
         private static long ourClassOverrideCounter = -2;
         private static readonly ConcurrentDictionary<long, IntPtr> FakeTokenClasses = new ConcurrentDictionary<long, IntPtr>();
 
-        private static TypeToClassDelegate ourOriginalTypeToClassMethod;
+        private static volatile TypeToClassDelegate ourOriginalTypeToClassMethod;
         private static readonly VoidCtorDelegate FinalizeDelegate = Finalize;
 
         private static Il2CppClass* ClassFromTypePatch(Il2CppTypeStruct* type)
@@ -461,6 +461,8 @@ namespace UnhollowerRuntimeLib
                 FakeTokenClasses.TryGetValue((long) type->data, out var classPointer);
                 return (Il2CppClass*) classPointer;
             }
+            // possible race: other threads can try resolving classes after the hook is installed but before delegate field is set
+            while (ourOriginalTypeToClassMethod == null) Thread.Sleep(1);
             return ourOriginalTypeToClassMethod(type);
         }
 
