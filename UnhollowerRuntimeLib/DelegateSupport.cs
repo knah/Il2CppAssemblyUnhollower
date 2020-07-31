@@ -142,7 +142,7 @@ namespace UnhollowerRuntimeLib
             }
             
             bodyBuilder.Emit(OpCodes.Call, managedMethod);
-            
+
             if (returnType == typeof(string))
                 bodyBuilder.Emit(OpCodes.Call, typeof(IL2CPP).GetMethod(nameof(IL2CPP.ManagedStringToIl2Cpp))!);
             else if (!returnType.IsValueType)
@@ -160,6 +160,13 @@ namespace UnhollowerRuntimeLib
                 bodyBuilder.MarkLabel(labelDone);
             }
 
+            LocalBuilder returnLocal = null;
+            if (returnType != typeof(void))
+            {
+                returnLocal = bodyBuilder.DeclareLocal(returnType);
+                bodyBuilder.Emit(OpCodes.Stloc, returnLocal);
+            }
+
             var exceptionLocal = bodyBuilder.DeclareLocal(typeof(Exception));
             bodyBuilder.BeginCatchBlock(typeof(Exception));
             bodyBuilder.Emit(OpCodes.Stloc, exceptionLocal);
@@ -170,7 +177,9 @@ namespace UnhollowerRuntimeLib
             bodyBuilder.Emit(OpCodes.Call, typeof(LogSupport).GetMethod(nameof(LogSupport.Error))!);
             
             bodyBuilder.EndExceptionBlock();
-            
+
+            if (returnLocal != null)
+                bodyBuilder.Emit(OpCodes.Ldloc, returnLocal);
             bodyBuilder.Emit(OpCodes.Ret);
 
             return trampoline.CreateDelegate(GetOrCreateDelegateType(signature, managedMethod));

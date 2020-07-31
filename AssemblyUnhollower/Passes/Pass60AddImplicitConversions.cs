@@ -100,17 +100,17 @@ namespace AssemblyUnhollower.Passes
                                     "System.Func`" + (invokeMethod.Parameters.Count + 1)));
 
                     GenericInstanceType? genericInstanceType = null;
-                    if (hasReturn)
-                    {
-                        genericInstanceType = new GenericInstanceType(monoDelegateType);
-                        genericInstanceType.GenericArguments.Add(invokeMethod.ReturnType);
-                    }
-                    
                     if (hasParameters)
                     {
-                        genericInstanceType ??= new GenericInstanceType(monoDelegateType);
+                        genericInstanceType = new GenericInstanceType(monoDelegateType);
                         for (var i = 0; i < invokeMethod.Parameters.Count; i++)
                             genericInstanceType.GenericArguments.Add(invokeMethod.Parameters[i].ParameterType);
+                    }
+
+                    if (hasReturn)
+                    {
+                        genericInstanceType ??= new GenericInstanceType(monoDelegateType);
+                        genericInstanceType.GenericArguments.Add(invokeMethod.ReturnType);
                     }
 
                     implicitMethod.Parameters.Add(new ParameterDefinition(genericInstanceType != null
