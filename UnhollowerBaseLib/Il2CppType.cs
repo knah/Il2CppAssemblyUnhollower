@@ -26,7 +26,7 @@ namespace UnhollowerRuntimeLib
         }
     }
 
-    [Obsolete("Use Il2CppType.Of<T>()", true)]
+    [Obsolete("Use Il2CppType.Of<T>()", false)]
     public static class Il2CppTypeOf<T>
     {
         [Obsolete("Use Il2CppType.Of<T>()", true)]
