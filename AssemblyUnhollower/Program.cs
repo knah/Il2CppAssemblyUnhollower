@@ -203,6 +203,9 @@ namespace AssemblyUnhollower
             else
                 Console.WriteLine("Not performing unstripping as unity libs are not specified");
             
+            using(new TimingCookie("Generating forwarded types"))
+                Pass89GenerateForwarders.DoPass(rewriteContext);
+            
             using(new TimingCookie("Writing assemblies"))
                 Pass99WriteToDisk.DoPass(rewriteContext, options);
 
