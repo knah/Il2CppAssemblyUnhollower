@@ -50,7 +50,7 @@ namespace AssemblyUnhollower.Contexts
 
             if (fieldA.IsStatic != fieldB.IsStatic) return false;
 
-            return fieldA.FieldType.FullName == fieldB.FieldType.FullName;
+            return fieldA.FieldType.Name == fieldB.FieldType.Name;
         }
     }
 }
