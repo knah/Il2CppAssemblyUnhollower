@@ -207,7 +207,7 @@ namespace AssemblyUnhollower
                 Pass89GenerateForwarders.DoPass(rewriteContext);
             
             using(new TimingCookie("Writing assemblies"))
-                Pass99WriteToDisk.DoPass(rewriteContext, options);
+                Pass90WriteToDisk.DoPass(rewriteContext, options);
 
             File.Copy(typeof(IL2CPP).Assembly.Location, Path.Combine(options.OutputDir, typeof(IL2CPP).Assembly.GetName().Name + ".dll"), true);
             File.Copy(typeof(RuntimeLibMarker).Assembly.Location, Path.Combine(options.OutputDir, typeof(RuntimeLibMarker).Assembly.GetName().Name + ".dll"), true);

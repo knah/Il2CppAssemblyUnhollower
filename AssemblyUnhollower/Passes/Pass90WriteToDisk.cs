@@ -4,7 +4,7 @@ using AssemblyUnhollower.Contexts;
 
 namespace AssemblyUnhollower.Passes
 {
-    public static class Pass99WriteToDisk
+    public static class Pass90WriteToDisk
     {
         public static void DoPass(RewriteGlobalContext context, UnhollowerOptions options)
         {
