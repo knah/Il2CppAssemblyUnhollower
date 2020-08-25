@@ -100,7 +100,10 @@ namespace AssemblyUnhollower
                     PrintUsage();
                     return;
                 } else if (s == ParamVerbose)
+                {
                     LogSupport.TraceHandler += Console.WriteLine;
+                    options.Verbose = true;
+                }
                 else if (s.StartsWith(ParamInputDir))
                     options.SourceDir = s.Substring(ParamInputDir.Length);
                 else if (s.StartsWith(ParamOutputDir))
@@ -217,6 +220,9 @@ namespace AssemblyUnhollower
             
             using(new TimingCookie("Writing assemblies"))
                 Pass90WriteToDisk.DoPass(rewriteContext, options);
+            
+            using(new TimingCookie("Writing method pointer map"))
+                Pass91GenerateMethodPointerMap.DoPass(rewriteContext, options);
 
             File.Copy(typeof(IL2CPP).Assembly.Location, Path.Combine(options.OutputDir, typeof(IL2CPP).Assembly.GetName().Name + ".dll"), true);
             File.Copy(typeof(RuntimeLibMarker).Assembly.Location, Path.Combine(options.OutputDir, typeof(RuntimeLibMarker).Assembly.GetName().Name + ".dll"), true);

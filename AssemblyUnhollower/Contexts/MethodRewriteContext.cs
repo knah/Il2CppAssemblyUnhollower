@@ -11,7 +11,8 @@ namespace AssemblyUnhollower.Contexts
         public readonly MethodDefinition OriginalMethod;
         public readonly MethodDefinition NewMethod;
 
-        public readonly long Address;
+        public readonly long FileOffset;
+        public readonly long Rva;
 
         public string UnmangledName { get; private set; }
         public string UnmangledNameWithSignature { get; private set; }
@@ -44,7 +45,8 @@ namespace AssemblyUnhollower.Contexts
             if (!Pass15GenerateMemberContexts.HasObfuscatedMethods && originalMethod.Name.IsObfuscated())
                 Pass15GenerateMemberContexts.HasObfuscatedMethods = true;
 
-            Address = originalMethod.ExtractAddress();
+            FileOffset = originalMethod.ExtractOffset();
+            Rva = originalMethod.ExtractRva();
         }
 
         public void CtorPhase2()
@@ -138,8 +140,10 @@ namespace AssemblyUnhollower.Contexts
             (MethodSemanticsAttributes.RemoveOn, "_rem"),
             (MethodSemanticsAttributes.Fire, "_fire"),
         };
-        private string ProduceMethodSignatureBase(MethodDefinition method)
+        private string ProduceMethodSignatureBase()
         {
+            var method = OriginalMethod;
+            
             var name = method.Name;
             if (method.Name.IsInvalidInSource())
                 name = "Method";
@@ -169,7 +173,7 @@ namespace AssemblyUnhollower.Contexts
                 builder.Append(DeclaringType.AssemblyContext.RewriteTypeRef(param.ParameterType).GetUnmangledName());
             }
             
-            var address = method.ExtractAddress();
+            var address = FileOffset;
             if (address != 0 && Pass15GenerateMemberContexts.HasObfuscatedMethods && !Pass16ScanMethodRefs.NonDeadMethods.Contains(address)) builder.Append("_PDM");
 
             return builder.ToString();
@@ -179,7 +183,7 @@ namespace AssemblyUnhollower.Contexts
         private string UnmangleMethodNameWithSignature()
         {
             var method = OriginalMethod;
-            return ProduceMethodSignatureBase(method) + "_" + DeclaringType.Methods.Where(ParameterSignatureMatchesThis).TakeWhile(it => it != this).Count();
+            return ProduceMethodSignatureBase() + "_" + DeclaringType.Methods.Where(ParameterSignatureMatchesThis).TakeWhile(it => it != this).Count();
         }
         
         private bool ParameterSignatureMatchesThis(MethodRewriteContext otherRewriteContext)
@@ -216,8 +220,8 @@ namespace AssemblyUnhollower.Contexts
 
             if (Pass15GenerateMemberContexts.HasObfuscatedMethods)
             {
-                var addressA = otherRewriteContext.Address;
-                var addressB = Address;
+                var addressA = otherRewriteContext.FileOffset;
+                var addressB = FileOffset;
                 if (addressA != 0 && addressB != 0)
                     if (Pass16ScanMethodRefs.NonDeadMethods.Contains(addressA) != Pass16ScanMethodRefs.NonDeadMethods.Contains(addressB))
                         return false;

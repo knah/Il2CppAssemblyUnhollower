@@ -6,10 +6,13 @@ namespace AssemblyUnhollower
 {
     public static class MethodDefinitionEx
     {
-        public static long ExtractAddress(this MethodDefinition originalMethod)
+        public static long ExtractOffset(this MethodDefinition originalMethod) => ExtractAddress(originalMethod, "Offset");
+        public static long ExtractRva(this MethodDefinition originalMethod) => ExtractAddress(originalMethod, "RVA");
+
+        private static long ExtractAddress(this MethodDefinition originalMethod, string attributeName)
         {
             var addressAttribute = originalMethod.CustomAttributes.SingleOrDefault(it => it.AttributeType.Name == "AddressAttribute");
-            var rvaField = addressAttribute?.Fields.SingleOrDefault(it => it.Name == "Offset");
+            var rvaField = addressAttribute?.Fields.SingleOrDefault(it => it.Name == attributeName);
 
             if (rvaField?.Name == null) return 0;
 

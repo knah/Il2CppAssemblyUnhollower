@@ -1,73 +1,44 @@
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Reflection;
-using System.Threading;
-using UnhollowerBaseLib;
+using UnhollowerBaseLib.Maps;
 
 namespace UnhollowerRuntimeLib.XrefScans
 {
     public static class XrefScanMethodDb
     {
-        private static readonly ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
-        private static readonly HashSet<Type> RegisteredTypes = new HashSet<Type>();
-        private static readonly Dictionary<IntPtr, MethodBase> MethodMap = new Dictionary<IntPtr, MethodBase>();
-        
+        private static readonly MethodAddressToTokenMap MethodMap;
+        private static readonly long GameAssemblyBase;
+
+        static XrefScanMethodDb()
+        {
+            var databasePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, MethodAddressToTokenMap.FileName);
+            MethodMap = new MethodAddressToTokenMap(databasePath);
+            
+            foreach (ProcessModule module in Process.GetCurrentProcess().Modules)
+            {
+                if (module.ModuleName == "GameAssembly.dll")
+                {
+                    GameAssemblyBase = (long) module.BaseAddress;
+                    break;
+                }
+            }
+        }
+
         public static MethodBase TryResolvePointer(IntPtr methodStart)
         {
-            try
-            {
-                Lock.EnterReadLock();
-                MethodMap.TryGetValue(methodStart, out var result);
-                return result;
-            }
-            finally
-            {
-                Lock.ExitReadLock();
-            }
+            return MethodMap.Lookup((long) methodStart - GameAssemblyBase);
         }
 
-        public static unsafe void RegisterType(Type type)
+        [Obsolete("Type registration is no longer needed")]
+        public static void RegisterType(Type type)
         {
-            try
-            {
-                Lock.EnterUpgradeableReadLock();
-                if (RegisteredTypes.Contains(type)) return;
-
-                try
-                {
-                    Lock.EnterWriteLock();
-                    RegisteredTypes.Add(type);
-
-                    void ProcessMethod(MethodBase method)
-                    {
-                        if (method.IsGenericMethod || method.IsGenericMethodDefinition) return;
-                        if (method.GetMethodBody() == null) return;
-                        var pointerField = UnhollowerUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(method);
-                        if (pointerField == null || pointerField.DeclaringType?.IsGenericTypeDefinition == true) return;
-                        MethodMap[*(IntPtr*) (IntPtr) pointerField.GetValue(null)] = method;
-                    }
-
-                    var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
-                    foreach (var methodInfo in methods) 
-                        ProcessMethod(methodInfo);
-                    
-                    var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
-                    foreach (var methodInfo in ctors) 
-                        ProcessMethod(methodInfo);
-                }
-                finally
-                {
-                    Lock.ExitWriteLock();
-                }
-            }
-            finally
-            {
-                Lock.ExitUpgradeableReadLock();
-            }
-            if (type.BaseType != null)
-                RegisterType(type.BaseType);
         }
 
-        public static void RegisterType<T>() => RegisterType(typeof(T));
+        [Obsolete("Type registration is no longer needed")]
+        public static void RegisterType<T>()
+        {
+        }
     }
 }

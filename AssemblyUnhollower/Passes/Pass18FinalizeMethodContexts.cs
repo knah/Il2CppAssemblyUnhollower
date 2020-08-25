@@ -27,7 +27,7 @@ namespace AssemblyUnhollower.Passes
                 TotalPotentiallyDeadMethods++;
 
                 int callerCount = 0;
-                if (Pass16ScanMethodRefs.MapOfCallers.TryGetValue(methodContext.Address, out var callers))
+                if (Pass16ScanMethodRefs.MapOfCallers.TryGetValue(methodContext.FileOffset, out var callers))
                     callerCount = callers.Count;
 
                 methodContext.NewMethod.CustomAttributes.Add(

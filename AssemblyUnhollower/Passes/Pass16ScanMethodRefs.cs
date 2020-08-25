@@ -41,7 +41,7 @@ namespace AssemblyUnhollower.Passes
             foreach (var typeRewriteContext in assemblyRewriteContext.Types)
             foreach (var originalTypeMethod in typeRewriteContext.Methods)
             {
-                var address = originalTypeMethod.Address;
+                var address = originalTypeMethod.FileOffset;
                 if (address == 0) continue;
 
                 foreach (var callTarget in XrefScannerLowLevel.CallAndIndirectTargets(IntPtr.Add(gameAssemblyPtr, (int) address)))
@@ -68,11 +68,11 @@ namespace AssemblyUnhollower.Passes
             foreach (var typeRewriteContext in assemblyRewriteContext.Types)
             foreach (var methodRewriteContext in typeRewriteContext.Methods)
             {
-                if (methodRewriteContext.Address == 0) continue;
+                if (methodRewriteContext.FileOffset == 0) continue;
                 
                 var originalMethod = methodRewriteContext.OriginalMethod;
                 if (!originalMethod.Name.IsObfuscated() || originalMethod.IsVirtual)
-                    MarkMethodAlive(methodRewriteContext.Address);
+                    MarkMethodAlive(methodRewriteContext.FileOffset);
             }
         }
     }
