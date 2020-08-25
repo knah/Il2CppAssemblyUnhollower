@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using UnhollowerBaseLib.Attributes;
 using UnhollowerBaseLib.Runtime;
+using UnhollowerRuntimeLib;
 
 namespace UnhollowerBaseLib
 {
@@ -196,7 +197,6 @@ namespace UnhollowerBaseLib
             return obj?.Pointer ?? throw new NullReferenceException();
         }
 
-        public static Func<IntPtr, string, IntPtr> GetNestedTypeViaReflection; 
         public static IntPtr GetIl2CppNestedType(IntPtr enclosingType, string nestedTypeName)
         {
             if(enclosingType == IntPtr.Zero) return IntPtr.Zero;
@@ -206,18 +206,8 @@ namespace UnhollowerBaseLib
             if (il2cpp_class_is_inflated(enclosingType))
             {
                 LogSupport.Trace("Original class was inflated, falling back to reflection");
-                if (GetNestedTypeViaReflection == null)
-                {
-                    // todo: clean up this ugly reflection hack
-                    GetNestedTypeViaReflection = AppDomain.CurrentDomain.GetAssemblies()
-                        .FirstOrDefault(it => it.GetName().Name == "UnhollowerRuntimeLib")
-                        ?.GetType("UnhollowerRuntimeLib.RuntimeReflectionHelper")
-                        ?.GetMethod("GetNestedTypeViaReflection", BindingFlags.Static | BindingFlags.Public)?.CreateDelegate(typeof(Func<IntPtr, string, IntPtr>)) as Func<IntPtr, string, IntPtr>;
-                }
                 
-                var result = GetNestedTypeViaReflection?.Invoke(enclosingType, nestedTypeName);
-                if (result != null) 
-                    return result.Value;
+                return RuntimeReflectionHelper.GetNestedTypeViaReflection(enclosingType, nestedTypeName);
             }
             while((nestedTypePtr = il2cpp_class_get_nested_types(enclosingType, ref iter)) != IntPtr.Zero)
             {
