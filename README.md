@@ -27,6 +27,7 @@ Before certain features can be used (namely class injection and delegate convers
  * Unstripped methods with array operations inside contain invalid bytecode
  * Unstripped methods with casts inside will likely throw invalid cast exceptions or produce nulls
  * Some unstripped methods are stubbed with `NotSupportedException` in cases where rewrite failed
+ * Nullables have issues when returned from field/property getters and methods
 
 ## Generated assemblies caveats
  * IL2CPP types must be cast using `.Cast<T>` or `.TryCast<T>` methods instead of C-style casts or `as`.
