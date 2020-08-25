@@ -30,7 +30,12 @@ namespace UnhollowerBaseLib
         public bool Contains(T item) => IndexOf(item) != -1;
         public void CopyTo(T[] array, int arrayIndex)
         {
-            throw new NotImplementedException();
+            if (array == null) throw new ArgumentNullException(nameof(array));
+            if (arrayIndex < 0) throw new ArgumentOutOfRangeException(nameof(arrayIndex));
+            if (array.Length - arrayIndex < Length) throw new ArgumentException($"Not enough space in target array: need {Length} slots, have {array.Length - arrayIndex}");
+
+            for (var i = 0; i < Length; i++)
+                array[i + arrayIndex] = this[i];
         }
 
         bool ICollection<T>.Remove(T item) => ThrowImmutableLength();
