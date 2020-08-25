@@ -13,10 +13,25 @@ namespace AssemblyUnhollower
 
             return str;
         }
+        
+        public static bool IsInvalidInSource(this string str)
+        {
+            foreach (var it in str)
+            {
+                if (!char.IsDigit(it) && !(it >= 'a' && it <= 'z' || it >= 'A' && it <= 'Z') && it != '_' && it != '`') return true;
+            }
+
+            return false;
+        }
 
         public static bool IsObfuscated(this string str)
         {
-            return str.Any(it => !char.IsDigit(it) && !(it >= 'a' && it <= 'z' || it >= 'A' && it <= 'Z') && it != '_' && it != '`');
+            foreach (var it in str)
+            {
+                if (!char.IsDigit(it) && !(it >= 'a' && it <= 'z' || it >= 'A' && it <= 'Z') && it != '_' && it != '`' && it != '.' && it != '<' && it != '>') return true;
+            }
+
+            return false;
         }
 
         public static ulong StableHash(this string str)

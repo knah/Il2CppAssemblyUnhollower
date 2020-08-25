@@ -55,6 +55,7 @@ namespace AssemblyUnhollower
         private const string ParamOutputDir = "--output=";
         private const string ParamMscorlibPath = "--mscorlib=";
         private const string ParamUnityDir = "--unity=";
+        private const string ParamGameAssemblyPath = "--gameassembly=";
         private const string ParamUniqChars = "--deobf-uniq-chars=";
         private const string ParamUniqMax = "--deobf-uniq-max=";
         private const string ParamAnalyze = "--deobf-analyze";
@@ -72,6 +73,7 @@ namespace AssemblyUnhollower
             Console.WriteLine($"\t{ParamOutputDir}<directory path> - Required. Directory to put results into");
             Console.WriteLine($"\t{ParamMscorlibPath}<file path> - Required. mscorlib.dll of target runtime system (typically loader's)");
             Console.WriteLine($"\t{ParamUnityDir}<directory path> - Optional. Directory with original Unity assemblies for unstripping");
+            Console.WriteLine($"\t{ParamGameAssemblyPath}<file path> - Optional. Path to GameAssembly.dll. Used for certain analyses");
             Console.WriteLine($"\t{ParamUniqChars}<number> - Optional. How many characters per unique token to use during deobfuscation");
             Console.WriteLine($"\t{ParamUniqMax}<number> - Optional. How many maximum unique tokens per type are allowed during deobfuscation");
             Console.WriteLine($"\t{ParamAnalyze} - Optional. Analyze deobfuscation performance with different parameter values. Will not generate assemblies.");
@@ -107,6 +109,8 @@ namespace AssemblyUnhollower
                     options.MscorlibPath = s.Substring(ParamMscorlibPath.Length);
                 else if (s.StartsWith(ParamUnityDir))
                     options.UnityBaseLibsDir = s.Substring(ParamUnityDir.Length);
+                else if (s.StartsWith(ParamGameAssemblyPath))
+                    options.GameAssemblyPath = s.Substring(ParamGameAssemblyPath.Length);
                 else if(s.StartsWith(ParamUniqChars))
                     options.TypeDeobfuscationCharsPerUniquifier = Int32.Parse(s.Substring(ParamUniqChars.Length));
                 else if(s.StartsWith(ParamUniqMax))
@@ -164,6 +168,11 @@ namespace AssemblyUnhollower
                 Pass13FillGenericConstraints.DoPass(rewriteContext);
             using(new TimingCookie("Creating members"))
                 Pass15GenerateMemberContexts.DoPass(rewriteContext);
+            using(new TimingCookie("Scanning method cross-references"))
+                Pass16ScanMethodRefs.DoPass(rewriteContext, options);
+            using(new TimingCookie("Finalizing method declarations"))
+                Pass18FinalizeMethodContexts.DoPass(rewriteContext);
+            LogSupport.Info($"{Pass18FinalizeMethodContexts.TotalPotentiallyDeadMethods} total potentially dead methods");
             using(new TimingCookie("Filling method parameters"))
                 Pass19CopyMethodParameters.DoPass(rewriteContext);
             

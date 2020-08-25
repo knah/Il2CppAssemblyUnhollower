@@ -23,6 +23,7 @@ namespace AssemblyUnhollower
         private readonly Lazy<TypeReference> myVoidReference;
         private readonly Lazy<TypeReference> myIntPtrReference;
         private readonly Lazy<TypeReference> myStringReference;
+        private readonly Lazy<TypeReference> myIntReference;
         private readonly Lazy<TypeDefinition> myTypeReference;
         private readonly Lazy<TypeReference> myEnumReference;
         private readonly Lazy<TypeReference> myDelegateReference;
@@ -41,6 +42,7 @@ namespace AssemblyUnhollower
         public TypeReference Void => myVoidReference.Value;
         public TypeReference IntPtr => myIntPtrReference.Value;
         public TypeReference String => myStringReference.Value;
+        public TypeReference Int => myIntReference.Value;
         public TypeDefinition Type => myTypeReference.Value;
         public TypeReference Enum => myEnumReference.Value;
         public TypeReference Delegate => myDelegateReference.Value;
@@ -103,6 +105,7 @@ namespace AssemblyUnhollower
         private readonly Lazy<MethodReference> myObsoleteAttributeCtor;
         private readonly Lazy<MethodReference> myNotSupportedExceptionCtor;
         private readonly Lazy<MethodReference> myObfuscatedNameAttributeCtor;
+        private readonly Lazy<MethodReference> myCallerCountAttributeCtor;
         
         public MethodReference FieldGetOffset => myFieldGetOffset.Value;
         public MethodReference FieldStaticGet => myFieldStaticGet.Value;
@@ -135,6 +138,7 @@ namespace AssemblyUnhollower
         public MethodReference ObsoleteAttributeCtor => myObsoleteAttributeCtor.Value;
         public MethodReference NotSupportedExceptionCtor => myNotSupportedExceptionCtor.Value;
         public MethodReference ObfuscatedNameAttributeCtor => myObfuscatedNameAttributeCtor.Value;
+        public MethodReference CallerCountAttributeCtor => myCallerCountAttributeCtor.Value;
         
 
         public AssemblyKnownImports(ModuleDefinition module, RewriteGlobalContext context)
@@ -145,6 +149,7 @@ namespace AssemblyUnhollower
             myVoidReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.Void));
             myIntPtrReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.IntPtr));
             myStringReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.String));
+            myIntReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.Int));
             myTypeReference = new Lazy<TypeDefinition>(() => TargetTypeSystemHandler.Type);
             myEnumReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.Enum));
             myDelegateReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.Delegate));
@@ -215,6 +220,10 @@ namespace AssemblyUnhollower
             myObfuscatedNameAttributeCtor = new Lazy<MethodReference>(() =>
                 new MethodReference(".ctor", Void, Module.ImportReference(typeof(ObfuscatedNameAttribute)))
                     {HasThis = true, Parameters = {new ParameterDefinition(String)}});
+            
+            myCallerCountAttributeCtor = new Lazy<MethodReference>(() =>
+                new MethodReference(".ctor", Void, Module.ImportReference(typeof(CallerCountAttribute)))
+                    {HasThis = true, Parameters = {new ParameterDefinition(Int)}});
         }
     }
 }

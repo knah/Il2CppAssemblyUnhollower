@@ -27,7 +27,7 @@ namespace AssemblyUnhollower.Contexts
         private static readonly string[] MethodAccessTypeLabels = { "CompilerControlled", "Private", "FamAndAssem", "Internal", "Protected", "FamOrAssem", "Public"};
         private string UnmangleFieldNameBase(FieldDefinition field)
         {
-            if (!field.Name.IsObfuscated()) return field.Name;
+            if (!field.Name.IsInvalidInSource()) return field.Name;
 
             var accessModString = MethodAccessTypeLabels[(int) (field.Attributes & FieldAttributes.FieldAccessMask)];
             var staticString = field.IsStatic ? "_Static" : "";
@@ -36,7 +36,7 @@ namespace AssemblyUnhollower.Contexts
         
         private string UnmangleFieldName(FieldDefinition field)
         {
-            if (!field.Name.IsObfuscated()) return field.Name;
+            if (!field.Name.IsInvalidInSource()) return field.Name;
 
             return UnmangleFieldNameBase(field) + "_" +
                    field.DeclaringType.Fields.Where(it => FieldsHaveSameSignature(field, it)).TakeWhile(it => it != field).Count();

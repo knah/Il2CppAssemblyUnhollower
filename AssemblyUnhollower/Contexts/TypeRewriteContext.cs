@@ -85,7 +85,6 @@ namespace AssemblyUnhollower.Contexts
                 var methodRewriteContext = new MethodRewriteContext(this, originalTypeMethod);
                 myMethodContexts[originalTypeMethod] = methodRewriteContext;
                 myMethodContextsByName[originalTypeMethod.Name] = methodRewriteContext;
-                methodRewriteContext.CtorPhase2();
             }
         }
 

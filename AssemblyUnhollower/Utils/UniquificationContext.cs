@@ -22,7 +22,7 @@ namespace AssemblyUnhollower.Utils
 
         public void Push(string str, bool noSubstring = false)
         {
-            if (str.IsObfuscated()) return;
+            if (str.IsInvalidInSource()) return;
             
             var stringPrefix = noSubstring ? str : SubstringBounded(str, 0, myUnhollowerOptions.TypeDeobfuscationCharsPerUniquifier);
             var currentCount = myUniquifiersCount[stringPrefix] = myUniquifiersCount.GetOrCreate(stringPrefix, _ => 0) + 1;

@@ -36,6 +36,41 @@ namespace UnhollowerRuntimeLib.XrefScans
             }
         }
 
+        public static IEnumerable<IntPtr> CallAndIndirectTargets(IntPtr pointer) => CallAndIndirectTargetsImpl(XrefScanner.DecoderForAddress(pointer, 1024 * 1024));
+
+        private static IEnumerable<IntPtr> CallAndIndirectTargetsImpl(Decoder decoder)
+        {
+            while (true)
+            {
+                decoder.Decode(out var instruction);
+                if (decoder.InvalidNoMoreBytes) yield break;
+
+                if (instruction.FlowControl == FlowControl.Return)
+                    yield break;
+
+                if (instruction.Mnemonic == Mnemonic.Int || instruction.Mnemonic == Mnemonic.Int1)
+                    yield break;
+
+                if (instruction.Mnemonic == Mnemonic.Call || instruction.Mnemonic == Mnemonic.Jmp)
+                {
+                    var targetAddress = XrefScanner.ExtractTargetAddress(instruction);
+                    if (targetAddress != 0)
+                        yield return (IntPtr) targetAddress;
+                    continue;
+                }
+
+                if (instruction.Mnemonic == Mnemonic.Lea)
+                {
+                    if (instruction.MemoryBase == Register.RIP)
+                    {
+                        var targetAddress = instruction.IPRelativeMemoryAddress;
+                        if (targetAddress != 0)
+                            yield return (IntPtr) targetAddress;
+                    }
+                }
+            }
+        }
+
         private static ulong ExtractTargetAddress(in Instruction instruction)
         {
             switch (instruction.Op0Kind)

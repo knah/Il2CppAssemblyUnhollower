@@ -11,5 +11,6 @@ namespace AssemblyUnhollower
         public List<string> AdditionalAssembliesBlacklist { get; } = new List<string>();
         public int TypeDeobfuscationCharsPerUniquifier { get; set; } = 2;
         public int TypeDeobfuscationMaxUniquifiers { get; set; } = 10;
+        public string GameAssemblyPath { get; set; }
     }
 }

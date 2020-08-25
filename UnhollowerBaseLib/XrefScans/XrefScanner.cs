@@ -34,7 +34,7 @@ namespace UnhollowerRuntimeLib.XrefScans
             return decoder;
         }
 
-        private static IEnumerable<XrefInstance> XrefScanImpl(Decoder decoder)
+        internal static IEnumerable<XrefInstance> XrefScanImpl(Decoder decoder)
         {
             while (true)
             {
@@ -91,7 +91,7 @@ namespace UnhollowerRuntimeLib.XrefScans
             }
         }
 
-        private static ulong ExtractTargetAddress(in Instruction instruction)
+        internal static ulong ExtractTargetAddress(in Instruction instruction)
         {
             switch (instruction.Op0Kind)
             {

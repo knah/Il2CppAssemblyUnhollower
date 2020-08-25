@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Text;
+using AssemblyUnhollower.Passes;
 using Mono.Cecil;
 
 namespace AssemblyUnhollower.Contexts
@@ -9,6 +10,8 @@ namespace AssemblyUnhollower.Contexts
         public readonly TypeRewriteContext DeclaringType;
         public readonly MethodDefinition OriginalMethod;
         public readonly MethodDefinition NewMethod;
+
+        public readonly long Address;
 
         public string UnmangledName { get; private set; }
         public string UnmangledNameWithSignature { get; private set; }
@@ -37,12 +40,17 @@ namespace AssemblyUnhollower.Contexts
                     newMethod.GenericParameters.Add(genericParameter);
                 }
             }
+
+            if (!Pass15GenerateMemberContexts.HasObfuscatedMethods && originalMethod.Name.IsObfuscated())
+                Pass15GenerateMemberContexts.HasObfuscatedMethods = true;
+
+            Address = originalMethod.ExtractAddress();
         }
 
         public void CtorPhase2()
         {
-            UnmangledName = UnmangleMethodName(OriginalMethod);
-            UnmangledNameWithSignature = UnmangleMethodNameWithSignature(OriginalMethod);
+            UnmangledName = UnmangleMethodName();
+            UnmangledNameWithSignature = UnmangleMethodNameWithSignature();
 
             NewMethod.Name = UnmangledName;
             NewMethod.ReturnType = DeclaringType.AssemblyContext.RewriteTypeRef(OriginalMethod.ReturnType);
@@ -108,10 +116,11 @@ namespace AssemblyUnhollower.Contexts
             return original;
         }
 
-        private string UnmangleMethodName(MethodDefinition method)
+        private string UnmangleMethodName()
         {
-            if(method.Name.IsObfuscated() && method.Name != ".ctor")
-                return UnmangleMethodNameWithSignature(method);
+            var method = OriginalMethod;
+            if(method.Name.IsInvalidInSource() && method.Name != ".ctor")
+                return UnmangleMethodNameWithSignature();
 
             if (method.Name == "GetType" && method.Parameters.Count == 0)
                 return "GetIl2CppType";
@@ -132,7 +141,7 @@ namespace AssemblyUnhollower.Contexts
         private string ProduceMethodSignatureBase(MethodDefinition method)
         {
             var name = method.Name;
-            if (method.Name.IsObfuscated())
+            if (method.Name.IsInvalidInSource())
                 name = "Method";
 
             if (method.Name == "GetType" && method.Parameters.Count == 0)
@@ -159,18 +168,28 @@ namespace AssemblyUnhollower.Contexts
                 builder.Append('_');
                 builder.Append(DeclaringType.AssemblyContext.RewriteTypeRef(param.ParameterType).GetUnmangledName());
             }
+            
+            var address = method.ExtractAddress();
+            if (address != 0 && Pass15GenerateMemberContexts.HasObfuscatedMethods && !Pass16ScanMethodRefs.NonDeadMethods.Contains(address)) builder.Append("_PDM");
 
             return builder.ToString();
         }
 
         
-        private string UnmangleMethodNameWithSignature(MethodDefinition method)
+        private string UnmangleMethodNameWithSignature()
         {
-            return ProduceMethodSignatureBase(method) + "_" + method.DeclaringType.Methods.Where(it => ParameterSignatureSame(it, method)).TakeWhile(it => it != method).Count();
+            var method = OriginalMethod;
+            return ProduceMethodSignatureBase(method) + "_" + DeclaringType.Methods.Where(ParameterSignatureMatchesThis).TakeWhile(it => it != this).Count();
         }
         
-        private static bool ParameterSignatureSame(MethodDefinition aM, MethodDefinition bM)
+        private bool ParameterSignatureMatchesThis(MethodRewriteContext otherRewriteContext)
         {
+            var aM = otherRewriteContext.OriginalMethod;
+            var bM = OriginalMethod;
+            
+            if (!aM.Name.IsInvalidInSource())
+                return false;
+            
             var comparisonMask = MethodAttributes.MemberAccessMask | MethodAttributes.Static | MethodAttributes.Final |
                                  MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
             if ((aM.Attributes & comparisonMask) !=
@@ -193,6 +212,15 @@ namespace AssemblyUnhollower.Contexts
             {
                 if (a[i].ParameterType.FullName != b[i].ParameterType.FullName)
                     return false;
+            }
+
+            if (Pass15GenerateMemberContexts.HasObfuscatedMethods)
+            {
+                var addressA = otherRewriteContext.Address;
+                var addressB = Address;
+                if (addressA != 0 && addressB != 0)
+                    if (Pass16ScanMethodRefs.NonDeadMethods.Contains(addressA) != Pass16ScanMethodRefs.NonDeadMethods.Contains(addressB))
+                        return false;
             }
 
             return true;
