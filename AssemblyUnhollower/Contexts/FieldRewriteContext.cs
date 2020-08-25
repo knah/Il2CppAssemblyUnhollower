@@ -50,7 +50,7 @@ namespace AssemblyUnhollower.Contexts
 
             if (fieldA.IsStatic != fieldB.IsStatic) return false;
 
-            return fieldA.FieldType.Name == fieldB.FieldType.Name;
+            return fieldA.FieldType.UnmangledNamesMatch(fieldB.FieldType);
         }
     }
 }

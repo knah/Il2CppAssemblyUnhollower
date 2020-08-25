@@ -57,7 +57,7 @@ namespace AssemblyUnhollower.Passes
             if (!prop.Name.IsInvalidInSource()) return prop.Name;
 
             return "prop_" + assemblyContext.RewriteTypeRef(prop.PropertyType).GetUnmangledName() + "_" + prop.DeclaringType.Properties
-                       .Where(it => it.PropertyType.Name == prop.PropertyType.Name).ToList().IndexOf(prop);
+                       .Where(it => it.PropertyType.UnmangledNamesMatch(prop.PropertyType)).ToList().IndexOf(prop);
         }
     }
 }
