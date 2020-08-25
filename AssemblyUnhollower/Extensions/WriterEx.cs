@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace AssemblyUnhollower
+namespace AssemblyUnhollower.Extensions
 {
     public static class WriterEx
     {

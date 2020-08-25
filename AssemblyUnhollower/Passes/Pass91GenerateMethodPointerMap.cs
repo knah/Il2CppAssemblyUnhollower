@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using AssemblyUnhollower.Contexts;
+using AssemblyUnhollower.Extensions;
 using UnhollowerBaseLib.Maps;
 
 namespace AssemblyUnhollower.Passes

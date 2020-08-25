@@ -1,4 +1,5 @@
 using System.Linq;
+using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
 
 namespace AssemblyUnhollower.Contexts

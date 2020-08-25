@@ -1,6 +1,6 @@
 using Mono.Cecil;
 
-namespace AssemblyUnhollower
+namespace AssemblyUnhollower.Extensions
 {
     public static class TypeReferenceEx
     {

@@ -1,8 +1,7 @@
-using System.Linq;
 using System.Text;
 using Mono.Cecil;
 
-namespace AssemblyUnhollower
+namespace AssemblyUnhollower.Extensions
 {
     public static class StringEx
     {

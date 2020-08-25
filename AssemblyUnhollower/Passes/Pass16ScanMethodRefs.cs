@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using AssemblyUnhollower.Contexts;
+using AssemblyUnhollower.Extensions;
 using UnhollowerRuntimeLib.XrefScans;
 
 namespace AssemblyUnhollower.Passes

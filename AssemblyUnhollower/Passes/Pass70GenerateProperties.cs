@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Reflection;
 using AssemblyUnhollower.Contexts;
+using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
 
 namespace AssemblyUnhollower.Passes

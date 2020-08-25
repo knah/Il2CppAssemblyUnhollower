@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AssemblyUnhollower.Contexts;
+using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Attributes;

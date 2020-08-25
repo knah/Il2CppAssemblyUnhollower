@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
 
 namespace AssemblyUnhollower.Contexts

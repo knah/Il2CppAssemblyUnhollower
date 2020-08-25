@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Text;
+using AssemblyUnhollower.Extensions;
 using AssemblyUnhollower.Passes;
 using Mono.Cecil;
 

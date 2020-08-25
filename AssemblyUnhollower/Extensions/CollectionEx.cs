@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AssemblyUnhollower
+namespace AssemblyUnhollower.Extensions
 {
     public static class CollectionEx
     {
