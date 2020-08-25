@@ -1,5 +1,6 @@
 using System;
 using AssemblyUnhollower.Contexts;
+using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using UnhollowerBaseLib;
@@ -8,11 +9,15 @@ namespace AssemblyUnhollower.Passes
 {
     public static class Pass20GenerateStaticConstructors
     {
+        private static int ourTokenlessMethods = 0;
+        
         public static void DoPass(RewriteGlobalContext context)
         {
             foreach (var assemblyContext in context.Assemblies)
             foreach (var typeContext in assemblyContext.Types)
                 GenerateStaticProxy(assemblyContext, typeContext);
+            
+            LogSupport.Trace($"\nTokenless method count: {ourTokenlessMethods}");
         }
 
         private static void GenerateStaticProxy(AssemblyRewriteContext assemblyContext, TypeRewriteContext typeContext)
@@ -104,21 +109,34 @@ namespace AssemblyUnhollower.Passes
             foreach (var method in typeContext.Methods)
             {
                 ctorBuilder.Emit(OpCodes.Ldsfld, typeContext.ClassPointerFieldRef);
-                ctorBuilder.Emit(method.OriginalMethod.GenericParameters.Count > 0 ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
-                ctorBuilder.Emit(OpCodes.Ldstr, method.OriginalMethod.Name);
-                ctorBuilder.EmitLoadTypeNameString(assemblyContext.Imports, method.OriginalMethod, method.OriginalMethod.ReturnType, method.NewMethod.ReturnType);
-                ctorBuilder.Emit(OpCodes.Ldc_I4, method.OriginalMethod.Parameters.Count);
-                ctorBuilder.Emit(OpCodes.Newarr, assemblyContext.Imports.String);
-
-                for (var i = 0; i < method.OriginalMethod.Parameters.Count; i++)
+                
+                var token = method.OriginalMethod.ExtractToken();
+                if (token == 0)
                 {
-                    ctorBuilder.Emit(OpCodes.Dup);
-                    ctorBuilder.EmitLdcI4(i);
-                    ctorBuilder.EmitLoadTypeNameString(assemblyContext.Imports, method.OriginalMethod, method.OriginalMethod.Parameters[i].ParameterType, method.NewMethod.Parameters[i].ParameterType);
-                    ctorBuilder.Emit(OpCodes.Stelem_Ref);
+                    ourTokenlessMethods++;
+                    
+                    ctorBuilder.Emit(method.OriginalMethod.GenericParameters.Count > 0 ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
+                    ctorBuilder.Emit(OpCodes.Ldstr, method.OriginalMethod.Name);
+                    ctorBuilder.EmitLoadTypeNameString(assemblyContext.Imports, method.OriginalMethod, method.OriginalMethod.ReturnType, method.NewMethod.ReturnType);
+                    ctorBuilder.Emit(OpCodes.Ldc_I4, method.OriginalMethod.Parameters.Count);
+                    ctorBuilder.Emit(OpCodes.Newarr, assemblyContext.Imports.String);
+
+                    for (var i = 0; i < method.OriginalMethod.Parameters.Count; i++)
+                    {
+                        ctorBuilder.Emit(OpCodes.Dup);
+                        ctorBuilder.EmitLdcI4(i);
+                        ctorBuilder.EmitLoadTypeNameString(assemblyContext.Imports, method.OriginalMethod, method.OriginalMethod.Parameters[i].ParameterType, method.NewMethod.Parameters[i].ParameterType);
+                        ctorBuilder.Emit(OpCodes.Stelem_Ref);
+                    }
+
+                    ctorBuilder.Emit(OpCodes.Call, assemblyContext.Imports.GetIl2CppMethod);
+                }
+                else
+                {
+                    ctorBuilder.EmitLdcI4((int) token);
+                    ctorBuilder.Emit(OpCodes.Call, assemblyContext.Imports.GetIl2CppMethodFromToken);
                 }
 
-                ctorBuilder.Emit(OpCodes.Call, assemblyContext.Imports.GetIl2CppMethod);
                 ctorBuilder.Emit(OpCodes.Stsfld, method.NonGenericMethodInfoPointerField);
             }
             

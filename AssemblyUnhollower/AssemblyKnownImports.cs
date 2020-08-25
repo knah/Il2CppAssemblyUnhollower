@@ -92,6 +92,7 @@ namespace AssemblyUnhollower
         private readonly Lazy<MethodReference> myGetIl2CppNestedClass;
         private readonly Lazy<MethodReference> myGetIl2CppGlobalClass;
         private readonly Lazy<MethodReference> myGetIl2CppMethod;
+        private readonly Lazy<MethodReference> myGetIl2CppMethodFromToken;
         private readonly Lazy<MethodReference> myGetIl2CppTypeFromClass;
         private readonly Lazy<MethodReference> myGetIl2CppTypeToClass;
         private readonly Lazy<MethodReference> myIl2CppNewObject;
@@ -125,6 +126,7 @@ namespace AssemblyUnhollower
         public MethodReference GetIl2CppNestedClass => myGetIl2CppNestedClass.Value;
         public MethodReference GetIl2CppGlobalClass => myGetIl2CppGlobalClass.Value;
         public MethodReference GetIl2CppMethod => myGetIl2CppMethod.Value;
+        public MethodReference GetIl2CppMethodFromToken => myGetIl2CppMethodFromToken.Value;
         public MethodReference GetIl2CppTypeFromClass => myGetIl2CppTypeFromClass.Value;
         public MethodReference GetIl2CppTypeToClass => myGetIl2CppTypeToClass.Value;
         public MethodReference Il2CppNewObject => myIl2CppNewObject.Value;
@@ -192,6 +194,7 @@ namespace AssemblyUnhollower
             myGetIl2CppNestedClass = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("GetIl2CppNestedType")));
             myGetIl2CppGlobalClass = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("GetIl2CppClass")));
             myGetIl2CppMethod = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("GetIl2CppMethod")));
+            myGetIl2CppMethodFromToken = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.GetIl2CppMethodByToken))));
             myGetIl2CppTypeFromClass = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_class_get_type))));
             myGetIl2CppTypeToClass = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_class_from_type))));
             myIl2CppNewObject = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_object_new))));

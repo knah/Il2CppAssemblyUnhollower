@@ -54,6 +54,25 @@ namespace UnhollowerBaseLib
             return field;
         }
 
+        public static IntPtr GetIl2CppMethodByToken(IntPtr clazz, int token)
+        {
+            if (clazz == IntPtr.Zero)
+                return NativeStructUtils.GetMethodInfoForMissingMethod(token.ToString());
+            
+            IntPtr iter = IntPtr.Zero;
+            IntPtr method;
+            while ((method = il2cpp_class_get_methods(clazz, ref iter)) != IntPtr.Zero)
+            {
+                if (il2cpp_method_get_token(method) == token)
+                    return method;
+            }
+            
+            var className = Marshal.PtrToStringAnsi(il2cpp_class_get_name(clazz));
+            LogSupport.Trace($"Unable to find method {className}::{token}");
+            
+            return NativeStructUtils.GetMethodInfoForMissingMethod(className + "::" + token);
+        }
+
         public static IntPtr GetIl2CppMethod(IntPtr clazz, bool isGeneric, string methodName, string returnTypeName, params string[] argTypes)
         {
             if(clazz == IntPtr.Zero) return NativeStructUtils.GetMethodInfoForMissingMethod(methodName + "(" + string.Join(", ", argTypes) + ")");
