@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -241,11 +242,25 @@ namespace UnhollowerBaseLib
             var icallPtr = il2cpp_resolve_icall(signature);
             if (icallPtr == IntPtr.Zero)
             {
-                LogSupport.Error($"ICall {signature} not resolved");
-                return null;
+                LogSupport.Trace($"ICall {signature} not resolved");
+                return GenerateDelegateForMissingICall<T>(signature);
             }
 
             return Marshal.GetDelegateForFunctionPointer<T>(icallPtr);
+        }
+
+        private static T GenerateDelegateForMissingICall<T>(string signature) where T: Delegate
+        {
+            var invoke = typeof(T).GetMethod("Invoke")!;
+            
+            var trampoline = new DynamicMethod("(missing icall delegate) " + typeof(T).FullName, MethodAttributes.Static, CallingConventions.Standard, invoke.ReturnType, invoke.GetParameters().Select(it => it.ParameterType).ToArray(), typeof(IL2CPP), true);
+            var bodyBuilder = trampoline.GetILGenerator();
+
+            bodyBuilder.Emit(OpCodes.Ldstr, $"ICall with signature {signature} was not resolved");
+            bodyBuilder.Emit(OpCodes.Newobj, typeof(Exception).GetConstructor(new[]{ typeof(string)})!);
+            bodyBuilder.Emit(OpCodes.Throw);
+
+            return (T) trampoline.CreateDelegate(typeof(T));
         }
 
         private static readonly MethodInfo UnboxMethod = typeof(Il2CppObjectBase).GetMethod(nameof(Il2CppObjectBase.Unbox));
