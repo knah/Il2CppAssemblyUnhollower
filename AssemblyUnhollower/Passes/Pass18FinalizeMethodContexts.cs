@@ -20,11 +20,6 @@ namespace AssemblyUnhollower.Passes
             foreach (var methodContext in typeContext.Methods)
             {
                 methodContext.CtorPhase2();
-                
-                if (!Pass15GenerateMemberContexts.HasObfuscatedMethods) continue;
-                if (!methodContext.UnmangledName.Contains("_PDM_")) continue;
-                
-                TotalPotentiallyDeadMethods++;
 
                 int callerCount = 0;
                 if (Pass16ScanMethodRefs.MapOfCallers.TryGetValue(methodContext.FileOffset, out var callers))
@@ -36,6 +31,10 @@ namespace AssemblyUnhollower.Passes
                         ConstructorArguments =
                             {new CustomAttributeArgument(assemblyContext.Imports.Int, callerCount)}
                     });
+                
+                if (!Pass15GenerateMemberContexts.HasObfuscatedMethods) continue;
+                if (!methodContext.UnmangledName.Contains("_PDM_")) continue;
+                TotalPotentiallyDeadMethods++;
                     
                 var hasZeroCallers = callerCount == 0;
                 if (methodContext.DeclaringType.OriginalType.IsNested)
