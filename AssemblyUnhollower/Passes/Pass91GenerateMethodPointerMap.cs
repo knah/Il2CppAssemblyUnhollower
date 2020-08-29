@@ -16,6 +16,9 @@ namespace AssemblyUnhollower.Passes
             
             foreach (var assemblyRewriteContext in context.Assemblies)
             {
+                if (options.AdditionalAssembliesBlacklist.Contains(assemblyRewriteContext.NewAssembly.Name.Name))
+                    continue;
+                
                 assemblyList.Add(assemblyRewriteContext.NewAssembly.FullName);
                 
                 foreach (var typeRewriteContext in assemblyRewriteContext.Types)

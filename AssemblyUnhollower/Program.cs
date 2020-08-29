@@ -88,7 +88,6 @@ namespace AssemblyUnhollower
             LogSupport.InstallConsoleHandlers();
             
             var options = new UnhollowerOptions();
-            options.AdditionalAssembliesBlacklist.Add("Mono.Security"); // always blacklist this one
             var analyze = false;
             
             foreach (var s in args)
