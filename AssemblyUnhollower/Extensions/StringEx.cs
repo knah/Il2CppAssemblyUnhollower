@@ -15,9 +15,11 @@ namespace AssemblyUnhollower.Extensions
         
         public static bool IsInvalidInSource(this string str)
         {
-            foreach (var it in str)
+            for (var i = 0; i < str.Length; i++)
             {
-                if (!char.IsDigit(it) && !(it >= 'a' && it <= 'z' || it >= 'A' && it <= 'Z') && it != '_' && it != '`') return true;
+                var it = str[i];
+                if (!char.IsDigit(it) && !(it >= 'a' && it <= 'z' || it >= 'A' && it <= 'Z') && it != '_' &&
+                    it != '`') return true;
             }
 
             return false;
