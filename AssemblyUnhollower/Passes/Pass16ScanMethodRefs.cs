@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Linq;
 using AssemblyUnhollower.Contexts;
 using AssemblyUnhollower.Extensions;
 using UnhollowerRuntimeLib.XrefScans;
@@ -11,7 +13,7 @@ namespace AssemblyUnhollower.Passes
     public static class Pass16ScanMethodRefs
     {
         public static readonly HashSet<long> NonDeadMethods = new HashSet<long>();
-        public static Dictionary<long, List<long>> MapOfCallers;
+        public static IDictionary<long, List<long>> MapOfCallers;
 
         public static void DoPass(RewriteGlobalContext context, UnhollowerOptions options)
         {
@@ -22,8 +24,8 @@ namespace AssemblyUnhollower.Passes
             }
             if (!Pass15GenerateMemberContexts.HasObfuscatedMethods) return;
 
-            var methodToCallersMap = new Dictionary<long, List<long>>();
-            var methodToCalleesMap = new Dictionary<long, List<long>>();
+            var methodToCallersMap = new ConcurrentDictionary<long, List<long>>();
+            var methodToCalleesMap = new ConcurrentDictionary<long, List<long>>();
 
             using var mappedFile = MemoryMappedFile.CreateFromFile(options.GameAssemblyPath, FileMode.Open, null, 0, MemoryMappedFileAccess.Read);
             using var accessor = mappedFile.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
@@ -38,20 +40,19 @@ namespace AssemblyUnhollower.Passes
             }
 
             // Scan xrefs
-            foreach (var assemblyRewriteContext in context.Assemblies)
-            foreach (var typeRewriteContext in assemblyRewriteContext.Types)
-            foreach (var originalTypeMethod in typeRewriteContext.Methods)
-            {
-                var address = originalTypeMethod.FileOffset;
-                if (address == 0) continue;
-
-                foreach (var callTarget in XrefScannerLowLevel.CallAndIndirectTargets(IntPtr.Add(gameAssemblyPtr, (int) address)))
+            context.Assemblies.SelectMany(it => it.Types).SelectMany(it => it.Methods).AsParallel().ForAll(
+                originalTypeMethod =>
                 {
-                    var targetRelative = (long) callTarget - (long) gameAssemblyPtr;
-                    methodToCallersMap.GetOrCreate(targetRelative, _ => new List<long>()).Add(address);
-                    methodToCalleesMap.GetOrCreate(address, _ => new List<long>()).Add(targetRelative);
-                }
-            }
+                    var address = originalTypeMethod.FileOffset;
+                    if (address == 0) return;
+
+                    foreach (var callTarget in XrefScannerLowLevel.CallAndIndirectTargets(IntPtr.Add(gameAssemblyPtr, (int) address)))
+                    {
+                        var targetRelative = (long) callTarget - (long) gameAssemblyPtr;
+                        methodToCallersMap.GetOrAdd(targetRelative, _ => new List<long>()).AddLocked(address);
+                        methodToCalleesMap.GetOrAdd(address, _ => new List<long>()).AddLocked(targetRelative);
+                    }
+                });
 
             MapOfCallers = methodToCallersMap;
 

@@ -15,5 +15,11 @@ namespace AssemblyUnhollower.Extensions
 
             return result;
         }
+
+        public static void AddLocked<T>(this List<T> list, T value)
+        {
+            lock (list)
+                list.Add(value);
+        }
     }
 }
