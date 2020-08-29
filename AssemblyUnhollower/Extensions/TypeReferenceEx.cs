@@ -16,7 +16,7 @@ namespace AssemblyUnhollower.Extensions
                 case ByReferenceType byRef:
                     return byRef.ElementType.UnmangledNamesMatch(((ByReferenceType) typeRefB).ElementType);
                 case ArrayType array:
-                    return array.UnmangledNamesMatch(((ArrayType) typeRefB).ElementType);
+                    return array.ElementType.UnmangledNamesMatch(((ArrayType) typeRefB).ElementType);
                 case GenericInstanceType genericInstance:
                 {
                     var elementA = genericInstance.ElementType;
