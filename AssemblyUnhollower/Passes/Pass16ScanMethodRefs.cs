@@ -13,7 +13,7 @@ namespace AssemblyUnhollower.Passes
     public static class Pass16ScanMethodRefs
     {
         public static readonly HashSet<long> NonDeadMethods = new HashSet<long>();
-        public static IDictionary<long, List<long>> MapOfCallers;
+        public static IDictionary<long, List<long>> MapOfCallers = new Dictionary<long, List<long>>();
 
         public static void DoPass(RewriteGlobalContext context, UnhollowerOptions options)
         {
