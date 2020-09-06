@@ -37,7 +37,7 @@ namespace AssemblyUnhollower.Passes
                         
                         newField.Offset = Convert.ToInt32(
                             (string) field.CustomAttributes
-                                .Single(it => it.AttributeType.FullName == "Il2CppDummyDll.FieldOffsetAttribute")
+                                .Single(it => it.AttributeType.Name == "FieldOffsetAttribute")
                                 .Fields.Single().Argument.Value, 16);
                         
                         newType.Fields.Add(newField);
