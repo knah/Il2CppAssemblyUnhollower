@@ -228,6 +228,8 @@ namespace AssemblyUnhollower
             File.Copy(typeof(Decoder).Assembly.Location, Path.Combine(options.OutputDir, typeof(Decoder).Assembly.GetName().Name + ".dll"), true);
             
             Console.WriteLine("Done!");
+
+            rewriteContext.Dispose();
         }
     }
 }
