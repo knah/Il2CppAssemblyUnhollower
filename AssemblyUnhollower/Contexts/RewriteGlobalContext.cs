@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using AssemblyUnhollower.Extensions;
@@ -5,7 +6,7 @@ using Mono.Cecil;
 
 namespace AssemblyUnhollower.Contexts
 {
-    public class RewriteGlobalContext
+    public class RewriteGlobalContext : IDisposable
     {
         public UnhollowerOptions Options { get; }
         private readonly Dictionary<string, AssemblyRewriteContext> myAssemblies = new Dictionary<string, AssemblyRewriteContext>();
@@ -33,7 +34,7 @@ namespace AssemblyUnhollower.Contexts
                 var assemblyName = Path.GetFileNameWithoutExtension(sourceAssemblyPath);
                 if(assemblyName == "Il2CppDummyDll") continue;
                 
-                var sourceAssembly = AssemblyDefinition.ReadAssembly(File.OpenRead(sourceAssemblyPath), new ReaderParameters(ReadingMode.Immediate) {MetadataResolver = metadataResolver});
+                var sourceAssembly = AssemblyDefinition.ReadAssembly(sourceAssemblyPath, new ReaderParameters(ReadingMode.Immediate) {MetadataResolver = metadataResolver});
                 myAssemblyResolver.Register(sourceAssembly);
                 var newAssembly = AssemblyDefinition.CreateAssembly(
                     new AssemblyNameDefinition(sourceAssembly.Name.Name.UnSystemify(), sourceAssembly.Name.Version),
@@ -79,6 +80,15 @@ namespace AssemblyUnhollower.Contexts
         public AssemblyRewriteContext? TryGetAssemblyByName(string name)
         {
             return myAssemblies.TryGetValue(name, out var result) ? result : null;
+        }
+
+        public void Dispose()
+        {
+	        foreach (var assembly in Assemblies)
+	        {
+		        assembly.NewAssembly.Dispose();
+                assembly.OriginalAssembly.Dispose();
+	        }
         }
     }
 }
