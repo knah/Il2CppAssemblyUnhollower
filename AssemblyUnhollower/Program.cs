@@ -10,20 +10,20 @@ using UnhollowerRuntimeLib;
 
 namespace AssemblyUnhollower
 {
-    class Program
+    public class Program
     {
         private struct TimingCookie : IDisposable
         {
             private Stopwatch myStopwatch;
             public TimingCookie(string message)
             {
-                Console.Write(message + "... ");
+                LogSupport.Info(message + "... ");
                 myStopwatch = Stopwatch.StartNew();
             }
 
             public void Dispose()
             {
-                Console.WriteLine($"Done in {myStopwatch.Elapsed}");
+	            LogSupport.Info($"Done in {myStopwatch.Elapsed}");
             }
         }
 
