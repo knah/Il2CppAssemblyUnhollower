@@ -84,11 +84,11 @@ namespace AssemblyUnhollower.Contexts
 
         public void Dispose()
         {
-	        foreach (var assembly in Assemblies)
-	        {
-		        assembly.NewAssembly.Dispose();
+            foreach (var assembly in Assemblies)
+            {
+                assembly.NewAssembly.Dispose();
                 assembly.OriginalAssembly.Dispose();
-	        }
+            }
         }
     }
 }
