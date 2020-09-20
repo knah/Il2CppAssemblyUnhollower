@@ -23,7 +23,7 @@ namespace AssemblyUnhollower
 
             public void Dispose()
             {
-	            LogSupport.Info($"Done in {myStopwatch.Elapsed}");
+                LogSupport.Info($"Done in {myStopwatch.Elapsed}");
             }
         }
 
