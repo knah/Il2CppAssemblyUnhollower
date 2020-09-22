@@ -422,35 +422,5 @@ namespace UnhollowerBaseLib.Runtime
         public ushort vtable_count; // lazily calculated for arrays, i.e. when rank > 0
         public ushort interfaces_count;
         public ushort interface_offsets_count; // lazily calculated for arrays, i.e. when rank > 0
-
-        public byte typeHierarchyDepth; // Initialized in SetupTypeHierachy
-        public byte genericRecursionDepth;
-        public byte rank;
-        public byte minimumAlignment; // Alignment of this type
-        public byte naturalAligment; // Alignment of this type without accounting for packing
-        public byte packingSize;
-
-        // this is critical for performance of Class::InitFromCodegen. Equals to initialized && !has_initialization_error at all times.
-        // Use Class::UpdateInitializedAndNoError to update
-        public ClassBitfield1 bitfield_1;
-        /*uint8_t initialized_and_no_error : 1;
-
-        uint8_t valuetype : 1;
-        uint8_t initialized : 1;
-        uint8_t enumtype : 1;
-        uint8_t is_generic : 1;
-        uint8_t has_references : 1;
-        uint8_t init_pending : 1;
-        uint8_t size_inited : 1;*/
-
-        public ClassBitfield2 bitfield_2;
-        /*uint8_t has_finalize : 1;
-        uint8_t has_cctor : 1;
-        uint8_t is_blittable : 1;
-        uint8_t is_import_or_windows_runtime : 1;
-        uint8_t is_vtable_initialized : 1;
-        uint8_t has_initialization_error : 1;*/
-
-        //VirtualInvokeData vtable[IL2CPP_ZERO_LEN_ARRAY];
     }
 }

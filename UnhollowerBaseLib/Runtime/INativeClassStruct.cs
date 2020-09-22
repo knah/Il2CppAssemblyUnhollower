@@ -10,5 +10,7 @@ namespace UnhollowerBaseLib.Runtime
 
         unsafe Il2CppClassPart1* Part1 { get; }
         unsafe Il2CppClassPart2* Part2 { get; }
+        unsafe ClassBitfield1* Bitfield1 { get; }
+        unsafe ClassBitfield2* Bitfield2 { get; }
     }
 }

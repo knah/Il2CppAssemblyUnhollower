@@ -3,27 +3,26 @@ using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific
 {
-    public class Unity2019NativeClassStructHandler : INativeClassStructHandler
+    public class Unity2018_4NativeClassStructHandler : INativeClassStructHandler
     {
         public unsafe INativeClassStruct CreateNewClassStruct(int vTableSlots)
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppClassU2019>() + Marshal.SizeOf<VirtualInvokeData>() * vTableSlots);
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppClassU2018_4>() + Marshal.SizeOf<VirtualInvokeData>() * vTableSlots);
 
-            *(Il2CppClassU2019*) pointer = default;
+            *(Il2CppClassU2018_4*) pointer = default;
             
-            return new Unity2019NativeClassStruct(pointer);
+            return new Unity2018_4NativeClassStruct(pointer);
         }
 
         public unsafe INativeClassStruct Wrap(Il2CppClass* classPointer)
         {
-            return new Unity2019NativeClassStruct((IntPtr) classPointer);
+            return new Unity2018_4NativeClassStruct((IntPtr) classPointer);
         }
-        
+
         [StructLayout(LayoutKind.Sequential)]
-        private struct Il2CppClassU2019
+        private struct Il2CppClassU2018_4
         {
             public Il2CppClassPart1 Part1;
-            public IntPtr unity_user_data;
             public Il2CppClassPart2 Part2;
             public byte typeHierarchyDepth; // Initialized in SetupTypeHierachy
             public byte genericRecursionDepth;
@@ -35,9 +34,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
             public ClassBitfield2 bitfield_2;
         }
 
-        private unsafe class Unity2019NativeClassStruct : INativeClassStruct
+        private unsafe class Unity2018_4NativeClassStruct : INativeClassStruct
         {
-            public Unity2019NativeClassStruct(IntPtr pointer)
+            public Unity2018_4NativeClassStruct(IntPtr pointer)
             {
                 Pointer = pointer;
             }
@@ -45,12 +44,12 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
             public IntPtr Pointer { get; }
             public Il2CppClass* ClassPointer => (Il2CppClass*) Pointer;
 
-            public IntPtr VTable => IntPtr.Add(Pointer, Marshal.SizeOf<Il2CppClassU2019>());
+            public IntPtr VTable => IntPtr.Add(Pointer, Marshal.SizeOf<Il2CppClassU2018_4>());
 
-            public Il2CppClassPart1* Part1 => &((Il2CppClassU2019*) Pointer)->Part1;
-            public Il2CppClassPart2* Part2 => &((Il2CppClassU2019*) Pointer)->Part2;
-            public ClassBitfield1* Bitfield1 => &((Il2CppClassU2019*)Pointer)->bitfield_1;
-            public ClassBitfield2* Bitfield2 => &((Il2CppClassU2019*)Pointer)->bitfield_2;
+            public Il2CppClassPart1* Part1 => &((Il2CppClassU2018_4*) Pointer)->Part1;
+            public Il2CppClassPart2* Part2 => &((Il2CppClassU2018_4*) Pointer)->Part2;
+            public ClassBitfield1* Bitfield1 => &((Il2CppClassU2018_4*)Pointer)->bitfield_1;
+            public ClassBitfield2* Bitfield2 => &((Il2CppClassU2018_4*)Pointer)->bitfield_2;
         }
     }
 }
