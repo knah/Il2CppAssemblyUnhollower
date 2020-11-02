@@ -118,7 +118,7 @@ namespace AssemblyUnhollower.Passes
         private static PropertyDefinition GetOrCreateProperty(MethodDefinition unityMethod, MethodDefinition newMethod)
         {
             var unityProperty = unityMethod.DeclaringType.Properties.Single(it => it.SetMethod == unityMethod || it.GetMethod == unityMethod);
-            var newProperty = newMethod.DeclaringType.Properties.SingleOrDefault(it => it.Name == unityProperty.Name);
+            var newProperty = newMethod.DeclaringType.Properties.SingleOrDefault(it => it.Name == unityProperty.Name && it.Parameters.Count == unityProperty.Parameters.Count);
             if (newProperty == null)
             {
                 newProperty = new PropertyDefinition(unityProperty.Name, PropertyAttributes.None, unityMethod.IsGetter ? newMethod.ReturnType : newMethod.Parameters.Last().ParameterType);
