@@ -446,6 +446,9 @@ namespace UnhollowerRuntimeLib
             LogSupport.Trace("il2cpp_class_from_il2cpp_type patched");
         }
 
+        
+        public static IManagedDetour Detour = new DoHookDetour();
+        [Obsolete("Set Detour instead")]
         public static Action<IntPtr, IntPtr> DoHook;
 
         private static long ourClassOverrideCounter = -2;
@@ -471,5 +474,28 @@ namespace UnhollowerRuntimeLib
         
         [DllImport("kernel32", SetLastError=true, CharSet = CharSet.Ansi)]
         static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)]string lpFileName);
+        
+        private class DoHookDetour : IManagedDetour
+        {
+            // In some cases garbage collection of delegates can release their native function pointer too - keep all of them alive to avoid that
+            // ReSharper disable once CollectionNeverQueried.Local
+            private static readonly List<object> PinnedDelegates = new List<object>();
+            
+            public T Detour<T>(IntPtr @from, T to) where T : Delegate
+            {
+                IntPtr* targetVarPointer = &from;
+                PinnedDelegates.Add(to);
+                DoHook((IntPtr) targetVarPointer, Marshal.GetFunctionPointerForDelegate(to));
+                return Marshal.GetDelegateForFunctionPointer<T>(from);
+            }
+        }
+    }
+
+    public interface IManagedDetour
+    {
+        /// <summary>
+        /// Patch the native function at address specified in `from`, replacing it with `to`, and return a delegate to call the original native function
+        /// </summary>
+        T Detour<T>(IntPtr from, T to) where T : Delegate;
     }
 }
