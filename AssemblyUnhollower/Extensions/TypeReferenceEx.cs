@@ -6,7 +6,9 @@ namespace AssemblyUnhollower.Extensions
     {
         public static bool UnmangledNamesMatch(this TypeReference typeRefA, TypeReference typeRefB)
         {
-            if (typeRefA.GetType() != typeRefB.GetType())
+            var aIsDefOrRef = typeRefA.GetType() == typeof(TypeReference) || typeRefA.GetType() == typeof(TypeDefinition);
+            var bIsDefOrRef = typeRefB.GetType() == typeof(TypeReference) || typeRefB.GetType() == typeof(TypeDefinition);
+            if (!(aIsDefOrRef && bIsDefOrRef) && typeRefA.GetType() != typeRefB.GetType())
                 return false;
             
             switch (typeRefA)
