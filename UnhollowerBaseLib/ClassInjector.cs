@@ -164,6 +164,12 @@ namespace UnhollowerRuntimeLib
                 .GetField(nameof(Il2CppClassPointerStore<int>.NativeClassPtr)).GetValue(null);
         }
 
+        internal static void WriteClassPointerForType(Type type, IntPtr value)
+        {
+            typeof(Il2CppClassPointerStore<>).MakeGenericType(type)
+                .GetField(nameof(Il2CppClassPointerStore<int>.NativeClassPtr)).SetValue(null, value);
+        }
+
         private static bool IsTypeSupported(Type type)
         {
             if(type.IsValueType) return type == typeof(void);

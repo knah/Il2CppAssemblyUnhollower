@@ -17,6 +17,11 @@ namespace UnhollowerBaseLib
             for (var i = 0; i < arr.Length; i++) 
                 this[i] = arr[i];
         }
+
+        static Il2CppStringArray()
+        {
+            StaticCtorBody(typeof(Il2CppStringArray));
+        }
         
         public static implicit operator Il2CppStringArray(string[] arr)
         {

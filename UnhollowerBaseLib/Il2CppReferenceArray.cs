@@ -35,6 +35,8 @@ namespace UnhollowerBaseLib
                 ourElementIsValueType = true;
                 ourElementTypeSize = IL2CPP.il2cpp_class_value_size(nativeClassPtr, ref align);
             }
+            
+            StaticCtorBody(typeof(Il2CppReferenceArray<T>));
         }
         
         public static implicit operator Il2CppReferenceArray<T>(T[] arr)

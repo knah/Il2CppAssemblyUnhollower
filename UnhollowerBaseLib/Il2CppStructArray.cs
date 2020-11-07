@@ -11,6 +11,11 @@ namespace UnhollowerBaseLib
         public Il2CppStructArray(long size) : base(AllocateArray(size))
         {
         }
+
+        static Il2CppStructArray()
+        {
+            StaticCtorBody(typeof(Il2CppStructArray<T>));
+        }
         
         public static implicit operator Il2CppStructArray<T>(T[] arr)
         {

@@ -52,8 +52,6 @@ namespace UnhollowerBaseLib
             if (nestedTypeClassPointer == IntPtr.Zero)
                 throw new ArgumentException($"{typeof(T)} is not al Il2Cpp reference type");
 
-            // todo: support arrays
-            
             var ownClass = IL2CPP.il2cpp_object_get_class(Pointer);
             if (!IL2CPP.il2cpp_class_is_assignable_from(nestedTypeClassPointer, ownClass))
                 return null;
@@ -61,7 +59,7 @@ namespace UnhollowerBaseLib
             if (RuntimeSpecificsStore.IsInjected(ownClass))
                 return ClassInjectorBase.GetMonoObjectFromIl2CppPointer(Pointer) as T;
 
-            return (T) Activator.CreateInstance(typeof(T), Pointer);
+            return (T) Activator.CreateInstance(Il2CppClassPointerStore<T>.CreatedTypeRedirect ?? typeof(T), Pointer);
         }
 
         ~Il2CppObjectBase()

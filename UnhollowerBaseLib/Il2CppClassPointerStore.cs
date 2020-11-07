@@ -8,6 +8,7 @@ namespace UnhollowerBaseLib
     public static class Il2CppClassPointerStore<T>
     {
         public static IntPtr NativeClassPtr;
+        public static Type CreatedTypeRedirect;
         
         static Il2CppClassPointerStore()
         {
