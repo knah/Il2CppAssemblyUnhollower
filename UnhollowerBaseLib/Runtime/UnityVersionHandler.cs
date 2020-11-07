@@ -12,8 +12,10 @@ namespace UnhollowerBaseLib.Runtime
         /// <example>For Unity 2018.4.20, call <c>Initialize(2018, 4, 20)</c></example>
         public static void Initialize(int majorVersion, int minorVersion, int patchVersion)
         {
-            if (majorVersion <= 2018)
-                ourHandler = new Unity2018NativeClassStructHandler();
+            if (majorVersion == 2018 && minorVersion == 4)
+                ourHandler = new Unity2018_4NativeClassStructHandler();
+            else if (majorVersion <= 2018)
+                ourHandler = new Unity2018_0NativeClassStructHandler();
             else
                 ourHandler = new Unity2019NativeClassStructHandler();
         }

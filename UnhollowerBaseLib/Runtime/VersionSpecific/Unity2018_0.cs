@@ -3,24 +3,24 @@ using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific
 {
-    public class Unity2019NativeClassStructHandler : INativeClassStructHandler
+    public class Unity2018_0NativeClassStructHandler : INativeClassStructHandler
     {
         public unsafe INativeClassStruct CreateNewClassStruct(int vTableSlots)
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppClassU2019>() + Marshal.SizeOf<VirtualInvokeData>() * vTableSlots);
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppClassU2018_0>() + Marshal.SizeOf<VirtualInvokeData>() * vTableSlots);
 
-            *(Il2CppClassU2019*) pointer = default;
+            *(Il2CppClassU2018_0*) pointer = default;
             
-            return new Unity2019NativeClassStruct(pointer);
+            return new Unity2018_0NativeClassStructWrapper(pointer);
         }
 
         public unsafe INativeClassStruct Wrap(Il2CppClass* classPointer)
         {
-            return new Unity2019NativeClassStruct((IntPtr) classPointer);
+            return new Unity2018_0NativeClassStructWrapper((IntPtr) classPointer);
         }
         
         [StructLayout(LayoutKind.Sequential)]
-        private unsafe struct Il2CppClassU2019
+        private unsafe struct Il2CppClassU2018_0
         {
             // The following fields are always valid for a Il2CppClass structure
             public Il2CppImage* image; // const
@@ -59,9 +59,6 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
             public Il2CppClass** typeHierarchy; // not const; Initialized in SetupTypeHierachy
             // End initialization required fields
 
-            // U2019 specific field
-            public IntPtr unity_user_data;
-
             public uint initializationExceptionGCHandle;
 
             public uint cctor_started;
@@ -69,7 +66,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
             public uint cctor_finished;
 
             /*ALIGN_TYPE(8)*/
-            IntPtr cctor_thread; // was uint64 in 2018.4, is size_t in 2019.3.1
+            ulong cctor_thread;
 
             // Remaining fields are always valid except where noted
             public /*GenericContainerIndex*/ int genericContainerIndex;
@@ -96,7 +93,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
             public byte genericRecursionDepth;
             public byte rank;
             public byte minimumAlignment; // Alignment of this type
-            public byte naturalAligment; // Alignment of this type without accounting for packing
+            // naturalAlignment is absent here
             public byte packingSize;
 
             // this is critical for performance of Class::InitFromCodegen. Equals to initialized && !has_initialization_error at all times.
@@ -123,9 +120,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
             //VirtualInvokeData vtable[IL2CPP_ZERO_LEN_ARRAY];
         }
 
-        private unsafe class Unity2019NativeClassStruct : INativeClassStruct
+        private unsafe class Unity2018_0NativeClassStructWrapper : INativeClassStruct
         {
-            public Unity2019NativeClassStruct(IntPtr pointer)
+            public Unity2018_0NativeClassStructWrapper(IntPtr pointer)
             {
                 Pointer = pointer;
             }
@@ -133,9 +130,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
             public IntPtr Pointer { get; }
             public Il2CppClass* ClassPointer => (Il2CppClass*) Pointer;
 
-            public IntPtr VTable => IntPtr.Add(Pointer, Marshal.SizeOf<Il2CppClassU2019>());
+            public IntPtr VTable => IntPtr.Add(Pointer, Marshal.SizeOf<Il2CppClassU2018_0>());
 
-            private Il2CppClassU2019* NativeClass => (Il2CppClassU2019*) ClassPointer;
+            private Il2CppClassU2018_0* NativeClass => (Il2CppClassU2018_0*) ClassPointer;
 
             public ref uint InstanceSize => ref NativeClass->instance_size;
 
