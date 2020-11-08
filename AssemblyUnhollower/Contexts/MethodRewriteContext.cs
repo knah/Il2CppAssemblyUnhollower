@@ -12,6 +12,8 @@ namespace AssemblyUnhollower.Contexts
         public readonly MethodDefinition OriginalMethod;
         public readonly MethodDefinition NewMethod;
 
+        public readonly bool OriginalNameInvalidInSource;
+
         public readonly long FileOffset;
         public readonly long Rva;
 
@@ -27,6 +29,8 @@ namespace AssemblyUnhollower.Contexts
         {
             DeclaringType = declaringType;
             OriginalMethod = originalMethod;
+
+            OriginalNameInvalidInSource = OriginalMethod?.Name?.IsInvalidInSource() ?? false;
 
             var newMethod = new MethodDefinition("", AdjustAttributes(originalMethod.Attributes), declaringType.AssemblyContext.Imports.Void);
             NewMethod = newMethod;
@@ -192,7 +196,7 @@ namespace AssemblyUnhollower.Contexts
             var aM = otherRewriteContext.OriginalMethod;
             var bM = OriginalMethod;
             
-            if (!aM.Name.IsInvalidInSource())
+            if (!otherRewriteContext.OriginalNameInvalidInSource)
                 return false;
             
             var comparisonMask = MethodAttributes.MemberAccessMask | MethodAttributes.Static | MethodAttributes.Final |
