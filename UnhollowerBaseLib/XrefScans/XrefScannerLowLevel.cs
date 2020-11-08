@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Iced.Intel;
-using UnhollowerBaseLib;
 using Decoder = Iced.Intel.Decoder;
 
 namespace UnhollowerRuntimeLib.XrefScans
@@ -16,14 +14,9 @@ namespace UnhollowerRuntimeLib.XrefScans
 
         private static IEnumerable<IntPtr> JumpTargetsImpl(Decoder myDecoder)
         {
-            var formatter = new IntelFormatter();
-            var builder = new StringBuilder();
             while (true)
             {
                 myDecoder.Decode(out var instruction);
-                builder.Clear();
-                formatter.Format(in instruction, new StringOutput(builder));
-                LogSupport.Trace($"Decoded instruction: {builder}");
                 if (myDecoder.InvalidNoMoreBytes) yield break;
                 if (instruction.FlowControl == FlowControl.Return)
                     yield break;
