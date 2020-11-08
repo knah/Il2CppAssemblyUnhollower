@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Iced.Intel;
 using UnhollowerBaseLib;
+using UnhollowerBaseLib.Attributes;
 using Type = Il2CppSystem.Type;
 
 namespace UnhollowerRuntimeLib.XrefScans
@@ -17,9 +18,29 @@ namespace UnhollowerRuntimeLib.XrefScans
             var fieldValue = UnhollowerUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(methodBase)?.GetValue(null);
             if (fieldValue == null) return Enumerable.Empty<XrefInstance>();
             
-            XrefScanMetadataUtil.CallMetadataInitForMethod(methodBase);
+            var cachedAttribute = methodBase.GetCustomAttribute<CachedScanResultsAttribute>(false);
+            if (cachedAttribute == null)
+            {
+                XrefScanMetadataRuntimeUtil.CallMetadataInitForMethod(methodBase);
+                
+                return XrefScanImpl(DecoderForAddress(*(IntPtr*) (IntPtr) fieldValue));
+            }
 
-            return XrefScanImpl(DecoderForAddress(*(IntPtr*) (IntPtr) fieldValue));
+            if (cachedAttribute.XrefRangeStart == cachedAttribute.XrefRangeEnd)
+                return Enumerable.Empty<XrefInstance>();
+            
+            XrefScanMethodDb.CallMetadataInitForMethod(cachedAttribute);
+
+            return XrefScanMethodDb.CachedXrefScan(cachedAttribute).Where(it => it.Type == XrefType.Method || XrefGlobalClassFilter(it.Pointer));
+        }
+
+        public static IEnumerable<XrefInstance> UsedBy(MethodBase methodBase)
+        {
+            var cachedAttribute = methodBase.GetCustomAttribute<CachedScanResultsAttribute>(false);
+            if (cachedAttribute == null || cachedAttribute.RefRangeStart == cachedAttribute.RefRangeEnd)
+                return Enumerable.Empty<XrefInstance>();
+
+            return XrefScanMethodDb.ListUsers(cachedAttribute);
         }
 
         internal static unsafe Decoder DecoderForAddress(IntPtr codeStart, int lengthLimit = 1000)
@@ -34,7 +55,7 @@ namespace UnhollowerRuntimeLib.XrefScans
             return decoder;
         }
 
-        internal static IEnumerable<XrefInstance> XrefScanImpl(Decoder decoder)
+        internal static IEnumerable<XrefInstance> XrefScanImpl(Decoder decoder, bool skipClassCheck = false)
         {
             while (true)
             {
@@ -51,7 +72,7 @@ namespace UnhollowerRuntimeLib.XrefScans
                 {
                     var targetAddress = ExtractTargetAddress(instruction);
                     if (targetAddress != 0)
-                        yield return new XrefInstance(XrefType.Method, (IntPtr) targetAddress);
+                        yield return new XrefInstance(XrefType.Method, (IntPtr) targetAddress, (IntPtr) instruction.IP);
                     continue;
                 }
                 
@@ -69,15 +90,8 @@ namespace UnhollowerRuntimeLib.XrefScans
                             if (instruction.MemorySize != MemorySize.UInt64) 
                                 continue;
                             
-                            var valueAtMov = (IntPtr) Marshal.ReadInt64(movTarget);
-                            if (valueAtMov != IntPtr.Zero)
-                            {
-                                var targetClass = (IntPtr) Marshal.ReadInt64(valueAtMov);
-                                if (targetClass == Il2CppClassPointerStore<string>.NativeClassPtr || targetClass == Il2CppClassPointerStore<Type>.NativeClassPtr)
-                                {
-                                    result = new XrefInstance(XrefType.Global, movTarget);
-                                }
-                            }
+                            if (skipClassCheck || XrefGlobalClassFilter(movTarget))
+                                result = new XrefInstance(XrefType.Global, movTarget, (IntPtr) instruction.IP);
                         }
                     }
                     catch (Exception ex)
@@ -89,6 +103,19 @@ namespace UnhollowerRuntimeLib.XrefScans
                         yield return result.Value;
                 }
             }
+        }
+
+        internal static bool XrefGlobalClassFilter(IntPtr movTarget)
+        {
+            var valueAtMov = (IntPtr) Marshal.ReadInt64(movTarget);
+            if (valueAtMov != IntPtr.Zero)
+            {
+                var targetClass = (IntPtr) Marshal.ReadInt64(valueAtMov);
+                return targetClass == Il2CppClassPointerStore<string>.NativeClassPtr ||
+                       targetClass == Il2CppClassPointerStore<Type>.NativeClassPtr;
+            }
+
+            return false;
         }
 
         internal static ulong ExtractTargetAddress(in Instruction instruction)

@@ -22,7 +22,7 @@ namespace AssemblyUnhollower.Passes
                 methodContext.CtorPhase2();
 
                 int callerCount = 0;
-                if (Pass16ScanMethodRefs.MapOfCallers.TryGetValue(methodContext.FileOffset, out var callers))
+                if (Pass16ScanMethodRefs.MapOfCallers.TryGetValue(methodContext.Rva, out var callers))
                     callerCount = callers.Count;
 
                 methodContext.NewMethod.CustomAttributes.Add(

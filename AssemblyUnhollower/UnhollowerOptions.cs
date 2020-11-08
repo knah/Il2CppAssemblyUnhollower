@@ -13,5 +13,6 @@ namespace AssemblyUnhollower
         public int TypeDeobfuscationMaxUniquifiers { get; set; } = 10;
         public string GameAssemblyPath { get; set; }
         public bool Verbose { get; set; }
+        public bool NoXrefCache { get; set; }
     }
 }

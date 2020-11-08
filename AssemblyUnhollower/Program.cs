@@ -60,6 +60,7 @@ namespace AssemblyUnhollower
         private const string ParamUniqMax = "--deobf-uniq-max=";
         private const string ParamAnalyze = "--deobf-analyze";
         private const string ParamBlacklistAssembly = "--blacklist-assembly=";
+        private const string ParamNoXrefCache = "--no-xref-cache";
         private const string ParamVerbose = "--verbose";
         private const string ParamHelp = "--help";
         private const string ParamHelpShort = "-h";
@@ -78,6 +79,7 @@ namespace AssemblyUnhollower
             Console.WriteLine($"\t{ParamUniqMax}<number> - Optional. How many maximum unique tokens per type are allowed during deobfuscation");
             Console.WriteLine($"\t{ParamAnalyze} - Optional. Analyze deobfuscation performance with different parameter values. Will not generate assemblies.");
             Console.WriteLine($"\t{ParamBlacklistAssembly}<assembly name> - Optional. Don't write specified assembly to output. Can be used multiple times");
+            Console.WriteLine($"\t{ParamNoXrefCache} - Optional. Don't generate xref scanning cache. All scanning will be done at runtime.");
             Console.WriteLine($"\t{ParamVerbose} - Optional. Produce more console output");
             Console.WriteLine($"\t{ParamHelp}, {ParamHelpShort}, {ParamHelpShortSlash} - Optional. Show this help");
             
@@ -102,7 +104,8 @@ namespace AssemblyUnhollower
                 {
                     LogSupport.TraceHandler += Console.WriteLine;
                     options.Verbose = true;
-                }
+                } else if (s == ParamNoXrefCache)
+                    options.NoXrefCache = true;
                 else if (s.StartsWith(ParamInputDir))
                     options.SourceDir = s.Substring(ParamInputDir.Length);
                 else if (s.StartsWith(ParamOutputDir))
@@ -216,6 +219,9 @@ namespace AssemblyUnhollower
             
             using(new TimingCookie("Generating forwarded types"))
                 Pass89GenerateForwarders.DoPass(rewriteContext);
+            
+            using(new TimingCookie("Writing xref cache"))
+                Pass89GenerateMethodXrefCache.DoPass(rewriteContext, options);
             
             using(new TimingCookie("Writing assemblies"))
                 Pass90WriteToDisk.DoPass(rewriteContext, options);

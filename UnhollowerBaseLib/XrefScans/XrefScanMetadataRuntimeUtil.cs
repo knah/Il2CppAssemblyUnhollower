@@ -8,10 +8,10 @@ using BindingFlags = Il2CppSystem.Reflection.BindingFlags;
 
 namespace UnhollowerRuntimeLib.XrefScans
 {
-    internal static class XrefScanMetadataUtil
+    internal static class XrefScanMetadataRuntimeUtil
     {
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        delegate void InitMetadataForMethod(int metadataUsageToken);
+        internal delegate void InitMetadataForMethod(int metadataUsageToken);
 
         private static InitMetadataForMethod ourMetadataInitForMethodDelegate;
         private static IntPtr ourMetadataInitForMethodPointer;

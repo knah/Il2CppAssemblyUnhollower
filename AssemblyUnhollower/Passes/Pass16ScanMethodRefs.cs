@@ -13,7 +13,7 @@ namespace AssemblyUnhollower.Passes
     public static class Pass16ScanMethodRefs
     {
         public static readonly HashSet<long> NonDeadMethods = new HashSet<long>();
-        public static IDictionary<long, List<long>> MapOfCallers = new Dictionary<long, List<long>>();
+        public static IDictionary<long, List<XrefInstance>> MapOfCallers = new Dictionary<long, List<XrefInstance>>();
 
         public static void DoPass(RewriteGlobalContext context, UnhollowerOptions options)
         {
@@ -24,7 +24,7 @@ namespace AssemblyUnhollower.Passes
             }
             if (!Pass15GenerateMemberContexts.HasObfuscatedMethods) return;
 
-            var methodToCallersMap = new ConcurrentDictionary<long, List<long>>();
+            var methodToCallersMap = new ConcurrentDictionary<long, List<XrefInstance>>();
             var methodToCalleesMap = new ConcurrentDictionary<long, List<long>>();
 
             using var mappedFile = MemoryMappedFile.CreateFromFile(options.GameAssemblyPath, FileMode.Open, null, 0, MemoryMappedFileAccess.Read);
@@ -46,11 +46,25 @@ namespace AssemblyUnhollower.Passes
                     var address = originalTypeMethod.FileOffset;
                     if (address == 0) return;
 
-                    foreach (var callTarget in XrefScannerLowLevel.CallAndIndirectTargets(IntPtr.Add(gameAssemblyPtr, (int) address)))
+                    if (!options.NoXrefCache)
                     {
-                        var targetRelative = (long) callTarget - (long) gameAssemblyPtr;
-                        methodToCallersMap.GetOrAdd(targetRelative, _ => new List<long>()).AddLocked(address);
-                        methodToCalleesMap.GetOrAdd(address, _ => new List<long>()).AddLocked(targetRelative);
+                        var pair = XrefScanMetadataGenerationUtil.FindMetadataInitForMethod(originalTypeMethod, (long) gameAssemblyPtr);
+                        originalTypeMethod.MetadataInitFlagRva = pair.FlagRva;
+                        originalTypeMethod.MetadataInitTokenRva = pair.TokenRva;
+                    }
+
+                    foreach (var callTargetGlobal in XrefScanner.XrefScanImpl(XrefScanner.DecoderForAddress(IntPtr.Add(gameAssemblyPtr, (int) address), 1024 * 1024), true))
+                    {
+                        var callTarget = callTargetGlobal.RelativeToBase((long) gameAssemblyPtr + originalTypeMethod.FileOffset - originalTypeMethod.Rva);
+                        if (callTarget.Type == XrefType.Method)
+                        {
+                            var targetRelative = (long) callTarget.Pointer;
+                            methodToCallersMap.GetOrAdd(targetRelative, _ => new List<XrefInstance>()).AddLocked(new XrefInstance(XrefType.Method, (IntPtr) originalTypeMethod.Rva, callTarget.FoundAt));
+                            methodToCalleesMap.GetOrAdd(originalTypeMethod.Rva, _ => new List<long>()).AddLocked(targetRelative);
+                        }
+
+                        if (!options.NoXrefCache)
+                            originalTypeMethod.XrefScanResults.Add(callTarget);
                     }
                 });
 
@@ -74,7 +88,7 @@ namespace AssemblyUnhollower.Passes
                 
                 var originalMethod = methodRewriteContext.OriginalMethod;
                 if (!originalMethod.Name.IsObfuscated() || originalMethod.IsVirtual)
-                    MarkMethodAlive(methodRewriteContext.FileOffset);
+                    MarkMethodAlive(methodRewriteContext.Rva);
             }
         }
     }
