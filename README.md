@@ -14,9 +14,28 @@ This includes generic types and methods, arrays, and new object creation. Some t
  This appears to be working reasonably well for Unity 2018.4.x games, but more extensive testing is required.  
  Generated assemblies appear to be invalid according to .NET Core/.NET Framework, but run fine on Mono.
 
+### Command-line parameter reference
+```
+Usage: AssemblyUnhollower [parameters]
+Possible parameters:
+        --input=<directory path> - Required. Directory with Il2CppDumper's dummy assemblies
+        --output=<directory path> - Required. Directory to put results into
+        --mscorlib=<file path> - Required. mscorlib.dll of target runtime system (typically loader's)
+        --unity=<directory path> - Optional. Directory with original Unity assemblies for unstripping
+        --gameassembly=<file path> - Optional. Path to GameAssembly.dll. Used for certain analyses
+        --deobf-uniq-chars=<number> - Optional. How many characters per unique token to use during deobfuscation
+        --deobf-uniq-max=<number> - Optional. How many maximum unique tokens per type are allowed during deobfuscation
+        --deobf-analyze - Optional. Analyze deobfuscation performance with different parameter values. Will not generate assemblies.
+        --blacklist-assembly=<assembly name> - Optional. Don't write specified assembly to output. Can be used multiple times
+        --no-xref-cache - Optional. Don't generate xref scanning cache. All scanning will be done at runtime.
+        --verbose - Optional. Produce more console output
+        --help, -h, /? - Optional. Show this help
+```
+
 ## Required external setup
-Before certain features can be used (namely class injection and delegate conversion), some external setup is required.  
- * Set `ClassInjector.DoHook` to an Action with same semantics as `DetourAttach` (signature `void**, void*`, first is a pointer to a variable containing pointer to hooked code start, second is a pointer to patch code start, a pointer to call-original code start is written to the first parameter)
+Before certain features can be used (namely class injection and delegate conversion), some external setup is required.
+ * Set `ClassInjector.Detour` to an implementation of a managed detour with semantics as described in the interface 
+ * Alternatively, set `ClassInjector.DoHook` to an Action with same semantics as `DetourAttach` (signature `void**, void*`, first is a pointer to a variable containing pointer to hooked code start, second is a pointer to patch code start, a pointer to call-original code start is written to the first parameter)
  * Call `UnityVersionHandler.Initialize` with appropriate Unity version (default is 2018.4.20)
 
 ## Known Issues
