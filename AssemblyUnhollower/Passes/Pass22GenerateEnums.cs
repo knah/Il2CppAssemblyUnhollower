@@ -27,7 +27,7 @@ namespace AssemblyUnhollower.Passes
                         if (fieldName.IsInvalidInSource())
                             fieldName = "EnumValue" + fieldDefinition.Constant;
                         
-                        var newDef = new FieldDefinition(fieldName, fieldDefinition.Attributes, assemblyContext.RewriteTypeRef(fieldDefinition.FieldType));
+                        var newDef = new FieldDefinition(fieldName, fieldDefinition.Attributes | FieldAttributes.HasDefault, assemblyContext.RewriteTypeRef(fieldDefinition.FieldType));
                         newType.Fields.Add(newDef);
 
                         newDef.Constant = fieldDefinition.Constant;

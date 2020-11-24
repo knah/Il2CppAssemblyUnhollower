@@ -72,12 +72,16 @@ namespace AssemblyUnhollower.Passes
                 foreach (var typeContext in assemblyContext.Types)
                 {
                     if (typeContext.OriginalType.BaseType?.FullName != "System.MulticastDelegate") continue;
-                    
-                    var implicitMethod = new MethodDefinition("op_Implicit", MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, typeContext.SelfSubstitutedRef);
-                    typeContext.NewType.Methods.Add(implicitMethod);
 
                     var invokeMethod = typeContext.NewType.Methods.Single(it => it.Name == "Invoke");
                     if (invokeMethod.Parameters.Count > 8) continue; // mscorlib only contains delegates of up to 8 parameters
+
+                    // Don't generate implicit conversions for pointers and byrefs, as they can't be specified in generics
+                    if (invokeMethod.Parameters.Any(it => it.ParameterType.IsByReference || it.ParameterType.IsPointer))
+                        continue;
+                    
+                    var implicitMethod = new MethodDefinition("op_Implicit", MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, typeContext.SelfSubstitutedRef);
+                    typeContext.NewType.Methods.Add(implicitMethod);
 
                     var hasReturn = invokeMethod.ReturnType.FullName != "System.Void";
                     var hasParameters = invokeMethod.Parameters.Count > 0;

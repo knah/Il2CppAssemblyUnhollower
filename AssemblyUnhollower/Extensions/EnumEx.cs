@@ -6,7 +6,7 @@ namespace AssemblyUnhollower.Extensions
     {
         public static FieldAttributes ForcePublic(this FieldAttributes fieldAttributes)
         {
-            return fieldAttributes & ~FieldAttributes.FieldAccessMask | FieldAttributes.Public;
+            return fieldAttributes & ~FieldAttributes.FieldAccessMask & ~FieldAttributes.HasFieldMarshal | FieldAttributes.Public;
         }
 
         public static GenericParameterAttributes StripValueTypeConstraint(this GenericParameterAttributes parameterAttributes)

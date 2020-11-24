@@ -126,6 +126,7 @@ namespace AssemblyUnhollower.Contexts
             original &= ~(MethodAttributes.Final);
             original &= ~(MethodAttributes.NewSlot);
             original &= ~(MethodAttributes.ReuseSlot);
+            original &= ~(MethodAttributes.CheckAccessOnOverride);
             original |= MethodAttributes.Public;
             return original;
         }
