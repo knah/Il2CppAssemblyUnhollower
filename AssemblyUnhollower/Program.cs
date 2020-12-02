@@ -61,6 +61,7 @@ namespace AssemblyUnhollower
         private const string ParamAnalyze = "--deobf-analyze";
         private const string ParamBlacklistAssembly = "--blacklist-assembly=";
         private const string ParamNoXrefCache = "--no-xref-cache";
+        private const string ParamNoCopyUnhollowerLibs = "--no-copy-unhollower-libs";
         private const string ParamVerbose = "--verbose";
         private const string ParamHelp = "--help";
         private const string ParamHelpShort = "-h";
@@ -80,6 +81,7 @@ namespace AssemblyUnhollower
             Console.WriteLine($"\t{ParamAnalyze} - Optional. Analyze deobfuscation performance with different parameter values. Will not generate assemblies.");
             Console.WriteLine($"\t{ParamBlacklistAssembly}<assembly name> - Optional. Don't write specified assembly to output. Can be used multiple times");
             Console.WriteLine($"\t{ParamNoXrefCache} - Optional. Don't generate xref scanning cache. All scanning will be done at runtime.");
+            Console.WriteLine($"\t{ParamNoCopyUnhollowerLibs} - Optional. Don't copy unhollower libraries to output directory");
             Console.WriteLine($"\t{ParamVerbose} - Optional. Produce more console output");
             Console.WriteLine($"\t{ParamHelp}, {ParamHelpShort}, {ParamHelpShortSlash} - Optional. Show this help");
             
@@ -106,6 +108,8 @@ namespace AssemblyUnhollower
                     options.Verbose = true;
                 } else if (s == ParamNoXrefCache)
                     options.NoXrefCache = true;
+                else if (s == ParamNoCopyUnhollowerLibs)
+                    options.NoCopyUnhollowerLibs = true;
                 else if (s.StartsWith(ParamInputDir))
                     options.SourceDir = s.Substring(ParamInputDir.Length);
                 else if (s.StartsWith(ParamOutputDir))
@@ -229,9 +233,12 @@ namespace AssemblyUnhollower
             using(new TimingCookie("Writing method pointer map"))
                 Pass91GenerateMethodPointerMap.DoPass(rewriteContext, options);
 
-            File.Copy(typeof(IL2CPP).Assembly.Location, Path.Combine(options.OutputDir, typeof(IL2CPP).Assembly.GetName().Name + ".dll"), true);
-            File.Copy(typeof(RuntimeLibMarker).Assembly.Location, Path.Combine(options.OutputDir, typeof(RuntimeLibMarker).Assembly.GetName().Name + ".dll"), true);
-            File.Copy(typeof(Decoder).Assembly.Location, Path.Combine(options.OutputDir, typeof(Decoder).Assembly.GetName().Name + ".dll"), true);
+            if (!options.NoCopyUnhollowerLibs)
+            {
+                File.Copy(typeof(IL2CPP).Assembly.Location, Path.Combine(options.OutputDir, typeof(IL2CPP).Assembly.GetName().Name + ".dll"), true);
+                File.Copy(typeof(RuntimeLibMarker).Assembly.Location, Path.Combine(options.OutputDir, typeof(RuntimeLibMarker).Assembly.GetName().Name + ".dll"), true);
+                File.Copy(typeof(Decoder).Assembly.Location, Path.Combine(options.OutputDir, typeof(Decoder).Assembly.GetName().Name + ".dll"), true);
+            }
             
             Console.WriteLine("Done!");
 

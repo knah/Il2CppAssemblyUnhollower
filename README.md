@@ -28,6 +28,7 @@ Possible parameters:
         --deobf-analyze - Optional. Analyze deobfuscation performance with different parameter values. Will not generate assemblies.
         --blacklist-assembly=<assembly name> - Optional. Don't write specified assembly to output. Can be used multiple times
         --no-xref-cache - Optional. Don't generate xref scanning cache. All scanning will be done at runtime.
+        --no-copy-unhollower-libs - Optional. Don't copy unhollower libraries to output directory
         --verbose - Optional. Produce more console output
         --help, -h, /? - Optional. Show this help
 ```

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using UnhollowerBaseLib;
 using UnhollowerBaseLib.Attributes;
 using UnhollowerBaseLib.Maps;
 
@@ -19,8 +19,8 @@ namespace UnhollowerRuntimeLib.XrefScans
 
         static XrefScanMethodDb()
         {
-            MethodMap = new MethodAddressToTokenMap(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, MethodAddressToTokenMap.FileName));
-            XrefScanCache = new MethodXrefScanCache(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, MethodXrefScanCache.FileName));
+            MethodMap = new MethodAddressToTokenMap(GeneratedDatabasesUtil.GetDatabasePath(MethodAddressToTokenMap.FileName));
+            XrefScanCache = new MethodXrefScanCache(GeneratedDatabasesUtil.GetDatabasePath(MethodXrefScanCache.FileName));
             
             foreach (ProcessModule module in Process.GetCurrentProcess().Modules)
             {

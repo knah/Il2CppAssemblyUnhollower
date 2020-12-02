@@ -14,5 +14,6 @@ namespace AssemblyUnhollower
         public string GameAssemblyPath { get; set; }
         public bool Verbose { get; set; }
         public bool NoXrefCache { get; set; }
+        public bool NoCopyUnhollowerLibs { get; set; }
     }
 }
