@@ -13,7 +13,7 @@ namespace UnhollowerRuntimeLib.XrefScans
             while (true)
             {
                 decoder.Decode(out var instruction);
-                if (decoder.InvalidNoMoreBytes) return IntPtr.Zero;
+                if (decoder.LastError == DecoderError.NoMoreBytes) return IntPtr.Zero;
 
                 if (instruction.FlowControl == FlowControl.Return)
                     return IntPtr.Zero;
@@ -53,7 +53,7 @@ namespace UnhollowerRuntimeLib.XrefScans
             while (true)
             {
                 decoder.Decode(out var instruction);
-                if (decoder.InvalidNoMoreBytes) return IntPtr.Zero;
+                if (decoder.LastError == DecoderError.NoMoreBytes) return IntPtr.Zero;
 
                 if (instruction.FlowControl == FlowControl.Return)
                     return IntPtr.Zero;
