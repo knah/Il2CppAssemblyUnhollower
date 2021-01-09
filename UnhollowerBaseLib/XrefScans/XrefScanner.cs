@@ -60,7 +60,7 @@ namespace UnhollowerRuntimeLib.XrefScans
             while (true)
             {
                 decoder.Decode(out var instruction);
-                if (decoder.InvalidNoMoreBytes) yield break;
+                if (decoder.LastError == DecoderError.NoMoreBytes) yield break;
 
                 if (instruction.FlowControl == FlowControl.Return)
                     yield break;
