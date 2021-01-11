@@ -184,6 +184,16 @@ namespace UnhollowerRuntimeLib
             if (method.Name == "Finalize") return false;
             if (method.IsStatic || method.IsAbstract) return false;
             if (method.CustomAttributes.Any(it => it.AttributeType == typeof(HideFromIl2CppAttribute))) return false;
+
+            if (
+                method.DeclaringType != null &&
+                method.DeclaringType.GetProperties()
+                    .Where(property => property.GetAccessors(true).Contains(method))
+                    .Any(property => property.CustomAttributes.Any(it => it.AttributeType == typeof(HideFromIl2CppAttribute)))
+            )
+            {
+                return false;
+            }
             
             if (!IsTypeSupported(method.ReturnType))
             {
