@@ -219,7 +219,7 @@ namespace AssemblyUnhollower
                     Pass81FillUnstrippedMethodBodies.DoPass(rewriteContext);
             }
             else
-                Console.WriteLine("Not performing unstripping as unity libs are not specified");
+                LogSupport.Warning("Not performing unstripping as unity libs are not specified");
             
             using(new TimingCookie("Generating forwarded types"))
                 Pass89GenerateForwarders.DoPass(rewriteContext);
@@ -240,7 +240,7 @@ namespace AssemblyUnhollower
                 File.Copy(typeof(Decoder).Assembly.Location, Path.Combine(options.OutputDir, typeof(Decoder).Assembly.GetName().Name + ".dll"), true);
             }
             
-            Console.WriteLine("Done!");
+            LogSupport.Info("Done!");
 
             rewriteContext.Dispose();
         }
