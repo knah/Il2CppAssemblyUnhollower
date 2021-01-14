@@ -7,7 +7,7 @@ namespace UnhollowerBaseLib
 {
     public class UnhollowerUtils
     {
-        public static FieldInfo GetIl2CppMethodInfoPointerFieldForGeneratedMethod(MethodBase method)
+        private static FieldInfo GetFieldInfoFromMethod(MethodBase method, string prefix)
         {
             var body = method.GetMethodBody();
             if (body == null) throw new ArgumentException("Target method may not be abstract");
@@ -16,10 +16,20 @@ namespace UnhollowerBaseLib
             {
                 if (opCode != OpCodes.Ldsfld) continue;
                 var fieldInfo = methodModule.ResolveField((int) opArg);
-                if (fieldInfo?.FieldType != typeof(IntPtr) || !fieldInfo.Name.StartsWith("NativeMethodInfo")) continue;
+                if (fieldInfo?.FieldType != typeof(IntPtr) || !fieldInfo.Name.StartsWith(prefix)) continue;
                 return fieldInfo;
             }
             return null;
+        }
+
+        public static FieldInfo GetIl2CppMethodInfoPointerFieldForGeneratedMethod(MethodBase method)
+        {
+            return GetFieldInfoFromMethod(method, "NativeMethodInfoPtr_");
+        }
+
+        public static FieldInfo GetIl2CppFieldInfoPointerFieldForGeneratedFieldAccessor(MethodBase method)
+        {
+            return GetFieldInfoFromMethod(method, "NativeFieldInfoPtr_");
         }
     }
 }
