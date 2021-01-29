@@ -81,7 +81,7 @@ namespace AssemblyUnhollower
             Console.WriteLine("Deobfuscation map generation mode:");
             Console.WriteLine($"\t{ParamGenerateDeobMap} - Generate a deobfuscation map for input files. Will not generate assemblies.");
             Console.WriteLine($"\t{ParamGenerateDeobMapAssembly}<assembly name> - Optional. Include this assembly for deobfuscation map generation. If none are specified, all assemblies will be included.");
-            Console.WriteLine($"\t{ParamGenerateDeobMapNew}<directory path> - Specifies the directory with new (obfuscated) assemblies");
+            Console.WriteLine($"\t{ParamGenerateDeobMapNew}<directory path> - Required. Specifies the directory with new (obfuscated) assemblies. The --input parameter specifies old (unobfuscated) assemblies.");
         }
 
         public static void Main(string[] args)
