@@ -29,7 +29,7 @@ namespace AssemblyUnhollower.Passes
                     var processedType = processedAssembly.TryGetTypeByName(unityType.FullName);
                     if (processedType == null) continue;
                     
-                    if (!unityType.IsValueType)
+                    if (!unityType.IsValueType || unityType.IsEnum)
                         continue;
 
                     foreach (var unityField in unityType.Fields)
