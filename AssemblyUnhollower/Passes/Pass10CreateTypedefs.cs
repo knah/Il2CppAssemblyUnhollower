@@ -35,7 +35,7 @@ namespace AssemblyUnhollower.Passes
 
         private static string GetConvertedTypeName(RewriteGlobalContext assemblyContextGlobalContext, TypeDefinition type)
         {
-            if (type.Name.IsInvalidInSource())
+            if (type.Name.IsObfuscated(assemblyContextGlobalContext.Options))
             {
                 var newNameBase = assemblyContextGlobalContext.RenamedTypes[type];
                 var genericParametersCount = type.GenericParameters.Count;

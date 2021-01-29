@@ -51,17 +51,17 @@ namespace AssemblyUnhollower.Passes
         private static string? GetUnobfuscatedNameBase(RewriteGlobalContext context, TypeDefinition typeDefinition, bool allowExtraHeuristics)
         {
             var options = context.Options;
-            if (!typeDefinition.Name.IsInvalidInSource()) return null;
+            if (!typeDefinition.Name.IsObfuscated(context.Options)) return null;
 
             var inheritanceDepth = 0;
             var firstUnobfuscatedType = typeDefinition.BaseType;
-            while (firstUnobfuscatedType != null && firstUnobfuscatedType.Name.IsInvalidInSource())
+            while (firstUnobfuscatedType != null && firstUnobfuscatedType.Name.IsObfuscated(context.Options))
             {
                 firstUnobfuscatedType = firstUnobfuscatedType.Resolve().BaseType?.Resolve();
                 inheritanceDepth++;
             }
 
-            var unobfuscatedInterfacesList = typeDefinition.Interfaces.Select(it => it.InterfaceType).Where(it => !it.Name.IsInvalidInSource());
+            var unobfuscatedInterfacesList = typeDefinition.Interfaces.Select(it => it.InterfaceType).Where(it => !it.Name.IsObfuscated(context.Options));
             var accessName = ClassAccessNames[(int) (typeDefinition.Attributes & TypeAttributes.VisibilityMask)];
 
             var classifier = typeDefinition.IsInterface ? "Interface" : (typeDefinition.IsValueType ? "Struct" : "Class");
@@ -173,7 +173,7 @@ namespace AssemblyUnhollower.Passes
                 return entries;
             }
 
-            if (typeRef.NameOrRename(context).IsInvalidInSource())
+            if (typeRef.NameOrRename(context).IsObfuscated(context.Options))
                 return new List<string> {"Obf"};
 
             return new List<string> {typeRef.NameOrRename(context)};

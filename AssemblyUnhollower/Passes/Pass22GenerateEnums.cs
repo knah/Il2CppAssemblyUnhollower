@@ -24,7 +24,7 @@ namespace AssemblyUnhollower.Passes
                     foreach (var fieldDefinition in type.Fields)
                     {
                         var fieldName = fieldDefinition.Name;
-                        if (fieldName.IsInvalidInSource())
+                        if (fieldName.IsObfuscated(context.Options))
                             fieldName = "EnumValue" + fieldDefinition.Constant;
                         
                         var newDef = new FieldDefinition(fieldName, fieldDefinition.Attributes | FieldAttributes.HasDefault, assemblyContext.RewriteTypeRef(fieldDefinition.FieldType));

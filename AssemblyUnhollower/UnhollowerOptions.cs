@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace AssemblyUnhollower
 {
@@ -15,5 +16,6 @@ namespace AssemblyUnhollower
         public bool Verbose { get; set; }
         public bool NoXrefCache { get; set; }
         public bool NoCopyUnhollowerLibs { get; set; }
+        public Regex? ObfuscatedNamesRegex { get; set; }
     }
 }

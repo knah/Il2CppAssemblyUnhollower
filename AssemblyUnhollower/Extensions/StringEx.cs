@@ -12,6 +12,19 @@ namespace AssemblyUnhollower.Extensions
 
             return str;
         }
+
+        public static string FilterInvalidInSourceChars(this string str)
+        {
+            var chars = str.ToCharArray();
+            for (var i = 0; i < chars.Length; i++)
+            {
+                var it = chars[i];
+                if (!char.IsDigit(it) && !(it >= 'a' && it <= 'z' || it >= 'A' && it <= 'Z') && it != '_' &&
+                    it != '`') chars[i] = '_';
+            }
+
+            return new string(chars);
+        }
         
         public static bool IsInvalidInSource(this string str)
         {
@@ -25,8 +38,11 @@ namespace AssemblyUnhollower.Extensions
             return false;
         }
 
-        public static bool IsObfuscated(this string str)
+        public static bool IsObfuscated(this string str, UnhollowerOptions options)
         {
+            if (options.ObfuscatedNamesRegex != null)
+                return options.ObfuscatedNamesRegex.IsMatch(str);
+
             foreach (var it in str)
             {
                 if (!char.IsDigit(it) && !(it >= 'a' && it <= 'z' || it >= 'A' && it <= 'Z') && it != '_' && it != '`' && it != '.' && it != '<' && it != '>') return true;

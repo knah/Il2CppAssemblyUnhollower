@@ -87,7 +87,7 @@ namespace AssemblyUnhollower.Passes
                 if (methodRewriteContext.FileOffset == 0) continue;
                 
                 var originalMethod = methodRewriteContext.OriginalMethod;
-                if (!originalMethod.Name.IsObfuscated() || originalMethod.IsVirtual)
+                if (!originalMethod.Name.IsObfuscated(options) || originalMethod.IsVirtual)
                     MarkMethodAlive(methodRewriteContext.Rva);
             }
         }

@@ -17,7 +17,7 @@ namespace AssemblyUnhollower.Contexts
             DeclaringType = declaringType;
             OriginalField = originalField;
 
-            UnmangledName = UnmangleFieldName(originalField);
+            UnmangledName = UnmangleFieldName(originalField, declaringType.AssemblyContext.GlobalContext.Options);
             var pointerField = new FieldDefinition("NativeFieldInfoPtr_" + UnmangledName, FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, declaringType.AssemblyContext.Imports.IntPtr);
             
             declaringType.NewType.Fields.Add(pointerField);
@@ -26,20 +26,30 @@ namespace AssemblyUnhollower.Contexts
         }
 
         private static readonly string[] MethodAccessTypeLabels = { "CompilerControlled", "Private", "FamAndAssem", "Internal", "Protected", "FamOrAssem", "Public"};
-        private string UnmangleFieldNameBase(FieldDefinition field)
+        private string UnmangleFieldNameBase(FieldDefinition field, UnhollowerOptions options)
         {
-            if (!field.Name.IsInvalidInSource()) return field.Name;
+            if (!field.Name.IsObfuscated(options))
+            {
+                if(!field.Name.IsInvalidInSource())
+                    return field.Name;
+                return field.Name.FilterInvalidInSourceChars();
+            }
 
             var accessModString = MethodAccessTypeLabels[(int) (field.Attributes & FieldAttributes.FieldAccessMask)];
             var staticString = field.IsStatic ? "_Static" : "";
             return "field_" + accessModString + staticString + "_" + DeclaringType.AssemblyContext.RewriteTypeRef(field.FieldType).GetUnmangledName();
         }
         
-        private string UnmangleFieldName(FieldDefinition field)
+        private string UnmangleFieldName(FieldDefinition field, UnhollowerOptions options)
         {
-            if (!field.Name.IsInvalidInSource()) return field.Name;
+            if (!field.Name.IsObfuscated(options))
+            {
+                if(!field.Name.IsInvalidInSource())
+                    return field.Name;
+                return field.Name.FilterInvalidInSourceChars();
+            }
 
-            return UnmangleFieldNameBase(field) + "_" +
+            return UnmangleFieldNameBase(field, options) + "_" +
                    field.DeclaringType.Fields.Where(it => FieldsHaveSameSignature(field, it)).TakeWhile(it => it != field).Count();
         }
 

@@ -14,7 +14,7 @@ namespace AssemblyUnhollower.Contexts
         public readonly MethodDefinition OriginalMethod;
         public readonly MethodDefinition NewMethod;
 
-        public readonly bool OriginalNameInvalidInSource;
+        public readonly bool OriginalNameObfuscated;
 
         public readonly long FileOffset;
         public readonly long Rva;
@@ -37,7 +37,7 @@ namespace AssemblyUnhollower.Contexts
             DeclaringType = declaringType;
             OriginalMethod = originalMethod;
 
-            OriginalNameInvalidInSource = OriginalMethod?.Name?.IsInvalidInSource() ?? false;
+            OriginalNameObfuscated = OriginalMethod?.Name?.IsObfuscated(declaringType.AssemblyContext.GlobalContext.Options) ?? false;
 
             var newMethod = new MethodDefinition("", AdjustAttributes(originalMethod.Attributes), declaringType.AssemblyContext.Imports.Void);
             NewMethod = newMethod;
@@ -54,7 +54,7 @@ namespace AssemblyUnhollower.Contexts
                 }
             }
 
-            if (!Pass15GenerateMemberContexts.HasObfuscatedMethods && originalMethod.Name.IsObfuscated())
+            if (!Pass15GenerateMemberContexts.HasObfuscatedMethods && originalMethod.Name.IsObfuscated(declaringType.AssemblyContext.GlobalContext.Options))
                 Pass15GenerateMemberContexts.HasObfuscatedMethods = true;
 
             FileOffset = originalMethod.ExtractOffset();
@@ -134,8 +134,11 @@ namespace AssemblyUnhollower.Contexts
         private string UnmangleMethodName()
         {
             var method = OriginalMethod;
-            if(method.Name.IsInvalidInSource() && method.Name != ".ctor")
+            if(method.Name.IsObfuscated(DeclaringType.AssemblyContext.GlobalContext.Options) && method.Name != ".ctor")
                 return UnmangleMethodNameWithSignature();
+
+            if (method.Name.IsInvalidInSource())
+                return method.Name.FilterInvalidInSourceChars();
 
             if (method.Name == "GetType" && method.Parameters.Count == 0)
                 return "GetIl2CppType";
@@ -158,8 +161,11 @@ namespace AssemblyUnhollower.Contexts
             var method = OriginalMethod;
             
             var name = method.Name;
-            if (method.Name.IsInvalidInSource())
+            if (method.Name.IsObfuscated(DeclaringType.AssemblyContext.GlobalContext.Options))
                 name = "Method";
+
+            if (name.IsInvalidInSource())
+                name = name.FilterInvalidInSourceChars();
 
             if (method.Name == "GetType" && method.Parameters.Count == 0)
                 name = "GetIl2CppType";
@@ -204,7 +210,7 @@ namespace AssemblyUnhollower.Contexts
             var aM = otherRewriteContext.OriginalMethod;
             var bM = OriginalMethod;
             
-            if (!otherRewriteContext.OriginalNameInvalidInSource)
+            if (!otherRewriteContext.OriginalNameObfuscated)
                 return false;
             
             var comparisonMask = MethodAttributes.MemberAccessMask | MethodAttributes.Static | MethodAttributes.Final |

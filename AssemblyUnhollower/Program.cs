@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using AssemblyUnhollower.Contexts;
 using AssemblyUnhollower.Passes;
 using Iced.Intel;
@@ -62,6 +63,7 @@ namespace AssemblyUnhollower
         private const string ParamBlacklistAssembly = "--blacklist-assembly=";
         private const string ParamNoXrefCache = "--no-xref-cache";
         private const string ParamNoCopyUnhollowerLibs = "--no-copy-unhollower-libs";
+        private const string ParamObfRegex = "--obf-regex=";
         private const string ParamVerbose = "--verbose";
         private const string ParamHelp = "--help";
         private const string ParamHelpShort = "-h";
@@ -82,6 +84,7 @@ namespace AssemblyUnhollower
             Console.WriteLine($"\t{ParamBlacklistAssembly}<assembly name> - Optional. Don't write specified assembly to output. Can be used multiple times");
             Console.WriteLine($"\t{ParamNoXrefCache} - Optional. Don't generate xref scanning cache. All scanning will be done at runtime.");
             Console.WriteLine($"\t{ParamNoCopyUnhollowerLibs} - Optional. Don't copy unhollower libraries to output directory");
+            Console.WriteLine($"\t{ParamObfRegex}<regex> - Optional. Specifies a regex for obfuscated names. All types and members matching will be renamed");
             Console.WriteLine($"\t{ParamVerbose} - Optional. Produce more console output");
             Console.WriteLine($"\t{ParamHelp}, {ParamHelpShort}, {ParamHelpShortSlash} - Optional. Show this help");
             
@@ -126,6 +129,8 @@ namespace AssemblyUnhollower
                     options.TypeDeobfuscationMaxUniquifiers = Int32.Parse(s.Substring(ParamUniqMax.Length));
                 else if(s.StartsWith(ParamBlacklistAssembly))
                     options.AdditionalAssembliesBlacklist.Add(s.Substring(ParamBlacklistAssembly.Length));
+                else if (s.StartsWith(ParamObfRegex))
+                    options.ObfuscatedNamesRegex = new Regex(s.Substring(ParamObfRegex.Length), RegexOptions.Compiled);
                 else
                 {
                     Console.WriteLine($"Unrecognized option {s}; use -h for help");
