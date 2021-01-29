@@ -19,13 +19,18 @@ namespace AssemblyUnhollower.Passes
             foreach (var unityAssembly in loadedAssemblies)
             {
                 var processedAssembly = context.TryGetAssemblyByName(unityAssembly.Name.Name);
-                if (processedAssembly == null) continue;
+                if (processedAssembly == null)
+                {
+                    var newAssembly = new AssemblyRewriteContext(context, unityAssembly,
+                        AssemblyDefinition.CreateAssembly(unityAssembly.Name, unityAssembly.MainModule.Name,
+                            ModuleKind.Dll));
+                    context.AddAssemblyContext(unityAssembly.Name.Name, newAssembly);
+                    processedAssembly = newAssembly;
+                }
                 var imports = processedAssembly.Imports;
                 
                 foreach (var unityType in unityAssembly.MainModule.Types)
-                {
                     ProcessType(processedAssembly, unityType, null, imports, ref typesUnstripped);
-                }
             }
             
             LogSupport.Trace(""); // end the progress message
@@ -55,7 +60,7 @@ namespace AssemblyUnhollower.Passes
                 return;
             }
 
-            if (unityType.IsSealed && unityType.IsAbstract && processedType == null) // aka static
+            if (processedType == null && !unityType.IsEnum && !HasNonBlittableFields(unityType) && !unityType.HasGenericParameters) // restore all types even if it would be not entirely correct
             {
                 typesUnstripped++;
                 var clonedType = CloneStatic(unityType, imports);
@@ -86,10 +91,29 @@ namespace AssemblyUnhollower.Passes
 
             return newType;
         }
-        
+
+        private static bool HasNonBlittableFields(TypeDefinition type)
+        {
+            if (!type.IsValueType) return false;
+
+            foreach (var fieldDefinition in type.Fields)
+            {
+                if (fieldDefinition.IsStatic || fieldDefinition.FieldType == type) continue;
+
+                if (!fieldDefinition.FieldType.IsValueType)
+                    return true;
+
+                if (fieldDefinition.FieldType.Namespace.StartsWith("System") && HasNonBlittableFields(fieldDefinition.FieldType.Resolve()))
+                    return true;
+            }
+
+            return false;
+        }
+
         private static TypeDefinition CloneStatic(TypeDefinition sourceEnum, AssemblyKnownImports imports)
         {
-            var newType = new TypeDefinition(sourceEnum.Namespace, sourceEnum.Name, ForcePublic(sourceEnum.Attributes), imports.Object);
+            var newType = new TypeDefinition(sourceEnum.Namespace, sourceEnum.Name, ForcePublic(sourceEnum.Attributes),
+                sourceEnum.BaseType?.FullName == "System.ValueType" ? imports.ValueType : imports.Object);
             return newType;
         }
 

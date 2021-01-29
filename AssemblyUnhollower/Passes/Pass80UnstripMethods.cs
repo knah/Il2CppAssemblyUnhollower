@@ -192,12 +192,22 @@ namespace AssemblyUnhollower.Passes
             var targetAssemblyName = unityType.Scope.Name;
             if (targetAssemblyName.EndsWith(".dll"))
                 targetAssemblyName = targetAssemblyName.Substring(0, targetAssemblyName.Length - 4);
-            if (targetAssemblyName == "mscorlib" && (unityType.IsValueType || unityType.FullName == "System.String" || unityType.FullName == "System.Void") && unityType.FullName != "System.RuntimeTypeHandle")
+            if ((targetAssemblyName == "mscorlib" || targetAssemblyName == "netstandard") && (unityType.IsValueType || unityType.FullName == "System.String" || unityType.FullName == "System.Void") && unityType.FullName != "System.RuntimeTypeHandle")
                 return TargetTypeSystemHandler.Type.Module.GetType(unityType.FullName);
+
+            if (targetAssemblyName == "UnityEngine")
+                foreach (var assemblyRewriteContext in context.Assemblies)
+                {
+                    if (!assemblyRewriteContext.NewAssembly.Name.Name.StartsWith("UnityEngine")) continue;
+
+                    var newTypeInAnyUnityAssembly =
+                        assemblyRewriteContext.TryGetTypeByName(unityType.FullName)?.NewType;
+                    if (newTypeInAnyUnityAssembly != null)
+                        return newTypeInAnyUnityAssembly;
+                }
 
             var targetAssembly = context.TryGetAssemblyByName(targetAssemblyName);
             var newType = targetAssembly?.TryGetTypeByName(unityType.FullName)?.NewType;
-            if (newType == null) return null;
             
             return newType;
         }

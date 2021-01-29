@@ -43,7 +43,7 @@ Before certain features can be used (namely class injection and delegate convers
  * Non-blittable structs can't be used in delegates
  * Types implementing interfaces, particularly IEnumerable, may be arbitrarily janky with interface methods. Additionally, using them in foreach may result in implicit casts on managed side (instead of `Cast<T>`, see below), leading to exceptions. Use `var` in `foreach` or use `for` instead of `foreach` when possible as a workaround, or cast them to the specific interface you want to use.
  * in/out/ref parameters on generic parameter types (like `out T` in `Dictionary.TryGetValue`) are currently broken
- * Unity unstripping currently doesn't restore types (except for enums), and certain methods can't be unstripped still
+ * Unity unstripping only partially restores types, and certain methods can't be unstripped still; some calls to unstripped methods might result in crashes
  * Unstripped methods with array operations inside contain invalid bytecode
  * Unstripped methods with casts inside will likely throw invalid cast exceptions or produce nulls
  * Some unstripped methods are stubbed with `NotSupportedException` in cases where rewrite failed

@@ -229,6 +229,8 @@ namespace AssemblyUnhollower
             {
                 using (new TimingCookie("Unstripping types"))
                     Pass79UnstripTypes.DoPass(rewriteContext);
+                using (new TimingCookie("Unstripping fields"))
+                    Pass80UnstripFields.DoPass(rewriteContext);
                 using (new TimingCookie("Unstripping methods"))
                     Pass80UnstripMethods.DoPass(rewriteContext);
                 using (new TimingCookie("Unstripping method bodies"))

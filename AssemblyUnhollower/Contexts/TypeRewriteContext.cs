@@ -115,6 +115,22 @@ namespace AssemblyUnhollower.Contexts
 
             return null;
         }
+        
+        public FieldRewriteContext? TryGetFieldByUnityAssemblyField(FieldDefinition field)
+        {
+            foreach (var fieldRewriteContext in myFieldContexts)
+            {
+                var originalField = fieldRewriteContext.Value.OriginalField;
+                if (originalField.Name != field.Name) continue;
+
+                if (originalField.FieldType.FullName != field.FieldType.FullName)
+                    continue;
+
+                return fieldRewriteContext.Value;
+            }
+
+            return null;
+        }
 
         public enum TypeSpecifics
         {
