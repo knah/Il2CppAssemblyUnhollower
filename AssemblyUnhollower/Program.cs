@@ -1,33 +1,19 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using AssemblyUnhollower.Contexts;
 using AssemblyUnhollower.Passes;
-using Iced.Intel;
 using UnhollowerBaseLib;
 using UnhollowerRuntimeLib;
+using Decoder = Iced.Intel.Decoder;
 
 namespace AssemblyUnhollower
 {
     public class Program
     {
-        private struct TimingCookie : IDisposable
-        {
-            private Stopwatch myStopwatch;
-            public TimingCookie(string message)
-            {
-                LogSupport.Info(message + "... ");
-                myStopwatch = Stopwatch.StartNew();
-            }
-
-            public void Dispose()
-            {
-                LogSupport.Info($"Done in {myStopwatch.Elapsed}");
-            }
-        }
-
         public static void AnalyzeDeobfuscationParams(UnhollowerOptions options)
         {
             RewriteGlobalContext rewriteContext;
@@ -60,10 +46,14 @@ namespace AssemblyUnhollower
         private const string ParamUniqChars = "--deobf-uniq-chars=";
         private const string ParamUniqMax = "--deobf-uniq-max=";
         private const string ParamAnalyze = "--deobf-analyze";
+        private const string ParamGenerateDeobMap = "--deobf-generate";
+        private const string ParamGenerateDeobMapAssembly = "--deobf-generate-asm=";
+        private const string ParamGenerateDeobMapNew = "--deobf-generate-new=";
         private const string ParamBlacklistAssembly = "--blacklist-assembly=";
         private const string ParamNoXrefCache = "--no-xref-cache";
         private const string ParamNoCopyUnhollowerLibs = "--no-copy-unhollower-libs";
         private const string ParamObfRegex = "--obf-regex=";
+        private const string ParamRenameMap = "--rename-map=";
         private const string ParamVerbose = "--verbose";
         private const string ParamHelp = "--help";
         private const string ParamHelpShort = "-h";
@@ -73,6 +63,8 @@ namespace AssemblyUnhollower
         {
             Console.WriteLine("Usage: AssemblyUnhollower [parameters]");
             Console.WriteLine("Possible parameters:");
+            Console.WriteLine($"\t{ParamHelp}, {ParamHelpShort}, {ParamHelpShortSlash} - Optional. Show this help");
+            Console.WriteLine($"\t{ParamVerbose} - Optional. Produce more console output");
             Console.WriteLine($"\t{ParamInputDir}<directory path> - Required. Directory with Il2CppDumper's dummy assemblies");
             Console.WriteLine($"\t{ParamOutputDir}<directory path> - Required. Directory to put results into");
             Console.WriteLine($"\t{ParamMscorlibPath}<file path> - Required. mscorlib.dll of target runtime system (typically loader's)");
@@ -85,9 +77,11 @@ namespace AssemblyUnhollower
             Console.WriteLine($"\t{ParamNoXrefCache} - Optional. Don't generate xref scanning cache. All scanning will be done at runtime.");
             Console.WriteLine($"\t{ParamNoCopyUnhollowerLibs} - Optional. Don't copy unhollower libraries to output directory");
             Console.WriteLine($"\t{ParamObfRegex}<regex> - Optional. Specifies a regex for obfuscated names. All types and members matching will be renamed");
-            Console.WriteLine($"\t{ParamVerbose} - Optional. Produce more console output");
-            Console.WriteLine($"\t{ParamHelp}, {ParamHelpShort}, {ParamHelpShortSlash} - Optional. Show this help");
-            
+            Console.WriteLine($"\t{ParamRenameMap}<file path> - Optional. Specifies a file specifying rename map for obfuscated types and members");
+            Console.WriteLine("Deobfuscation map generation mode:");
+            Console.WriteLine($"\t{ParamGenerateDeobMap} - Generate a deobfuscation map for input files. Will not generate assemblies.");
+            Console.WriteLine($"\t{ParamGenerateDeobMapAssembly}<assembly name> - Optional. Include this assembly for deobfuscation map generation. If none are specified, all assemblies will be included.");
+            Console.WriteLine($"\t{ParamGenerateDeobMapNew}<directory path> - Specifies the directory with new (obfuscated) assemblies");
         }
 
         public static void Main(string[] args)
@@ -96,11 +90,14 @@ namespace AssemblyUnhollower
             
             var options = new UnhollowerOptions();
             var analyze = false;
+            var generateMap = false;
             
             foreach (var s in args)
             {
                 if (s == ParamAnalyze) 
                     analyze = true;
+                else if (s == ParamGenerateDeobMap)
+                    generateMap = true;
                 else if (s == ParamHelp || s == ParamHelpShort || s == ParamHelpShortSlash)
                 {
                     PrintUsage();
@@ -131,15 +128,29 @@ namespace AssemblyUnhollower
                     options.AdditionalAssembliesBlacklist.Add(s.Substring(ParamBlacklistAssembly.Length));
                 else if (s.StartsWith(ParamObfRegex))
                     options.ObfuscatedNamesRegex = new Regex(s.Substring(ParamObfRegex.Length), RegexOptions.Compiled);
+                else if(s.StartsWith(ParamRenameMap))
+                    ReadRenameMap(s.Substring(ParamRenameMap.Length), options);
+                else if(s.StartsWith(ParamGenerateDeobMapAssembly))
+                    options.DeobfuscationGenerationAssemblies.Add(s.Substring(ParamGenerateDeobMapAssembly.Length));
+                else if (s.StartsWith(ParamGenerateDeobMapNew))
+                    options.DeobfuscationNewAssembliesPath = s.Substring(ParamGenerateDeobMapNew.Length);
                 else
                 {
-                    Console.WriteLine($"Unrecognized option {s}; use -h for help");
+                    LogSupport.Error($"Unrecognized option {s}; use -h for help");
                     return;
                 }
+            }
+
+            if (analyze && generateMap)
+            {
+                LogSupport.Error($"Can't use {ParamAnalyze} and {ParamGenerateDeobMap} at the same time");
+                return;
             }
             
             if (analyze)
                 AnalyzeDeobfuscationParams(options);
+            else if (generateMap)
+                DeobfuscationMapGenerator.GenerateDeobfuscationMap(options);
             else
                 Main(options);
         }
@@ -248,6 +259,39 @@ namespace AssemblyUnhollower
             LogSupport.Info("Done!");
 
             rewriteContext.Dispose();
+        }
+
+        /// <summary>
+        /// Reads a rename map from the specified name into the specified instance of options
+        /// </summary>
+        public static void ReadRenameMap(string fileName, UnhollowerOptions options)
+        {
+            using var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read);
+            ReadRenameMap(fileStream, fileName.EndsWith(".gz"), options);
+        }
+
+        /// <summary>
+        /// Reads a rename map from the specified name into the specified instance of options.
+        /// The stream is not closed by this method.
+        /// </summary>
+        public static void ReadRenameMap(Stream fileStream, bool isGzip, UnhollowerOptions options)
+        {
+            if (isGzip)
+            {
+                using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress, true);
+                ReadRenameMap(gzipStream, false, options);
+                return;
+            }
+
+            using var reader = new StreamReader(fileStream, Encoding.UTF8, false, 65536, true);
+            while (!reader.EndOfStream)
+            {
+                var line = reader.ReadLine();
+                if(string.IsNullOrEmpty(line) || line.StartsWith("#")) continue;
+                var split = line.Split(';');
+                if(split.Length < 2) continue;
+                options.RenameMap[split[0]] = split[1];
+            }
         }
     }
 }

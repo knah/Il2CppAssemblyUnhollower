@@ -29,6 +29,7 @@ namespace AssemblyUnhollower.Contexts
         }
 
         public TypeRewriteContext GetContextForOriginalType(TypeDefinition type) => myOldTypeMap[type];
+        public TypeRewriteContext? TryGetContextForOriginalType(TypeDefinition type) => myOldTypeMap.TryGetValue(type, out var result) ? result : null;
         public TypeRewriteContext GetContextForNewType(TypeDefinition type) => myNewTypeMap[type];
 
         public void RegisterTypeRewrite(TypeRewriteContext context)

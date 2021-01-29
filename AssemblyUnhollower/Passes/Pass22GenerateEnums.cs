@@ -25,7 +25,10 @@ namespace AssemblyUnhollower.Passes
                     {
                         var fieldName = fieldDefinition.Name;
                         if (fieldName.IsObfuscated(context.Options))
-                            fieldName = "EnumValue" + fieldDefinition.Constant;
+                            fieldName = GetUnmangledName(fieldDefinition);
+                        
+                        if (context.Options.RenameMap.TryGetValue(typeContext.NewType.GetNamespacePrefix() + "::" + fieldName, out var newName))
+                            fieldName = newName;
                         
                         var newDef = new FieldDefinition(fieldName, fieldDefinition.Attributes | FieldAttributes.HasDefault, assemblyContext.RewriteTypeRef(fieldDefinition.FieldType));
                         newType.Fields.Add(newDef);
@@ -34,6 +37,11 @@ namespace AssemblyUnhollower.Passes
                     }
                 }
             }
+        }
+
+        public static string GetUnmangledName(FieldDefinition field)
+        {
+            return "EnumValue" + field.Constant;
         }
     }
 }

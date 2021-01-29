@@ -62,6 +62,13 @@ namespace AssemblyUnhollower.Contexts
                 .GetContextForOriginalType(originalType);
         }
         
+        public TypeRewriteContext? TryGetNewTypeForOriginal(TypeDefinition originalType)
+        {
+            if (!myAssembliesByOld.TryGetValue(originalType.Module.Assembly, out var assembly))
+                return null;
+            return assembly.TryGetContextForOriginalType(originalType);
+        }
+        
         public TypeRewriteContext.TypeSpecifics JudgeSpecificsByOriginalType(TypeReference typeRef)
         {
             if (typeRef.IsPrimitive || typeRef.IsPointer || typeRef.FullName == "System.TypedReference") return TypeRewriteContext.TypeSpecifics.BlittableStruct;

@@ -134,7 +134,10 @@ namespace AssemblyUnhollower.Contexts
         private string UnmangleMethodName()
         {
             var method = OriginalMethod;
-            if(method.Name.IsObfuscated(DeclaringType.AssemblyContext.GlobalContext.Options) && method.Name != ".ctor")
+            if (method.Name == ".ctor")
+                return ".ctor";
+            
+            if(method.Name.IsObfuscated(DeclaringType.AssemblyContext.GlobalContext.Options))
                 return UnmangleMethodNameWithSignature();
 
             if (method.Name.IsInvalidInSource())
@@ -201,8 +204,11 @@ namespace AssemblyUnhollower.Contexts
         
         private string UnmangleMethodNameWithSignature()
         {
-            var method = OriginalMethod;
-            return ProduceMethodSignatureBase() + "_" + DeclaringType.Methods.Where(ParameterSignatureMatchesThis).TakeWhile(it => it != this).Count();
+            var unmangleMethodNameWithSignature = ProduceMethodSignatureBase() + "_" + DeclaringType.Methods.Where(ParameterSignatureMatchesThis).TakeWhile(it => it != this).Count();
+            if (DeclaringType.AssemblyContext.GlobalContext.Options.RenameMap.TryGetValue(
+                DeclaringType.NewType.GetNamespacePrefix() + "::" + unmangleMethodNameWithSignature, out var newName))
+                unmangleMethodNameWithSignature = newName;
+            return unmangleMethodNameWithSignature;
         }
         
         private bool ParameterSignatureMatchesThis(MethodRewriteContext otherRewriteContext)

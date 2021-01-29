@@ -41,5 +41,13 @@ namespace AssemblyUnhollower.Extensions
                     return typeRefA.Name == typeRefB.Name;
             }
         }
+        
+        public static string GetNamespacePrefix(this TypeReference type)
+        {
+            if (type.IsNested)
+                return GetNamespacePrefix(type.DeclaringType) + "." + type.DeclaringType.Name;
+
+            return type.Namespace;
+        }
     }
 }

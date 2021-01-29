@@ -17,7 +17,7 @@ namespace AssemblyUnhollower.Passes
                     var type = typeContext.OriginalType;
                     foreach (var oldProperty in type.Properties)
                     {
-                        var unmangledPropertyName = UnmanglePropertyName(assemblyContext, oldProperty);
+                        var unmangledPropertyName = UnmanglePropertyName(assemblyContext, oldProperty, typeContext.NewType);
 
                         var property = new PropertyDefinition(unmangledPropertyName, oldProperty.Attributes,
                             assemblyContext.RewriteTypeRef(oldProperty.PropertyType));
@@ -53,12 +53,18 @@ namespace AssemblyUnhollower.Passes
             }
         }
         
-        private static string UnmanglePropertyName(AssemblyRewriteContext assemblyContext, PropertyDefinition prop)
+        private static string UnmanglePropertyName(AssemblyRewriteContext assemblyContext, PropertyDefinition prop, TypeReference declaringType)
         {
             if (!prop.Name.IsObfuscated(assemblyContext.GlobalContext.Options)) return prop.Name;
 
-            return "prop_" + assemblyContext.RewriteTypeRef(prop.PropertyType).GetUnmangledName() + "_" + prop.DeclaringType.Properties
-                       .Where(it => it.PropertyType.UnmangledNamesMatch(prop.PropertyType)).ToList().IndexOf(prop);
+            var unmanglePropertyName = "prop_" + assemblyContext.RewriteTypeRef(prop.PropertyType).GetUnmangledName() + "_" + prop.DeclaringType.Properties
+                .Where(it => it.PropertyType.UnmangledNamesMatch(prop.PropertyType)).ToList().IndexOf(prop);
+            
+            if (assemblyContext.GlobalContext.Options.RenameMap.TryGetValue(
+                declaringType.GetNamespacePrefix() + "::" + unmanglePropertyName, out var newName))
+                unmanglePropertyName = newName;
+            
+            return unmanglePropertyName;
         }
     }
 }

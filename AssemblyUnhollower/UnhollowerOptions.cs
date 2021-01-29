@@ -17,5 +17,10 @@ namespace AssemblyUnhollower
         public bool NoXrefCache { get; set; }
         public bool NoCopyUnhollowerLibs { get; set; }
         public Regex? ObfuscatedNamesRegex { get; set; }
+        public Dictionary<string, string> RenameMap { get; } = new Dictionary<string, string>();
+        
+        public List<string> DeobfuscationGenerationAssemblies { get; } = new List<string>();
+        public string DeobfuscationNewAssembliesPath { get; set; }
+        
     }
 }

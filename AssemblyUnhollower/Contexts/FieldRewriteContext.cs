@@ -49,8 +49,13 @@ namespace AssemblyUnhollower.Contexts
                 return field.Name.FilterInvalidInSourceChars();
             }
 
-            return UnmangleFieldNameBase(field, options) + "_" +
-                   field.DeclaringType.Fields.Where(it => FieldsHaveSameSignature(field, it)).TakeWhile(it => it != field).Count();
+            var unmangleFieldNameBase = UnmangleFieldNameBase(field, options) + "_" + field.DeclaringType.Fields.Where(it => FieldsHaveSameSignature(field, it)).TakeWhile(it => it != field).Count();
+            
+            if (DeclaringType.AssemblyContext.GlobalContext.Options.RenameMap.TryGetValue(
+                DeclaringType.NewType.GetNamespacePrefix() + "::" + unmangleFieldNameBase, out var newName))
+                unmangleFieldNameBase = newName;
+            
+            return unmangleFieldNameBase;
         }
 
         private static bool FieldsHaveSameSignature(FieldDefinition fieldA, FieldDefinition fieldB)
