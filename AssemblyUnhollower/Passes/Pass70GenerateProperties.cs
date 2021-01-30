@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using AssemblyUnhollower.Contexts;
@@ -15,9 +16,11 @@ namespace AssemblyUnhollower.Passes
                 foreach (var typeContext in assemblyContext.Types)
                 {
                     var type = typeContext.OriginalType;
+                    var propertyCountsByName = new Dictionary<string, int>();
+                    
                     foreach (var oldProperty in type.Properties)
                     {
-                        var unmangledPropertyName = UnmanglePropertyName(assemblyContext, oldProperty, typeContext.NewType);
+                        var unmangledPropertyName = UnmanglePropertyName(assemblyContext, oldProperty, typeContext.NewType, propertyCountsByName);
 
                         var property = new PropertyDefinition(unmangledPropertyName, oldProperty.Attributes,
                             assemblyContext.RewriteTypeRef(oldProperty.PropertyType));
@@ -53,15 +56,18 @@ namespace AssemblyUnhollower.Passes
             }
         }
         
-        private static string UnmanglePropertyName(AssemblyRewriteContext assemblyContext, PropertyDefinition prop, TypeReference declaringType)
+        private static string UnmanglePropertyName(AssemblyRewriteContext assemblyContext, PropertyDefinition prop, TypeReference declaringType, Dictionary<string, int> countsByBaseName)
         {
             if (!prop.Name.IsObfuscated(assemblyContext.GlobalContext.Options)) return prop.Name;
 
-            var unmanglePropertyName = "prop_" + assemblyContext.RewriteTypeRef(prop.PropertyType).GetUnmangledName() + "_" + prop.DeclaringType.Properties
-                .Where(it => it.PropertyType.UnmangledNamesMatch(prop.PropertyType)).ToList().IndexOf(prop);
+            var baseName = "prop_" + assemblyContext.RewriteTypeRef(prop.PropertyType).GetUnmangledName();
+
+            countsByBaseName.TryGetValue(baseName, out var index);
+            countsByBaseName[baseName] = index + 1;
             
-            if (assemblyContext.GlobalContext.Options.RenameMap.TryGetValue(
-                declaringType.GetNamespacePrefix() + "::" + unmanglePropertyName, out var newName))
+            var unmanglePropertyName = baseName + "_" + index;
+                        
+            if (assemblyContext.GlobalContext.Options.RenameMap.TryGetValue(declaringType.GetNamespacePrefix() + "::" + unmanglePropertyName, out var newName))
                 unmanglePropertyName = newName;
             
             return unmanglePropertyName;

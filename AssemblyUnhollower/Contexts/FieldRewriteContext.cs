@@ -1,4 +1,5 @@
-using System.Linq;
+using System;
+using System.Collections.Generic;
 using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
 
@@ -12,12 +13,12 @@ namespace AssemblyUnhollower.Contexts
 
         public readonly FieldReference PointerField;
 
-        public FieldRewriteContext(TypeRewriteContext declaringType, FieldDefinition originalField)
+        public FieldRewriteContext(TypeRewriteContext declaringType, FieldDefinition originalField, Dictionary<string, int>? renamedFieldCounts = null)
         {
             DeclaringType = declaringType;
             OriginalField = originalField;
 
-            UnmangledName = UnmangleFieldName(originalField, declaringType.AssemblyContext.GlobalContext.Options);
+            UnmangledName = UnmangleFieldName(originalField, declaringType.AssemblyContext.GlobalContext.Options, renamedFieldCounts);
             var pointerField = new FieldDefinition("NativeFieldInfoPtr_" + UnmangledName, FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, declaringType.AssemblyContext.Imports.IntPtr);
             
             declaringType.NewType.Fields.Add(pointerField);
@@ -40,7 +41,7 @@ namespace AssemblyUnhollower.Contexts
             return "field_" + accessModString + staticString + "_" + DeclaringType.AssemblyContext.RewriteTypeRef(field.FieldType).GetUnmangledName();
         }
         
-        private string UnmangleFieldName(FieldDefinition field, UnhollowerOptions options)
+        private string UnmangleFieldName(FieldDefinition field, UnhollowerOptions options, Dictionary<string, int>? renamedFieldCounts)
         {
             if (!field.Name.IsObfuscated(options))
             {
@@ -49,24 +50,20 @@ namespace AssemblyUnhollower.Contexts
                 return field.Name.FilterInvalidInSourceChars();
             }
 
-            var unmangleFieldNameBase = UnmangleFieldNameBase(field, options) + "_" + field.DeclaringType.Fields.Where(it => FieldsHaveSameSignature(field, it)).TakeWhile(it => it != field).Count();
+            if (renamedFieldCounts == null) throw new ArgumentNullException(nameof(renamedFieldCounts));
+
+            var unmangleFieldNameBase = UnmangleFieldNameBase(field, options);
+
+            renamedFieldCounts.TryGetValue(unmangleFieldNameBase, out var count);
+            renamedFieldCounts[unmangleFieldNameBase] = count + 1;
+
+            unmangleFieldNameBase += "_" + count;
             
             if (DeclaringType.AssemblyContext.GlobalContext.Options.RenameMap.TryGetValue(
                 DeclaringType.NewType.GetNamespacePrefix() + "::" + unmangleFieldNameBase, out var newName))
                 unmangleFieldNameBase = newName;
             
             return unmangleFieldNameBase;
-        }
-
-        private static bool FieldsHaveSameSignature(FieldDefinition fieldA, FieldDefinition fieldB)
-        {
-            if ((fieldA.Attributes & FieldAttributes.FieldAccessMask) !=
-                (fieldB.Attributes & FieldAttributes.FieldAccessMask))
-                return false;
-
-            if (fieldA.IsStatic != fieldB.IsStatic) return false;
-
-            return fieldA.FieldType.UnmangledNamesMatch(fieldB.FieldType);
         }
     }
 }
