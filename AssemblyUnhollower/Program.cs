@@ -54,6 +54,7 @@ namespace AssemblyUnhollower
         private const string ParamNoCopyUnhollowerLibs = "--no-copy-unhollower-libs";
         private const string ParamObfRegex = "--obf-regex=";
         private const string ParamRenameMap = "--rename-map=";
+        private const string ParamPassthroughNames = "--passthrough-names";
         private const string ParamVerbose = "--verbose";
         private const string ParamHelp = "--help";
         private const string ParamHelpShort = "-h";
@@ -78,6 +79,7 @@ namespace AssemblyUnhollower
             Console.WriteLine($"\t{ParamNoCopyUnhollowerLibs} - Optional. Don't copy unhollower libraries to output directory");
             Console.WriteLine($"\t{ParamObfRegex}<regex> - Optional. Specifies a regex for obfuscated names. All types and members matching will be renamed");
             Console.WriteLine($"\t{ParamRenameMap}<file path> - Optional. Specifies a file specifying rename map for obfuscated types and members");
+            Console.WriteLine($"\t{ParamPassthroughNames} - Optional. If specified, names will be copied from input assemblies as-is without renaming or deobfuscation");
             Console.WriteLine("Deobfuscation map generation mode:");
             Console.WriteLine($"\t{ParamGenerateDeobMap} - Generate a deobfuscation map for input files. Will not generate assemblies.");
             Console.WriteLine($"\t{ParamGenerateDeobMapAssembly}<assembly name> - Optional. Include this assembly for deobfuscation map generation. If none are specified, all assemblies will be included.");

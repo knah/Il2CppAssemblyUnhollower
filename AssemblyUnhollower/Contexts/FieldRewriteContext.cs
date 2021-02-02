@@ -29,6 +29,8 @@ namespace AssemblyUnhollower.Contexts
         private static readonly string[] MethodAccessTypeLabels = { "CompilerControlled", "Private", "FamAndAssem", "Internal", "Protected", "FamOrAssem", "Public"};
         private string UnmangleFieldNameBase(FieldDefinition field, UnhollowerOptions options)
         {
+            if (options.PassthroughNames) return field.Name;
+            
             if (!field.Name.IsObfuscated(options))
             {
                 if(!field.Name.IsInvalidInSource())
@@ -43,6 +45,8 @@ namespace AssemblyUnhollower.Contexts
         
         private string UnmangleFieldName(FieldDefinition field, UnhollowerOptions options, Dictionary<string, int>? renamedFieldCounts)
         {
+            if (options.PassthroughNames) return field.Name;
+            
             if (!field.Name.IsObfuscated(options))
             {
                 if(!field.Name.IsInvalidInSource())

@@ -37,7 +37,11 @@ namespace AssemblyUnhollower.Contexts
             DeclaringType = declaringType;
             OriginalMethod = originalMethod;
 
-            OriginalNameObfuscated = OriginalMethod?.Name?.IsObfuscated(declaringType.AssemblyContext.GlobalContext.Options) ?? false;
+            var passthroughNames = declaringType.AssemblyContext.GlobalContext.Options.PassthroughNames;
+
+            OriginalNameObfuscated = !passthroughNames &&
+                                     (OriginalMethod?.Name?.IsObfuscated(declaringType.AssemblyContext.GlobalContext
+                                         .Options) ?? false);
 
             var newMethod = new MethodDefinition("", AdjustAttributes(originalMethod.Attributes), declaringType.AssemblyContext.Imports.Void);
             NewMethod = newMethod;
@@ -54,7 +58,7 @@ namespace AssemblyUnhollower.Contexts
                 }
             }
 
-            if (!Pass15GenerateMemberContexts.HasObfuscatedMethods && originalMethod.Name.IsObfuscated(declaringType.AssemblyContext.GlobalContext.Options))
+            if (!Pass15GenerateMemberContexts.HasObfuscatedMethods && !passthroughNames && originalMethod.Name.IsObfuscated(declaringType.AssemblyContext.GlobalContext.Options))
                 Pass15GenerateMemberContexts.HasObfuscatedMethods = true;
 
             FileOffset = originalMethod.ExtractOffset();
@@ -133,6 +137,9 @@ namespace AssemblyUnhollower.Contexts
 
         private string UnmangleMethodName()
         {
+            if (DeclaringType.AssemblyContext.GlobalContext.Options.PassthroughNames)
+                return OriginalMethod.Name;
+            
             var method = OriginalMethod;
             if (method.Name == ".ctor")
                 return ".ctor";

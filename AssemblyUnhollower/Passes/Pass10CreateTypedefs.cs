@@ -36,6 +36,9 @@ namespace AssemblyUnhollower.Passes
 
         internal static (string? Namespace, string Name) GetConvertedTypeName(RewriteGlobalContext assemblyContextGlobalContext, TypeDefinition type, TypeDefinition? enclosingType)
         {
+            if (assemblyContextGlobalContext.Options.PassthroughNames)
+                return (null, type.Name);
+
             if (type.Name.IsObfuscated(assemblyContextGlobalContext.Options))
             {
                 var newNameBase = assemblyContextGlobalContext.RenamedTypes[type];

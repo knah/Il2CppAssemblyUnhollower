@@ -33,6 +33,7 @@ Possible parameters:
         --no-copy-unhollower-libs - Optional. Don't copy unhollower libraries to output directory
         --obf-regex=<regex> - Optional. Specifies a regex for obfuscated names. All types and members matching will be renamed
         --rename-map=<file path> - Optional. Specifies a file specifying rename map for obfuscated types and members
+        --passthrough-names - Optional. If specified, names will be copied from input assemblies as-is without renaming or deobfuscation
 Deobfuscation map generation mode:
         --deobf-generate - Generate a deobfuscation map for input files. Will not generate assemblies.
         --deobf-generate-asm=<assembly name> - Optional. Include this assembly for deobfuscation map generation. If none are specified, all assemblies will be included.

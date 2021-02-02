@@ -58,7 +58,7 @@ namespace AssemblyUnhollower.Passes
         
         private static string UnmanglePropertyName(AssemblyRewriteContext assemblyContext, PropertyDefinition prop, TypeReference declaringType, Dictionary<string, int> countsByBaseName)
         {
-            if (!prop.Name.IsObfuscated(assemblyContext.GlobalContext.Options)) return prop.Name;
+            if (assemblyContext.GlobalContext.Options.PassthroughNames || !prop.Name.IsObfuscated(assemblyContext.GlobalContext.Options)) return prop.Name;
 
             var baseName = "prop_" + assemblyContext.RewriteTypeRef(prop.PropertyType).GetUnmangledName();
 

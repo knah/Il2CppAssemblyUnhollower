@@ -51,7 +51,7 @@ namespace AssemblyUnhollower.Passes
         private static string? GetUnobfuscatedNameBase(RewriteGlobalContext context, TypeDefinition typeDefinition, bool allowExtraHeuristics)
         {
             var options = context.Options;
-            if (!typeDefinition.Name.IsObfuscated(context.Options)) return null;
+            if (options.PassthroughNames || !typeDefinition.Name.IsObfuscated(context.Options)) return null;
 
             var inheritanceDepth = 0;
             var firstUnobfuscatedType = typeDefinition.BaseType;
