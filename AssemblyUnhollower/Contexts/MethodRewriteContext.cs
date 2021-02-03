@@ -143,10 +143,14 @@ namespace AssemblyUnhollower.Contexts
 
         private string UnmangleMethodName()
         {
-            if (DeclaringType.AssemblyContext.GlobalContext.Options.PassthroughNames)
-                return OriginalMethod.Name;
-            
             var method = OriginalMethod;
+            
+            if (method.Name == "GetType" && method.Parameters.Count == 0)
+                return "GetIl2CppType";
+            
+            if (DeclaringType.AssemblyContext.GlobalContext.Options.PassthroughNames)
+                return method.Name;
+            
             if (method.Name == ".ctor")
                 return ".ctor";
             
@@ -156,9 +160,6 @@ namespace AssemblyUnhollower.Contexts
             if (method.Name.IsInvalidInSource())
                 return method.Name.FilterInvalidInSourceChars();
 
-            if (method.Name == "GetType" && method.Parameters.Count == 0)
-                return "GetIl2CppType";
-            
             return method.Name;
         }
 
