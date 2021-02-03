@@ -105,7 +105,10 @@ namespace AssemblyUnhollower.Contexts
 
             if(typeRef.FullName == "System.Object")
                 return sourceModule.ImportReference(GlobalContext.GetAssemblyByName("mscorlib").GetTypeByName("System.Object").NewType);
-            
+
+            if (typeRef.FullName == "System.Attribute")
+                return sourceModule.ImportReference(GlobalContext.GetAssemblyByName("mscorlib").GetTypeByName("System.Attribute").NewType);
+
             var originalTypeDef = typeRef.Resolve();
             var targetAssembly = GlobalContext.GetNewAssemblyForOriginal(originalTypeDef.Module.Assembly);
             var target = targetAssembly.GetContextForOriginalType(originalTypeDef).NewType;

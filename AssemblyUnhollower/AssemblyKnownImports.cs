@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using AssemblyUnhollower.Contexts;
 using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
@@ -111,6 +112,7 @@ namespace AssemblyUnhollower
         private readonly Lazy<MethodReference> myObfuscatedNameAttributeCtor;
         private readonly Lazy<MethodReference> myCallerCountAttributeCtor;
         private readonly Lazy<MethodReference> myCachedScanResultsAttributeCtor;
+        private readonly Lazy<MethodReference> myExtensionAttributeCtor;
         
         public MethodReference FieldGetOffset => myFieldGetOffset.Value;
         public MethodReference FieldStaticGet => myFieldStaticGet.Value;
@@ -146,6 +148,7 @@ namespace AssemblyUnhollower
         public MethodReference ObfuscatedNameAttributeCtor => myObfuscatedNameAttributeCtor.Value;
         public MethodReference CallerCountAttributeCtor => myCallerCountAttributeCtor.Value;
         public MethodReference CachedScanResultsAttributeCtor => myCachedScanResultsAttributeCtor.Value;
+        public MethodReference ExtensionAttributeCtor => myExtensionAttributeCtor.Value;
         
 
         public AssemblyKnownImports(ModuleDefinition module, RewriteGlobalContext context)
@@ -237,6 +240,10 @@ namespace AssemblyUnhollower
             myCachedScanResultsAttributeCtor = new Lazy<MethodReference>(() =>
                 new MethodReference(".ctor", Void, Module.ImportReference(typeof(CachedScanResultsAttribute)))
                     {HasThis = true, Parameters = {}});
+
+            myExtensionAttributeCtor = new Lazy<MethodReference>(() =>
+                new MethodReference(".ctor", Void, Module.ImportReference(typeof(ExtensionAttribute))) { HasThis = true }
+            );
         }
     }
 }

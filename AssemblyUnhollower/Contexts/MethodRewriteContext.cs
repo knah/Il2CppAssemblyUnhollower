@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using AssemblyUnhollower.Extensions;
 using AssemblyUnhollower.Passes;
@@ -51,6 +52,11 @@ namespace AssemblyUnhollower.Contexts
             {
                 newMethod.IsVirtual = true;
                 newMethod.IsNewSlot = false;
+            }
+
+            if (originalMethod.CustomAttributes.Any(x => x.AttributeType.FullName == typeof(ExtensionAttribute).FullName))
+            {
+                newMethod.CustomAttributes.Add(new CustomAttribute(declaringType.AssemblyContext.Imports.ExtensionAttributeCtor));
             }
 
             if (originalMethod.HasGenericParameters)
