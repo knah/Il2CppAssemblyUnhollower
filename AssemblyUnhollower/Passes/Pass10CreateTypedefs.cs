@@ -19,6 +19,11 @@ namespace AssemblyUnhollower.Passes
         {
             var convertedTypeName = GetConvertedTypeName(assemblyContext.GlobalContext, type, parentType);
             var newType = new TypeDefinition(convertedTypeName.Namespace ?? type.Namespace.UnSystemify(), convertedTypeName.Name, AdjustAttributes(type.Attributes));
+
+            if (type.IsSealed && type.IsAbstract) // is static
+            {
+                newType.IsSealed = newType.IsAbstract = true;
+            }
             
             if(parentType == null)
                 assemblyContext.NewAssembly.MainModule.Types.Add(newType);
