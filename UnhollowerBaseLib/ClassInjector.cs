@@ -66,7 +66,7 @@ namespace UnhollowerRuntimeLib
             *(IntPtr*) targetGcHandlePointer = handleAsPointer;
         }
 
-        public static void RegisterTypeInIl2Cpp<T>() where T : class
+        public static void RegisterTypeInIl2Cpp<T>(bool suppressLogSuccess = false) where T : class
         {
             var type = typeof(T);
             
@@ -153,8 +153,11 @@ namespace UnhollowerRuntimeLib
 
             RuntimeSpecificsStore.SetClassInfo(classPointer.Pointer, true, true);
             Il2CppClassPointerStore<T>.NativeClassPtr = classPointer.Pointer;
-            
-            LogSupport.Info($"Registered mono type {typeof(T)} in il2cpp domain");
+
+            if (!suppressLogSuccess)
+            {
+                LogSupport.Info($"Registered mono type {typeof(T)} in il2cpp domain");
+            }
         }
 
         internal static IntPtr ReadClassPointerForType(Type type)
