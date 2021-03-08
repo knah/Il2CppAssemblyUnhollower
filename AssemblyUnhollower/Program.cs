@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using AssemblyUnhollower.Contexts;
+using AssemblyUnhollower.MetadataAccess;
 using AssemblyUnhollower.Passes;
 using UnhollowerBaseLib;
 using UnhollowerRuntimeLib;
@@ -17,8 +18,12 @@ namespace AssemblyUnhollower
         public static void AnalyzeDeobfuscationParams(UnhollowerOptions options)
         {
             RewriteGlobalContext rewriteContext;
-            using(new TimingCookie("Reading assemblies"))
-                rewriteContext = new RewriteGlobalContext(options, Directory.EnumerateFiles(options.SourceDir, "*.dll"));
+            IIl2CppMetadataAccess inputAssemblies;
+            using (new TimingCookie("Reading assemblies"))
+                inputAssemblies = new CecilMetadataAccess(Directory.EnumerateFiles(options.SourceDir, "*.dll"));
+            
+            using(new TimingCookie("Creating assembly contexts"))
+                rewriteContext = new RewriteGlobalContext(options, inputAssemblies, NullMetadataAccess.Instance, NullMetadataAccess.Instance);
 
             for (var chars = 1; chars <= 3; chars++)
             for (var uniq = 3; uniq <= 15; uniq++)
@@ -41,6 +46,7 @@ namespace AssemblyUnhollower
         private const string ParamInputDir = "--input=";
         private const string ParamOutputDir = "--output=";
         private const string ParamMscorlibPath = "--mscorlib=";
+        private const string ParamSystemLibsPath = "--system-libs=";
         private const string ParamUnityDir = "--unity=";
         private const string ParamGameAssemblyPath = "--gameassembly=";
         private const string ParamUniqChars = "--deobf-uniq-chars=";
@@ -68,7 +74,8 @@ namespace AssemblyUnhollower
             Console.WriteLine($"\t{ParamVerbose} - Optional. Produce more console output");
             Console.WriteLine($"\t{ParamInputDir}<directory path> - Required. Directory with Il2CppDumper's dummy assemblies");
             Console.WriteLine($"\t{ParamOutputDir}<directory path> - Required. Directory to put results into");
-            Console.WriteLine($"\t{ParamMscorlibPath}<file path> - Required. mscorlib.dll of target runtime system (typically loader's)");
+            Console.WriteLine($"\t{ParamMscorlibPath}<file path> - Deprecated. mscorlib.dll of target runtime system (typically loader's)");
+            Console.WriteLine($"\t{ParamSystemLibsPath}<file path> - Required. Directory with system libraries of target runtime system (typically loader's)");
             Console.WriteLine($"\t{ParamUnityDir}<directory path> - Optional. Directory with original Unity assemblies for unstripping");
             Console.WriteLine($"\t{ParamGameAssemblyPath}<file path> - Optional. Path to GameAssembly.dll. Used for certain analyses");
             Console.WriteLine($"\t{ParamUniqChars}<number> - Optional. How many characters per unique token to use during deobfuscation");
@@ -118,6 +125,8 @@ namespace AssemblyUnhollower
                     options.OutputDir = s.Substring(ParamOutputDir.Length);
                 else if (s.StartsWith(ParamMscorlibPath))
                     options.MscorlibPath = s.Substring(ParamMscorlibPath.Length);
+                else if (s.StartsWith(ParamSystemLibsPath))
+                    options.SystemLibrariesPath = s.Substring(ParamSystemLibsPath.Length);
                 else if (s.StartsWith(ParamUnityDir))
                     options.UnityBaseLibsDir = s.Substring(ParamUnityDir.Length);
                 else if (s.StartsWith(ParamGameAssemblyPath))
@@ -170,9 +179,9 @@ namespace AssemblyUnhollower
                 Console.WriteLine("No target dir specified; use -h for help");
                 return;
             }
-            if (string.IsNullOrEmpty(options.MscorlibPath))
+            if (string.IsNullOrEmpty(options.MscorlibPath) && string.IsNullOrEmpty(options.SystemLibrariesPath))
             {
-                Console.WriteLine("No mscorlib specified; use -h for help");
+                Console.WriteLine("No mscorlib or system libraries specified; use -h for help");
                 return;
             }
 
@@ -180,8 +189,33 @@ namespace AssemblyUnhollower
                 Directory.CreateDirectory(options.OutputDir);
 
             RewriteGlobalContext rewriteContext;
-            using(new TimingCookie("Reading assemblies"))
-                rewriteContext = new RewriteGlobalContext(options, Directory.EnumerateFiles(options.SourceDir, "*.dll"));
+            IIl2CppMetadataAccess gameAssemblies;
+            IMetadataAccess systemAssemblies;
+            IMetadataAccess unityAssemblies;
+
+            using (new TimingCookie("Reading assemblies"))
+                gameAssemblies = new CecilMetadataAccess(Directory.EnumerateFiles(options.SourceDir, "*.dll"));
+
+            using (new TimingCookie("Reading system assemblies"))
+            {
+                if (!string.IsNullOrEmpty(options.SystemLibrariesPath)) 
+                    systemAssemblies = new CecilMetadataAccess(Directory.EnumerateFiles(options.MscorlibPath, "*.dll")
+                        .Where(it => Path.GetFileName(it).StartsWith("System.") || Path.GetFileName(it) == "mscorlib.dll" || Path.GetFileName(it) == "netstandard.dll"));
+                else
+                    systemAssemblies = new CecilMetadataAccess(new[] {options.MscorlibPath});
+
+            }
+
+            if (!string.IsNullOrEmpty(options.UnityBaseLibsDir))
+            {
+                using (new TimingCookie("Reading unity assemblies"))
+                    unityAssemblies = new CecilMetadataAccess(Directory.EnumerateFiles(options.UnityBaseLibsDir, "*.dll"));
+            }
+            else
+                unityAssemblies = NullMetadataAccess.Instance;
+
+            using(new TimingCookie("Creating rewrite assemblies"))
+                rewriteContext = new RewriteGlobalContext(options, gameAssemblies, systemAssemblies, unityAssemblies);
 
             using(new TimingCookie("Computing renames"))
                 Pass05CreateRenameGroups.DoPass(rewriteContext);

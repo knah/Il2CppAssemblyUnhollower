@@ -1,3 +1,5 @@
+using System;
+using AssemblyUnhollower.MetadataAccess;
 using Mono.Cecil;
 
 namespace AssemblyUnhollower
@@ -20,8 +22,11 @@ namespace AssemblyUnhollower
         public static TypeReference FlagsAttribute { get; private set; }
         public static TypeReference ObsoleteAttribute { get; private set; }
 
-        public static void Init(AssemblyDefinition mscorlib)
+        public static void Init(IMetadataAccess systemLibraries)
         {
+            var mscorlib = systemLibraries.GetAssemblyBySimpleName("mscorlib") ??
+                           systemLibraries.GetAssemblyBySimpleName("netstandard") ?? throw new ArgumentException("System libraries metadata access doesn't contain mscorlib or netstandard");
+            
             Void = mscorlib.MainModule.TypeSystem.Void;
             IntPtr = mscorlib.MainModule.TypeSystem.IntPtr;
             String = mscorlib.MainModule.GetType("System.String");

@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using AssemblyUnhollower.Contexts;
 using AssemblyUnhollower.Extensions;
+using AssemblyUnhollower.MetadataAccess;
 using AssemblyUnhollower.Passes;
 using Mono.Cecil;
 using UnhollowerBaseLib;
@@ -38,8 +38,12 @@ namespace AssemblyUnhollower
                 Directory.CreateDirectory(options.OutputDir);
 
             RewriteGlobalContext rewriteContext;
-            using(new TimingCookie("Reading assemblies"))
-                rewriteContext = new RewriteGlobalContext(options, Directory.EnumerateFiles(options.DeobfuscationNewAssembliesPath, "*.dll"));
+            IIl2CppMetadataAccess inputAssemblies;
+            using (new TimingCookie("Reading assemblies"))
+                inputAssemblies = new CecilMetadataAccess(Directory.EnumerateFiles(options.DeobfuscationNewAssembliesPath, "*.dll"));
+            
+            using(new TimingCookie("Creating rewrite assemblies"))
+                rewriteContext = new RewriteGlobalContext(options, inputAssemblies, NullMetadataAccess.Instance, NullMetadataAccess.Instance);
             using(new TimingCookie("Computing renames"))
                 Pass05CreateRenameGroups.DoPass(rewriteContext);
             using(new TimingCookie("Creating typedefs"))
@@ -55,8 +59,12 @@ namespace AssemblyUnhollower
 
 
             RewriteGlobalContext cleanContext;
-            using(new TimingCookie("Reading clean assemblies"))
-                cleanContext = new RewriteGlobalContext(options, Directory.EnumerateFiles(options.SourceDir, "*.dll"));
+            IIl2CppMetadataAccess cleanAssemblies;
+            using (new TimingCookie("Reading clean assemblies"))
+                cleanAssemblies = new CecilMetadataAccess(Directory.EnumerateFiles(options.SourceDir, "*.dll"));
+            
+            using(new TimingCookie("Creating clean rewrite assemblies"))
+                cleanContext = new RewriteGlobalContext(options, cleanAssemblies, NullMetadataAccess.Instance, NullMetadataAccess.Instance);
             using(new TimingCookie("Computing clean assembly renames"))
                 Pass05CreateRenameGroups.DoPass(cleanContext);
             using(new TimingCookie("Creating clean assembly typedefs"))

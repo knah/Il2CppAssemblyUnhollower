@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using AssemblyUnhollower.Extensions;
+using AssemblyUnhollower.MetadataAccess;
 using Mono.Cecil;
 
 namespace AssemblyUnhollower.Contexts
@@ -9,9 +9,12 @@ namespace AssemblyUnhollower.Contexts
     public class RewriteGlobalContext : IDisposable
     {
         public UnhollowerOptions Options { get; }
+        public IIl2CppMetadataAccess GameAssemblies { get; }
+        public IMetadataAccess SystemAssemblies { get; }
+        public IMetadataAccess UnityAssemblies { get; }
+        
         private readonly Dictionary<string, AssemblyRewriteContext> myAssemblies = new Dictionary<string, AssemblyRewriteContext>();
         private readonly Dictionary<AssemblyDefinition, AssemblyRewriteContext> myAssembliesByOld = new Dictionary<AssemblyDefinition, AssemblyRewriteContext>();
-        private readonly Resolver myAssemblyResolver = new Resolver();
         
         internal readonly Dictionary<(object, string, int), List<TypeDefinition>> RenameGroups = new Dictionary<(object, string, int), List<TypeDefinition>>();
         internal readonly Dictionary<TypeDefinition, string> RenamedTypes = new Dictionary<TypeDefinition, string>();
@@ -19,23 +22,20 @@ namespace AssemblyUnhollower.Contexts
 
         public IEnumerable<AssemblyRewriteContext> Assemblies => myAssemblies.Values;
         
-        public RewriteGlobalContext(UnhollowerOptions options, IEnumerable<string> sourceAssemblyPaths)
+        public RewriteGlobalContext(UnhollowerOptions options, IIl2CppMetadataAccess gameAssemblies, IMetadataAccess systemAssemblies, IMetadataAccess unityAssemblies)
         {
             Options = options;
-            var metadataResolver = new MetadataResolver(myAssemblyResolver);
+            GameAssemblies = gameAssemblies;
+            SystemAssemblies = systemAssemblies;
+            UnityAssemblies = unityAssemblies;
             
-            var mscorlib = AssemblyDefinition.ReadAssembly(options.MscorlibPath);
-            TargetTypeSystemHandler.Init(mscorlib);
+            TargetTypeSystemHandler.Init(systemAssemblies);
             
-            myAssemblyResolver.Register(mscorlib);
-            
-            foreach (var sourceAssemblyPath in sourceAssemblyPaths)
+            foreach (var sourceAssembly in gameAssemblies.Assemblies)
             {
-                var assemblyName = Path.GetFileNameWithoutExtension(sourceAssemblyPath);
-                if(assemblyName == "Il2CppDummyDll") continue;
+                var assemblyName = sourceAssembly.Name.Name;
+                if (assemblyName == "Il2CppDummyDll") continue;
                 
-                var sourceAssembly = AssemblyDefinition.ReadAssembly(sourceAssemblyPath, new ReaderParameters(ReadingMode.Immediate) {MetadataResolver = metadataResolver});
-                myAssemblyResolver.Register(sourceAssembly);
                 var newAssembly = AssemblyDefinition.CreateAssembly(
                     new AssemblyNameDefinition(sourceAssembly.Name.Name.UnSystemify(), sourceAssembly.Name.Version),
                     sourceAssembly.MainModule.Name.UnSystemify(), sourceAssembly.MainModule.Kind);
@@ -50,11 +50,6 @@ namespace AssemblyUnhollower.Contexts
             myAssemblies[assemblyName] = context;
             if (context.OriginalAssembly != null)
                 myAssembliesByOld[context.OriginalAssembly] = context;
-        }
-        
-        private class Resolver : DefaultAssemblyResolver
-        {
-            public void Register(AssemblyDefinition ass) => RegisterAssembly(ass);
         }
 
         public AssemblyRewriteContext GetNewAssemblyForOriginal(AssemblyDefinition oldAssembly)
