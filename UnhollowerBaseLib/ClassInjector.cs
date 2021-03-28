@@ -18,25 +18,22 @@ namespace UnhollowerRuntimeLib
     public unsafe static class ClassInjector
     {
         private static readonly Il2CppAssembly* FakeAssembly;
-        private static readonly Il2CppImage* FakeImage;
+        private static readonly INativeImageStruct FakeImage;
 
         private static readonly HashSet<string> InjectedTypes = new HashSet<string>(); 
 
         static ClassInjector()
         {
             FakeAssembly = (Il2CppAssembly*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppAssembly>());
-            FakeImage = (Il2CppImage*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImage>());
+            FakeImage = UnityVersionHandler.NewImage(); //(Il2CppImage*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImage>());
 
             *FakeAssembly = default;
-            *FakeImage = default;
-
-            FakeAssembly->image = FakeImage;
             FakeAssembly->aname.name = Marshal.StringToHGlobalAnsi("InjectedMonoTypes");
-            
-            FakeImage->assembly = FakeAssembly;
-            FakeImage->dynamic = 1;
-            FakeImage->name = FakeAssembly->aname.name;
-            FakeImage->nameNoExt = FakeImage->name;
+
+            FakeImage.Assembly = FakeAssembly;
+            FakeImage.Dynamic = 1;
+            FakeImage.Name = FakeAssembly->aname.name;
+            FakeImage.NameNoExt = FakeImage.Name;
         }
 
         public static void ProcessNewObject(Il2CppObjectBase obj)
@@ -104,7 +101,7 @@ namespace UnhollowerRuntimeLib
 
             var classPointer = UnityVersionHandler.NewClass(baseClassPointer.VtableCount);
 
-            classPointer.Image = FakeImage;
+            classPointer.Image = FakeImage.ImagePointer;
             classPointer.Parent = baseClassPointer.ClassPointer;
             classPointer.ElementClass = classPointer.Class = classPointer.CastClass = classPointer.ClassPointer;
             classPointer.NativeSize = -1;
