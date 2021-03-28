@@ -3,22 +3,23 @@ using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific
 {
-    [UnityVersionHandler("2019.0.0")]
-    public static class Unity2018
+    [UnityVersionHandler("9999.0.0")]
+    public static class Unity2019Default
     {
         public static bool WorksOn(Version v)
         {
-            return v.Major <= 2018;
+            // Make this a default resolver
+            return true;
         }
 
         public class NativeClassStructHandler : INativeClassStructHandler
         {
             public unsafe INativeClassStruct CreateNewClassStruct(int vTableSlots)
             {
-                var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppClassU2018>() +
+                var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppClassU2019>() +
                                                    Marshal.SizeOf<VirtualInvokeData>() * vTableSlots);
 
-                *(Il2CppClassU2018*) pointer = default;
+                *(Il2CppClassU2019*) pointer = default;
 
                 return new NativeClassStruct(pointer);
             }
@@ -29,7 +30,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
             }
 
             [StructLayout(LayoutKind.Sequential)]
-            private unsafe struct Il2CppClassU2018
+            private unsafe struct Il2CppClassU2019
             {
                 // The following fields are always valid for a Il2CppClass structure
                 public Il2CppImage* image; // const
@@ -68,6 +69,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
                 public Il2CppClass** typeHierarchy; // not const; Initialized in SetupTypeHierachy
                 // End initialization required fields
 
+                // U2019 specific field
+                public IntPtr unity_user_data;
+
                 public uint initializationExceptionGCHandle;
 
                 public uint cctor_started;
@@ -75,7 +79,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
                 public uint cctor_finished;
 
                 /*ALIGN_TYPE(8)*/
-                private ulong cctor_thread;
+                private IntPtr cctor_thread; // was uint64 in 2018.4, is size_t in 2019.3.1
 
                 // Remaining fields are always valid except where noted
                 public /*GenericContainerIndex*/ int genericContainerIndex;
@@ -101,10 +105,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
                 public byte typeHierarchyDepth; // Initialized in SetupTypeHierachy
                 public byte genericRecursionDepth;
                 public byte rank;
-
                 public byte minimumAlignment; // Alignment of this type
-
-                // naturalAlignment is absent here
+                public byte naturalAligment;  // Alignment of this type without accounting for packing
                 public byte packingSize;
 
                 // this is critical for performance of Class::InitFromCodegen. Equals to initialized && !has_initialization_error at all times.
@@ -141,9 +143,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
                 public IntPtr Pointer { get; }
                 public Il2CppClass* ClassPointer => (Il2CppClass*) Pointer;
 
-                public IntPtr VTable => IntPtr.Add(Pointer, Marshal.SizeOf<Il2CppClassU2018>());
+                public IntPtr VTable => IntPtr.Add(Pointer, Marshal.SizeOf<Il2CppClassU2019>());
 
-                private Il2CppClassU2018* NativeClass => (Il2CppClassU2018*) ClassPointer;
+                private Il2CppClassU2019* NativeClass => (Il2CppClassU2019*) ClassPointer;
 
                 public ref uint InstanceSize => ref NativeClass->instance_size;
 
@@ -180,6 +182,70 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
                 public ref Il2CppClass* Class => ref NativeClass->klass;
 
                 public ref Il2CppMethodInfo** Methods => ref NativeClass->methods;
+            }
+        }
+
+        public unsafe class NativeImageStructHandler : INativeImageStructHandler
+        {
+            public INativeImageStruct CreateNewImageStruct()
+            {
+                var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImageU2019>());
+
+                *(Il2CppImageU2019*) pointer = default;
+
+                return new NativeImageStruct(pointer);
+            }
+
+            public INativeImageStruct Wrap(Il2CppImage* classPointer)
+            {
+                return new NativeImageStruct((IntPtr) classPointer);
+            }
+            
+            private struct Il2CppImageU2019
+            {
+                public IntPtr name;      // const char*
+                public IntPtr nameNoExt; // const char*
+                public Il2CppAssembly* assembly;
+
+                public /*TypeDefinitionIndex*/ int typeStart;
+                public uint typeCount;
+
+                public /*TypeDefinitionIndex*/ int exportedTypeStart;
+                public uint exportedTypeCount;
+
+                public /*CustomAttributeIndex*/ int customAttributeStart;
+                public uint customAttributeCount;
+        
+                public /*MethodIndex*/ int entryPointIndex;
+
+                public /*Il2CppNameToTypeDefinitionIndexHashTable **/ IntPtr nameToClassHashTable;
+        
+                public /*Il2CppCodeGenModule*/ IntPtr codeGenModule;
+
+                public uint token;
+                public byte dynamic;
+            }
+            
+            private class NativeImageStruct : INativeImageStruct
+            {
+                public NativeImageStruct(IntPtr pointer)
+                {
+                    Pointer = pointer;
+                }
+                
+                public IntPtr Pointer { get; }
+
+                public Il2CppImage* ImagePointer => (Il2CppImage*) Pointer;
+                
+                private Il2CppImageU2019* NativeImage => (Il2CppImageU2019*) ImagePointer;
+                
+                public ref Il2CppAssembly* Assembly => ref NativeImage->assembly;
+
+                public ref byte Dynamic => ref NativeImage->dynamic;
+
+                public ref IntPtr Name => ref NativeImage->name;
+
+                public ref IntPtr NameNoExt => ref NativeImage->nameNoExt;
             }
         }
     }

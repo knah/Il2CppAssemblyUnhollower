@@ -1,24 +1,24 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific
 {
-    [UnityVersionHandler("2019.0.0")]
-    public static class Unity2018
+    [UnityVersionHandler("2020.2.0")]
+    public static class Unity2020_2
     {
         public static bool WorksOn(Version v)
         {
-            return v.Major <= 2018;
+            return v.Major == 2020 && v.Minor == 2;
         }
 
         public class NativeClassStructHandler : INativeClassStructHandler
         {
             public unsafe INativeClassStruct CreateNewClassStruct(int vTableSlots)
             {
-                var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppClassU2018>() +
+                var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppClassU2020_2>() +
                                                    Marshal.SizeOf<VirtualInvokeData>() * vTableSlots);
 
-                *(Il2CppClassU2018*) pointer = default;
+                *(Il2CppClassU2020_2*) pointer = default;
 
                 return new NativeClassStruct(pointer);
             }
@@ -29,7 +29,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
             }
 
             [StructLayout(LayoutKind.Sequential)]
-            private unsafe struct Il2CppClassU2018
+            private unsafe struct Il2CppClassU2020_2
             {
                 // The following fields are always valid for a Il2CppClass structure
                 public Il2CppImage* image; // const
@@ -44,8 +44,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
                 public Il2CppClass* parent;        // not const
                 public /*Il2CppGenericClass**/ IntPtr generic_class;
 
-                public                     /*Il2CppTypeDefinition**/
-                    IntPtr typeDefinition; // const; non-NULL for Il2CppClass's constructed from type defintions
+                public IntPtr
+                    typeMetadataHandle; //  // const; non-NULL for Il2CppClass's constructed from type defintions
 
                 public /*Il2CppInteropData**/ IntPtr interopData; // const
 
@@ -61,24 +61,33 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
                 public Il2CppClass** implementedInterfaces;                // not const; Initialized in SetupInterfaces
                 public Il2CppRuntimeInterfaceOffsetPair* interfaceOffsets; // not const; Initialized in Init
                 public IntPtr static_fields;                               // not const; Initialized in Init
-
-                public /*Il2CppRGCTXData**/ IntPtr rgctx_data; // const; Initialized in Init
+                public /*Il2CppRGCTXData**/ IntPtr rgctx_data;             // const; Initialized in Init
 
                 // used for fast parent checks
                 public Il2CppClass** typeHierarchy; // not const; Initialized in SetupTypeHierachy
                 // End initialization required fields
 
+                // public IntPtr typeDefinition;
+
+                // U2020 specific field
+                public IntPtr unity_user_data;
+
                 public uint initializationExceptionGCHandle;
 
-                public uint cctor_started;
 
+                public uint cctor_started;
                 public uint cctor_finished;
 
-                /*ALIGN_TYPE(8)*/
-                private ulong cctor_thread;
+                ///*ALIGN_TYPE(8)*/
+                public ulong cctor_thread; // was uint64 in 2018.4, is size_t in >=2019.3.1
+
+
+                ///*ALIGN_TYPE(8)*/ IntPtr cctor_thread; // was uint64 in 2018.4, is size_t in 2020.3.1
 
                 // Remaining fields are always valid except where noted
-                public /*GenericContainerIndex*/ int genericContainerIndex;
+                //public /*GenericContainerIndex*/ int genericContainerIndex;
+                public IntPtr genericContainerHandle;
+
                 public uint instance_size;
                 public uint actualSize;
                 public uint element_size;
@@ -101,24 +110,22 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
                 public byte typeHierarchyDepth; // Initialized in SetupTypeHierachy
                 public byte genericRecursionDepth;
                 public byte rank;
-
                 public byte minimumAlignment; // Alignment of this type
-
-                // naturalAlignment is absent here
+                public byte naturalAligment;  // Alignment of this type without accounting for packing
                 public byte packingSize;
 
                 // this is critical for performance of Class::InitFromCodegen. Equals to initialized && !has_initialization_error at all times.
                 // Use Class::UpdateInitializedAndNoError to update
                 public ClassBitfield1 bitfield_1;
-                /*uint8_t initialized_and_no_error : 1;
-        
-                uint8_t valuetype : 1;
-                uint8_t initialized : 1;
-                uint8_t enumtype : 1;
-                uint8_t is_generic : 1;
-                uint8_t has_references : 1;
-                uint8_t init_pending : 1;
-                uint8_t size_inited : 1;*/
+                //uint8_t initialized_and_no_error : 1;
+
+                //uint8_t valuetype : 1;
+                //uint8_t initialized : 1;
+                //uint8_t enumtype : 1;
+                //uint8_t is_generic : 1;
+                //uint8_t has_references : 1;
+                //uint8_t init_pending : 1;
+                //uint8_t size_inited : 1;
 
                 public ClassBitfield2 bitfield_2;
                 /*uint8_t has_finalize : 1;
@@ -141,9 +148,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
                 public IntPtr Pointer { get; }
                 public Il2CppClass* ClassPointer => (Il2CppClass*) Pointer;
 
-                public IntPtr VTable => IntPtr.Add(Pointer, Marshal.SizeOf<Il2CppClassU2018>());
+                public IntPtr VTable => IntPtr.Add(Pointer, Marshal.SizeOf<Il2CppClassU2020_2>());
 
-                private Il2CppClassU2018* NativeClass => (Il2CppClassU2018*) ClassPointer;
+                private Il2CppClassU2020_2* NativeClass => (Il2CppClassU2020_2*) ClassPointer;
 
                 public ref uint InstanceSize => ref NativeClass->instance_size;
 
@@ -180,6 +187,83 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
                 public ref Il2CppClass* Class => ref NativeClass->klass;
 
                 public ref Il2CppMethodInfo** Methods => ref NativeClass->methods;
+            }
+        }
+
+        public unsafe class NativeImageStructHandler : INativeImageStructHandler
+        {
+            public INativeImageStruct CreateNewImageStruct()
+            {
+                var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImageU2020_2>());
+                var imageMetadata =
+                    (Il2CppImageGlobalMetadata*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImageGlobalMetadata>());
+
+                *(Il2CppImageU2020_2*) pointer = default;
+                *imageMetadata = default;
+
+                imageMetadata->image = (Il2CppImage*) pointer;
+                ((Il2CppImageU2020_2*) pointer)->metadataHandle = imageMetadata;
+
+                return new NativeImageStruct(pointer);
+            }
+
+            public INativeImageStruct Wrap(Il2CppImage* classPointer)
+            {
+                return new NativeImageStruct((IntPtr) classPointer);
+            }
+
+            private struct Il2CppImageU2020_2
+            {
+                public IntPtr name;      // const char*
+                public IntPtr nameNoExt; // const char*
+                public Il2CppAssembly* assembly;
+
+                public uint typeCount;
+
+                public uint exportedTypeCount;
+
+                public uint customAttributeCount;
+
+                public /*Il2CppNameToTypeDefinitionIndexHashTable **/ Il2CppImageGlobalMetadata* metadataHandle;
+
+
+                public /*Il2CppNameToTypeDefinitionIndexHashTable **/ IntPtr nameToClassHashTable;
+
+                public /*Il2CppCodeGenModule*/ IntPtr codeGenModule;
+
+                public uint token;
+                public byte dynamic;
+            }
+
+            private struct Il2CppImageGlobalMetadata
+            {
+                public int typeStart;
+                public int exportedTypeStart;
+                public int customAttributeStart;
+                public int entryPointIndex;
+                public Il2CppImage* image;
+            }
+
+            private class NativeImageStruct : INativeImageStruct
+            {
+                public NativeImageStruct(IntPtr pointer)
+                {
+                    Pointer = pointer;
+                }
+
+                public IntPtr Pointer { get; }
+
+                public Il2CppImage* ImagePointer => (Il2CppImage*) Pointer;
+
+                private Il2CppImageU2020_2* NativeImage => (Il2CppImageU2020_2*) ImagePointer;
+
+                public ref Il2CppAssembly* Assembly => ref NativeImage->assembly;
+
+                public ref byte Dynamic => ref NativeImage->dynamic;
+
+                public ref IntPtr Name => ref NativeImage->name;
+
+                public ref IntPtr NameNoExt => ref NativeImage->nameNoExt;
             }
         }
     }
