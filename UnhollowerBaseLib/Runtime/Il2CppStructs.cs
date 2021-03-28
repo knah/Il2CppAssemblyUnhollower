@@ -321,27 +321,8 @@ namespace UnhollowerBaseLib.Runtime
         public fixed byte public_key_token[16]; // PUBLIC_KEY_BYTE_LENGTH
     }
 
-    public unsafe struct Il2CppImage
+    public struct Il2CppImage
     {
-        public IntPtr name; // const char*
-        public IntPtr nameNoExt; // const char*
-        public Il2CppAssembly* assembly;
-
-        public /*TypeDefinitionIndex*/ int typeStart;
-        public uint typeCount;
-
-        public /*TypeDefinitionIndex*/ int exportedTypeStart;
-        public uint exportedTypeCount;
-
-        public /*CustomAttributeIndex*/ int customAttributeStart;
-        public uint customAttributeCount;
-
-        public /*MethodIndex*/ int entryPointIndex;
-
-        public /*Il2CppNameToTypeDefinitionIndexHashTable **/ IntPtr nameToClassHashTable;
-
-        public uint token;
-        public byte dynamic;
     }
 
     public unsafe struct Il2CppAssembly
