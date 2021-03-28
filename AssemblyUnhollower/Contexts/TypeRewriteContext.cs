@@ -72,12 +72,8 @@ namespace AssemblyUnhollower.Contexts
             var renamedFieldCounts = new Dictionary<string, int>();
             
             foreach (var originalTypeField in OriginalType.Fields)
-            {
-                if (originalTypeField.Name.EndsWith(">k__BackingField")) continue; // covered by properties anyway
-                
                 myFieldContexts[originalTypeField] = new FieldRewriteContext(this, originalTypeField, renamedFieldCounts);
-            }
-            
+
             foreach (var originalTypeMethod in OriginalType.Methods)
             {
                 if (originalTypeMethod.Name == ".cctor") continue;
