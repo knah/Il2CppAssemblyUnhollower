@@ -27,8 +27,8 @@ namespace UnhollowerBaseLib.Runtime
     {
         private static readonly List<VersionHandleInfo> VersionHandlers = new();
 
-        private static readonly List<Type> StructHandlers = new()
-            {typeof(INativeClassStructHandler), typeof(INativeImageStructHandler)};
+        private static readonly List<Type> StructHandlers =
+            GetAllTypesSafe().Where(t => t.IsInterface && typeof(INativeStructHandler).IsAssignableFrom(t)).ToList();
 
         private static readonly Dictionary<Type, object> Handlers = new();
 
