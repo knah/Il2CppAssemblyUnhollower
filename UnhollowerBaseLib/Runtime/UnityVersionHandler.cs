@@ -100,7 +100,7 @@ namespace UnhollowerBaseLib.Runtime
         /// <example>For Unity 2018.4.20, call <c>Initialize(2018, 4, 20)</c></example>
         public static void Initialize(int majorVersion, int minorVersion, int patchVersion)
         {
-            UnityVersion = new Version(majorVersion, majorVersion, patchVersion);
+            UnityVersion = new Version(majorVersion, minorVersion, patchVersion);
             Handlers.Clear();
             //
             // if (majorVersion == 2018 && minorVersion == 4)
