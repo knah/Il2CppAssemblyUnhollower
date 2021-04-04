@@ -5,14 +5,12 @@ namespace UnhollowerBaseLib.Runtime
 {
     public static class NativeStructUtils
     {
-        public static unsafe IntPtr GetMethodInfoForMissingMethod(string methodName)
+        public static IntPtr GetMethodInfoForMissingMethod(string methodName)
         {
-            var methodInfo = (Il2CppMethodInfo*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfo>());
-            *methodInfo = default;
-            methodInfo->name = Marshal.StringToHGlobalAnsi(methodName);
-            methodInfo->slot = UInt16.MaxValue;
-
-            return (IntPtr) methodInfo;
+            var methodInfo = UnityVersionHandler.NewMethod();
+            methodInfo.Name = Marshal.StringToHGlobalAnsi(methodName);
+            methodInfo.Slot = ushort.MaxValue;
+            return methodInfo.Pointer;
         }
 
         public static unsafe bool CheckBit(this INativeStruct self, int startOffset, int bit)

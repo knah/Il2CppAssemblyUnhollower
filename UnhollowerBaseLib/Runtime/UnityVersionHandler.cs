@@ -96,8 +96,7 @@ namespace UnhollowerBaseLib.Runtime
                 throw new NotImplementedException(
                     $"No matching {typeof(T).FullName} handler for Unity version {UnityVersion}");
 
-            LogSupport.Warning(
-                $"No suitable handler for {typeof(T).FullName} found. Using best match ({latestValidVersionHandleInfo.VersionHandleType.FullName})");
+            LogSupport.Warning($"No direct handler for {typeof(T).FullName} found for Unity {UnityVersion}; using best match handler {latestValidVersionHandleInfo.VersionHandleType.FullName}");
 
             return (T) InitHandler(latestValidHandler);
         }
@@ -143,5 +142,20 @@ namespace UnhollowerBaseLib.Runtime
         {
             return GetHandler<INativeImageStructHandler>().Wrap(classPointer);
         }
+
+        public static INativeMethodStruct NewMethod() =>
+            GetHandler<INativeMethodStructHandler>().CreateNewMethodStruct();
+
+        public static unsafe Il2CppParameterInfo* NewMethodParameterArray(int count) =>
+            GetHandler<INativeMethodStructHandler>().CreateNewParameterInfoArray(count);
+
+        public static unsafe INativeMethodStruct Wrap(Il2CppMethodInfo* methodPointer) =>
+            GetHandler<INativeMethodStructHandler>().Wrap(methodPointer);
+        
+        public static unsafe INativeParameterInfoStruct Wrap(Il2CppParameterInfo* parameterInfo) =>
+            GetHandler<INativeMethodStructHandler>().Wrap(parameterInfo);
+
+        public static IntPtr GetMethodFromReflection(IntPtr method) =>
+            GetHandler<INativeMethodStructHandler>().GetMethodFromReflection(method);
     }
 }

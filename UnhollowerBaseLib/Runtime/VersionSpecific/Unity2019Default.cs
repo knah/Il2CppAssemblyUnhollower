@@ -246,9 +246,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
                 return new NativeImageStruct(pointer);
             }
 
-            public INativeImageStruct Wrap(Il2CppImage* classPointer)
+            public INativeImageStruct Wrap(Il2CppImage* imagePointer)
             {
-                return new NativeImageStruct((IntPtr) classPointer);
+                return new NativeImageStruct((IntPtr) imagePointer);
             }
             
             private struct Il2CppImageU2019

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using UnhollowerBaseLib;
+using UnhollowerBaseLib.Runtime;
 using AppDomain = Il2CppSystem.AppDomain;
 using BindingFlags = Il2CppSystem.Reflection.BindingFlags;
 
@@ -21,7 +22,7 @@ namespace UnhollowerRuntimeLib.XrefScans
             var unityObjectCctor = AppDomain.CurrentDomain.GetAssemblies()
                 .Single(it => it.GetSimpleName() == "UnityEngine.CoreModule").GetType("UnityEngine.Object")
                 .GetConstructors(BindingFlags.Static | BindingFlags.NonPublic).Single();
-            var nativeMethodInfo = IL2CPP.il2cpp_method_get_from_reflection(unityObjectCctor.Pointer);
+            var nativeMethodInfo = UnityVersionHandler.GetMethodFromReflection(unityObjectCctor.Pointer);
             ourMetadataInitForMethodPointer = XrefScannerLowLevel.JumpTargets(*(IntPtr*) nativeMethodInfo).First();
             ourMetadataInitForMethodDelegate = Marshal.GetDelegateForFunctionPointer<InitMetadataForMethod>(ourMetadataInitForMethodPointer);
         }

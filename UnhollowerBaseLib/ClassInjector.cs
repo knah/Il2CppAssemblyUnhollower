@@ -129,6 +129,7 @@ namespace UnhollowerRuntimeLib
             classPointer.Methods = methodPointerArray;
 
             methodPointerArray[0] = ConvertStaticMethod(FinalizeDelegate, "Finalize", classPointer);
+            var finalizeMethod = UnityVersionHandler.Wrap(methodPointerArray[0]);
             methodPointerArray[1] = ConvertStaticMethod(CreateEmptyCtor(type), ".ctor", classPointer);
             for (var i = 0; i < eligibleMethods.Length; i++)
             {
@@ -142,10 +143,11 @@ namespace UnhollowerRuntimeLib
             for (var i = 0; i < classPointer.VtableCount; i++)
             {
                 vTablePointer[i] = baseVTablePointer[i];
-                if (Marshal.PtrToStringAnsi(vTablePointer[i].method->name) == "Finalize") // slot number is not static
+                var vTableMethod = UnityVersionHandler.Wrap(vTablePointer[i].method);
+                if (Marshal.PtrToStringAnsi(vTableMethod.Name) == "Finalize") // slot number is not static
                 {
                     vTablePointer[i].method = methodPointerArray[0];
-                    vTablePointer[i].methodPtr = methodPointerArray[0]->methodPointer;
+                    vTablePointer[i].methodPtr = finalizeMethod.MethodPointer;
                 }
             }
 
@@ -218,54 +220,53 @@ namespace UnhollowerRuntimeLib
         
         private static Il2CppMethodInfo* ConvertStaticMethod(VoidCtorDelegate voidCtor, string methodName, INativeClassStruct declaringClass)
         {
-            var converted = (Il2CppMethodInfo*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfo>());
-            *converted = default;
-            converted->name = Marshal.StringToHGlobalAnsi(methodName);
-            converted->klass = declaringClass.ClassPointer;
+            var converted = UnityVersionHandler.NewMethod();
+            converted.Name = Marshal.StringToHGlobalAnsi(methodName);
+            converted.Class = declaringClass.ClassPointer;
 
-            converted->invoker_method = Marshal.GetFunctionPointerForDelegate(new InvokerDelegate(StaticVoidIntPtrInvoker));
-            converted->methodPointer = Marshal.GetFunctionPointerForDelegate(voidCtor);
-            converted->slot = ushort.MaxValue;
-            converted->return_type = (Il2CppTypeStruct*) IL2CPP.il2cpp_class_get_type(Il2CppClassPointerStore<Void>.NativeClassPtr);
+            converted.InvokerMethod = Marshal.GetFunctionPointerForDelegate(new InvokerDelegate(StaticVoidIntPtrInvoker));
+            converted.MethodPointer = Marshal.GetFunctionPointerForDelegate(voidCtor);
+            converted.Slot = ushort.MaxValue;
+            converted.ReturnType = (Il2CppTypeStruct*) IL2CPP.il2cpp_class_get_type(Il2CppClassPointerStore<Void>.NativeClassPtr);
 
-            converted->flags = Il2CppMethodFlags.METHOD_ATTRIBUTE_PUBLIC |
+            converted.Flags = Il2CppMethodFlags.METHOD_ATTRIBUTE_PUBLIC |
                                Il2CppMethodFlags.METHOD_ATTRIBUTE_HIDE_BY_SIG | Il2CppMethodFlags.METHOD_ATTRIBUTE_SPECIAL_NAME | Il2CppMethodFlags.METHOD_ATTRIBUTE_RT_SPECIAL_NAME;
 
-            return converted;
+            return converted.MethodInfoPointer;
         }
 
         private static Il2CppMethodInfo* ConvertMethodInfo(MethodInfo monoMethod, INativeClassStruct declaringClass)
         {
-            var converted = (Il2CppMethodInfo*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfo>());
-            *converted = default;
-            converted->name = Marshal.StringToHGlobalAnsi(monoMethod.Name);
-            converted->klass = declaringClass.ClassPointer;
+            var converted = UnityVersionHandler.NewMethod();
+            converted.Name = Marshal.StringToHGlobalAnsi(monoMethod.Name);
+            converted.Class = declaringClass.ClassPointer;
 
             var parameters = monoMethod.GetParameters();
             if (parameters.Length > 0)
             {
-                converted->parameters_count = (byte) parameters.Length;
-                var paramsArray = (Il2CppParameterInfo*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppParameterInfo>() * parameters.Length);
-                converted->parameters = paramsArray;
+                converted.ParametersCount = (byte) parameters.Length;
+                var paramsArray = UnityVersionHandler.NewMethodParameterArray(parameters.Length);
+                converted.Parameters = paramsArray;
                 for (var i = 0; i < parameters.Length; i++)
                 {
                     var parameterInfo = parameters[i];
-                    paramsArray[i].name = Marshal.StringToHGlobalAnsi(parameterInfo.Name);
-                    paramsArray[i].position = i;
-                    paramsArray[i].token = 0;
-                    paramsArray[i].parameter_type = (Il2CppTypeStruct*) IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(parameterInfo.ParameterType));
+                    var param = UnityVersionHandler.Wrap(&paramsArray[i]);
+                    param.Name = Marshal.StringToHGlobalAnsi(parameterInfo.Name);
+                    param.Position = i;
+                    param.Token = 0;
+                    param.ParameterType = (Il2CppTypeStruct*) IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(parameterInfo.ParameterType));
                 }
             }
 
-            converted->invoker_method = Marshal.GetFunctionPointerForDelegate(GetOrCreateInvoker(monoMethod));
-            converted->methodPointer = Marshal.GetFunctionPointerForDelegate(GetOrCreateTrampoline(monoMethod));
-            converted->slot = ushort.MaxValue;
-            converted->return_type = (Il2CppTypeStruct*) IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(monoMethod.ReturnType));
+            converted.InvokerMethod = Marshal.GetFunctionPointerForDelegate(GetOrCreateInvoker(monoMethod));
+            converted.MethodPointer = Marshal.GetFunctionPointerForDelegate(GetOrCreateTrampoline(monoMethod));
+            converted.Slot = ushort.MaxValue;
+            converted.ReturnType = (Il2CppTypeStruct*) IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(monoMethod.ReturnType));
 
-            converted->flags = Il2CppMethodFlags.METHOD_ATTRIBUTE_PUBLIC |
+            converted.Flags = Il2CppMethodFlags.METHOD_ATTRIBUTE_PUBLIC |
                                Il2CppMethodFlags.METHOD_ATTRIBUTE_HIDE_BY_SIG;
 
-            return converted;
+            return converted.MethodInfoPointer;
         }
 
         private static VoidCtorDelegate CreateEmptyCtor(Type targetType)

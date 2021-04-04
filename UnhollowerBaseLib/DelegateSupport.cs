@@ -253,19 +253,16 @@ namespace UnhollowerRuntimeLib
 
             converted.method_ptr = Marshal.GetFunctionPointerForDelegate(managedTrampoline);
             converted.method_info = nativeDelegateInvokeMethod; // todo: is this truly a good hack?
-            var methodInfoSize = Marshal.SizeOf<Il2CppMethodInfo>();
-            var methodInfoPointer = Marshal.AllocHGlobal(methodInfoSize);
-            var methodInfo = (Il2CppMethodInfo*) methodInfoPointer;
-            *methodInfo = default; // zero out everything
-            converted.method = methodInfoPointer;
+            var methodInfo = UnityVersionHandler.NewMethod();
+            converted.method = methodInfo.Pointer;
 
-            methodInfo->methodPointer = converted.method_ptr;
-            methodInfo->invoker_method = IntPtr.Zero;
-            methodInfo->parameters_count = (byte) parameterInfos.Length;
-            methodInfo->slot = ushort.MaxValue;
-            methodInfo->extra_flags = MethodInfoExtraFlags.is_marshalled_from_native;
+            methodInfo.MethodPointer = converted.method_ptr;
+            methodInfo.InvokerMethod = IntPtr.Zero;
+            methodInfo.ParametersCount = (byte) parameterInfos.Length;
+            methodInfo.Slot = ushort.MaxValue;
+            methodInfo.ExtraFlags = MethodInfoExtraFlags.is_marshalled_from_native;
             
-            converted.m_target = new Il2CppToMonoDelegateReference(@delegate, methodInfoPointer);
+            converted.m_target = new Il2CppToMonoDelegateReference(@delegate, methodInfo.Pointer);
 
             return converted.Cast<TIl2Cpp>();
         }

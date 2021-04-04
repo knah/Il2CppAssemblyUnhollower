@@ -54,7 +54,7 @@ namespace UnhollowerBaseLib.Runtime
     public interface INativeImageStructHandler : INativeStructHandler
     {
         INativeImageStruct CreateNewImageStruct();
-        unsafe INativeImageStruct Wrap(Il2CppImage* classPointer);
+        unsafe INativeImageStruct Wrap(Il2CppImage* imagePointer);
     }
 
     public interface INativeImageStruct : INativeStruct
@@ -68,5 +68,39 @@ namespace UnhollowerBaseLib.Runtime
         ref IntPtr Name { get; }
         
         ref IntPtr NameNoExt { get; }
+    }
+
+    public interface INativeMethodStructHandler : INativeStructHandler
+    {
+        INativeMethodStruct CreateNewMethodStruct();
+        unsafe INativeMethodStruct Wrap(Il2CppMethodInfo* methodPointer);
+        unsafe Il2CppParameterInfo* CreateNewParameterInfoArray(int paramCount);
+        unsafe INativeParameterInfoStruct Wrap(Il2CppParameterInfo* paramInfoPointer);
+        IntPtr GetMethodFromReflection(IntPtr method);
+    }
+
+    public interface INativeMethodStruct : INativeStruct
+    {
+        int StructSize { get; }
+        unsafe Il2CppMethodInfo* MethodInfoPointer { get; }
+        ref IntPtr Name { get; }
+        ref ushort Slot { get; }
+        ref IntPtr MethodPointer { get; }
+        unsafe ref Il2CppClass* Class { get; }
+        ref IntPtr InvokerMethod { get; }
+        unsafe ref Il2CppTypeStruct* ReturnType { get; }
+        ref Il2CppMethodFlags Flags { get; }
+        ref byte ParametersCount { get; }
+        unsafe ref Il2CppParameterInfo* Parameters { get; }
+        ref MethodInfoExtraFlags ExtraFlags { get; }
+    }
+
+    public interface INativeParameterInfoStruct : INativeStruct
+    {
+        unsafe Il2CppParameterInfo* ParameterInfoPointer { get; }
+        ref IntPtr Name { get; }
+        ref int Position { get; }
+        ref uint Token { get; }
+        unsafe ref Il2CppTypeStruct* ParameterType { get; }
     }
 }
