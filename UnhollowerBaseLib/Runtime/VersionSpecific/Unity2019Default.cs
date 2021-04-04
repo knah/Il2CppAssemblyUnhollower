@@ -111,7 +111,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
 
                 // this is critical for performance of Class::InitFromCodegen. Equals to initialized && !has_initialization_error at all times.
                 // Use Class::UpdateInitializedAndNoError to update
-                public ClassBitfield1 bitfield_1;
+                public byte bitfield_1;
                 /*uint8_t initialized_and_no_error : 1;
         
                 uint8_t valuetype : 1;
@@ -122,7 +122,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
                 uint8_t init_pending : 1;
                 uint8_t size_inited : 1;*/
 
-                public ClassBitfield2 bitfield_2;
+                public byte bitfield_2;
                 /*uint8_t has_finalize : 1;
                 uint8_t has_cctor : 1;
                 uint8_t is_blittable : 1;
@@ -157,9 +157,59 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
 
                 public ref ushort MethodCount => ref NativeClass->method_count;
 
-                public ref ClassBitfield1 Bitfield1 => ref NativeClass->bitfield_1;
+                private static int bitfield1offset =
+                    Marshal.OffsetOf<Il2CppClassU2019>(nameof(Il2CppClassU2019.bitfield_1)).ToInt32();
+                
+                private static int bitfield2offset =
+                    Marshal.OffsetOf<Il2CppClassU2019>(nameof(Il2CppClassU2019.bitfield_2)).ToInt32(); 
+                
+                public bool ValueType
+                {
+                    get => this.CheckBit(bitfield1offset, 1);
+                    set => this.SetBit(bitfield1offset, 1, value);
+                }
 
-                public ref ClassBitfield2 Bitfield2 => ref NativeClass->bitfield_2;
+                public bool EnumType
+                {
+                    get => this.CheckBit(bitfield1offset, 3);
+                    set => this.SetBit(bitfield1offset, 3, value);
+                }
+
+                public bool IsGeneric
+                {
+                    get => this.CheckBit(bitfield1offset, 4);
+                    set => this.SetBit(bitfield1offset, 4, value);
+                }
+
+                public bool Initialized
+                {
+                    get => this.CheckBit(bitfield1offset, 2);
+                    set => this.SetBit(bitfield1offset, 2, value);
+                }
+
+                public bool InitializedAndNoError
+                {
+                    get => this.CheckBit(bitfield1offset, 0);
+                    set => this.SetBit(bitfield1offset, 0, value);
+                }
+
+                public bool SizeInited
+                {
+                    get => this.CheckBit(bitfield1offset, 7);
+                    set => this.SetBit(bitfield1offset, 7, value);
+                }
+
+                public bool HasFinalize
+                {
+                    get => this.CheckBit(bitfield2offset, 0);
+                    set => this.SetBit(bitfield2offset, 0, value);
+                }
+
+                public bool IsVtableInitialized
+                {
+                    get => this.CheckBit(bitfield2offset, 4);
+                    set => this.SetBit(bitfield2offset, 4, value);
+                }
 
                 public ref Il2CppClassAttributes Flags => ref NativeClass->flags;
 

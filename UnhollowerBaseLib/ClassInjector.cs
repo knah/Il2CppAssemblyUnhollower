@@ -80,10 +80,10 @@ namespace UnhollowerRuntimeLib
             if (baseClassPointer == null)
                 throw new ArgumentException($"Base class {baseType} of class {type} is not registered in il2cpp");
             
-            if ((baseClassPointer.Bitfield1 & ClassBitfield1.valuetype) != 0 || (baseClassPointer.Bitfield1 & ClassBitfield1.enumtype) != 0)
+            if (baseClassPointer.ValueType || baseClassPointer.EnumType)
                 throw new ArgumentException($"Base class {baseType} is value type and can't be inherited from");
             
-            if ((baseClassPointer.Bitfield1 & ClassBitfield1.is_generic) != 0)
+            if (baseClassPointer.IsGeneric)
                 throw new ArgumentException($"Base class {baseType} is generic and can't be inherited from");
             
             if ((baseClassPointer.Flags & Il2CppClassAttributes.TYPE_ATTRIBUTE_SEALED) != 0)
@@ -106,9 +106,13 @@ namespace UnhollowerRuntimeLib
             classPointer.ElementClass = classPointer.Class = classPointer.CastClass = classPointer.ClassPointer;
             classPointer.NativeSize = -1;
             classPointer.ActualSize = classPointer.InstanceSize = baseClassPointer.InstanceSize + (uint) IntPtr.Size;
-            classPointer.Bitfield1 = ClassBitfield1.initialized | ClassBitfield1.initialized_and_no_error |
-                                             ClassBitfield1.size_inited;
-            classPointer.Bitfield2 = ClassBitfield2.has_finalize | ClassBitfield2.is_vtable_initialized;
+
+            classPointer.Initialized = true;
+            classPointer.InitializedAndNoError = true;
+            classPointer.SizeInited = true;
+            classPointer.HasFinalize = true;
+            classPointer.IsVtableInitialized = true;
+            
             classPointer.Name = Marshal.StringToHGlobalAnsi(type.Name);
             classPointer.Namespace = Marshal.StringToHGlobalAnsi(type.Namespace);
             
