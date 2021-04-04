@@ -8,7 +8,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
     {
         public static bool WorksOn(Version v)
         {
-            return v.Major == 2020 && v.Minor == 2;
+            return v.Major == 2020 && (v.Minor == 2 || v.Minor == 3);
         }
 
         public class NativeClassStructHandler : INativeClassStructHandler
