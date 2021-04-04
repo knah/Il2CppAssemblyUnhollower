@@ -8,25 +8,27 @@ namespace UnhollowerBaseLib.Runtime
     [AttributeUsage(AttributeTargets.Class)]
     internal class UnityVersionHandlerAttribute : Attribute
     {
-        public string Priority { get; }
-
         public UnityVersionHandlerAttribute(string priority)
         {
             Priority = priority;
         }
+
+        public string Priority { get; }
     }
-    
+
     internal class VersionHandleInfo
     {
         public Func<Version, bool> WorksOn { get; init; }
         public Dictionary<Type, Type> StructHandlers { get; } = new();
+        public Type VersionHandleType { get; init; }
     }
-    
+
     public static class UnityVersionHandler
     {
         private static readonly List<VersionHandleInfo> VersionHandlers = new();
 
-        private static readonly List<Type> StructHandlers = new() {typeof(INativeClassStructHandler)};
+        private static readonly List<Type> StructHandlers = new()
+            {typeof(INativeClassStructHandler), typeof(INativeImageStructHandler)};
 
         private static readonly Dictionary<Type, object> Handlers = new();
 
@@ -37,23 +39,28 @@ namespace UnhollowerBaseLib.Runtime
             var versionHandlerTypes =
                 GetAllTypesSafe().Where(t => t.GetCustomAttribute<UnityVersionHandlerAttribute>() != null);
 
-            foreach (var versionHandlerType in versionHandlerTypes.OrderBy(t => Version.Parse(t.GetCustomAttribute<UnityVersionHandlerAttribute>().Priority)))
+            foreach (var versionHandlerType in versionHandlerTypes.OrderBy(t =>
+                Version.Parse(t.GetCustomAttribute<UnityVersionHandlerAttribute>().Priority)))
             {
                 var worksOnCheck = versionHandlerType.GetMethods().FirstOrDefault(m => m.IsStatic &&
                     m.Name == "WorksOn" && m.ReturnType == typeof(bool) &&
                     m.GetParameters().FirstOrDefault()?.ParameterType == typeof(Version));
                 var info = new VersionHandleInfo
                 {
-                    WorksOn = worksOnCheck != null ? (Func<Version, bool>) worksOnCheck.CreateDelegate(typeof(Func<Version, bool>)) : _ => true
+                    WorksOn = worksOnCheck != null
+                        ? (Func<Version, bool>) worksOnCheck.CreateDelegate(typeof(Func<Version, bool>))
+                        : _ => true,
+                    VersionHandleType = versionHandlerType
                 };
-                
+
                 foreach (var structHandler in StructHandlers)
                 {
                     var handlerImplementation = versionHandlerType.GetNestedTypes().FirstOrDefault(t =>
                         !t.IsInterface && !t.IsAbstract && structHandler.IsAssignableFrom(t));
-                    info.StructHandlers[structHandler] = handlerImplementation;
+                    if (handlerImplementation != null)
+                        info.StructHandlers[structHandler] = handlerImplementation;
                 }
-                
+
                 VersionHandlers.Add(info);
             }
         }
@@ -69,15 +76,28 @@ namespace UnhollowerBaseLib.Runtime
                 Handlers[typeof(T)] = res;
                 return res;
             }
-            
+
             Type latestValidHandler = null;
+            VersionHandleInfo latestValidVersionHandleInfo = null;
             foreach (var versionHandleInfo in VersionHandlers)
             {
                 if (!versionHandleInfo.StructHandlers.TryGetValue(typeof(T), out var handler)) continue;
                 latestValidHandler = handler;
+                latestValidVersionHandleInfo = versionHandleInfo;
                 if (versionHandleInfo.WorksOn(UnityVersion))
+                {
+                    LogSupport.Info(
+                        $"Using version handler {versionHandleInfo.VersionHandleType.FullName} for {typeof(T).FullName}");
                     return (T) InitHandler(handler);
+                }
             }
+
+            if (latestValidVersionHandleInfo == null)
+                throw new NotImplementedException(
+                    $"No matching {typeof(T).FullName} handler for Unity version {UnityVersion}");
+
+            LogSupport.Warning(
+                $"No suitable handler for {typeof(T).FullName} found. Using best match ({latestValidVersionHandleInfo.VersionHandleType.FullName})");
 
             return (T) InitHandler(latestValidHandler);
         }
@@ -93,30 +113,35 @@ namespace UnhollowerBaseLib.Runtime
                 return re.Types.Where(t => t != null);
             }
         }
-        
+
         /// <summary>
-        /// Initializes Unity interface for specified Unity version.
+        ///     Initializes Unity interface for specified Unity version.
         /// </summary>
         /// <example>For Unity 2018.4.20, call <c>Initialize(2018, 4, 20)</c></example>
         public static void Initialize(int majorVersion, int minorVersion, int patchVersion)
         {
             UnityVersion = new Version(majorVersion, minorVersion, patchVersion);
             Handlers.Clear();
-            //
-            // if (majorVersion == 2018 && minorVersion == 4)
-            //     ourHandler = new Unity2018_4NativeClassStructHandler();
-            // else if (majorVersion <= 2018)
-            //     ourHandler = new Unity2018_0NativeClassStructHandler();
-            // else if (majorVersion == 2020 && minorVersion == 2 && patchVersion >= 4)
-            //     ourHandler = new Unity2020_2_4.Unity2020_2_4NativeClassStructHandler();
-            // else
-            //     ourHandler = new Unity2019NativeClassStructHandler();
         }
 
-        public static INativeClassStruct NewClass(int vTableSlots) => GetHandler<INativeClassStructHandler>().CreateNewClassStruct(vTableSlots);
-        public static unsafe INativeClassStruct Wrap(Il2CppClass* classPointer) => GetHandler<INativeClassStructHandler>().Wrap(classPointer);
-        
-        public static INativeImageStruct NewImage() => GetHandler<INativeImageStructHandler>().CreateNewImageStruct();
-        public static unsafe INativeImageStruct Wrap(Il2CppImage* classPointer) => GetHandler<INativeImageStructHandler>().Wrap(classPointer);
+        public static INativeClassStruct NewClass(int vTableSlots)
+        {
+            return GetHandler<INativeClassStructHandler>().CreateNewClassStruct(vTableSlots);
+        }
+
+        public static unsafe INativeClassStruct Wrap(Il2CppClass* classPointer)
+        {
+            return GetHandler<INativeClassStructHandler>().Wrap(classPointer);
+        }
+
+        public static INativeImageStruct NewImage()
+        {
+            return GetHandler<INativeImageStructHandler>().CreateNewImageStruct();
+        }
+
+        public static unsafe INativeImageStruct Wrap(Il2CppImage* classPointer)
+        {
+            return GetHandler<INativeImageStructHandler>().Wrap(classPointer);
+        }
     }
 }
