@@ -79,7 +79,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
                 public uint cctor_finished;
 
                 ///*ALIGN_TYPE(8)*/
-                public ulong cctor_thread; // was uint64 in 2018.4, is size_t in >=2019.3.1
+                public IntPtr cctor_thread; // was uint64 in 2018.4, is size_t in >=2019.3.1
 
 
                 ///*ALIGN_TYPE(8)*/ IntPtr cctor_thread; // was uint64 in 2018.4, is size_t in 2020.3.1
