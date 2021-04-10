@@ -384,7 +384,18 @@ namespace UnhollowerRuntimeLib
                     if(parameter == typeof(string))
                         body.Emit(OpCodes.Call, typeof(IL2CPP).GetMethod(nameof(IL2CPP.Il2CppStringToManaged))!);
                     else
-                        body.Emit(OpCodes.Newobj, parameter.GetConstructor(new []{typeof(IntPtr)})!);
+                    {
+                        var labelNull = body.DefineLabel();
+                        var labelNotNull = body.DefineLabel();
+                        body.Emit(OpCodes.Dup);
+                        body.Emit(OpCodes.Brfalse, labelNull);
+                        body.Emit(OpCodes.Newobj, parameter.GetConstructor(new[] {typeof(IntPtr)})!);
+                        body.Emit(OpCodes.Br, labelNotNull);
+                        body.MarkLabel(labelNull);
+                        body.Emit(OpCodes.Pop);
+                        body.Emit(OpCodes.Ldnull);
+                        body.MarkLabel(labelNotNull);
+                    }
                 }
             }
             
