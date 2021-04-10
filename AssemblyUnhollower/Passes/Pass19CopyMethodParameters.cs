@@ -1,4 +1,5 @@
 using AssemblyUnhollower.Contexts;
+using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
 
 namespace AssemblyUnhollower.Passes
@@ -18,7 +19,11 @@ namespace AssemblyUnhollower.Passes
 
                         foreach (var originalMethodParameter in originalMethod.Parameters)
                         {
-                            var newParameter = new ParameterDefinition(originalMethodParameter.Name,
+                            var newName = originalMethodParameter.Name.IsObfuscated(context.Options)
+                                ? $"param_{originalMethodParameter.Sequence}"
+                                : originalMethodParameter.Name;
+                            
+                            var newParameter = new ParameterDefinition(newName,
                                 originalMethodParameter.Attributes & ~ParameterAttributes.HasFieldMarshal,
                                 assemblyContext.RewriteTypeRef(originalMethodParameter.ParameterType));
 
