@@ -38,6 +38,8 @@ namespace AssemblyUnhollower.Passes
                 accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref fileStartPtr);
                 gameAssemblyPtr = (IntPtr) fileStartPtr;
             }
+            
+            context.MethodStartAddresses.Sort();
 
             // Scan xrefs
             context.Assemblies.SelectMany(it => it.Types).SelectMany(it => it.Methods).AsParallel().ForAll(
@@ -53,7 +55,10 @@ namespace AssemblyUnhollower.Passes
                         originalTypeMethod.MetadataInitTokenRva = pair.TokenRva;
                     }
 
-                    foreach (var callTargetGlobal in XrefScanner.XrefScanImpl(XrefScanner.DecoderForAddress(IntPtr.Add(gameAssemblyPtr, (int) address), 1024 * 1024), true))
+                    var nextMethodStart = context.MethodStartAddresses.BinarySearch(address + 1);
+                    if (nextMethodStart < 0) nextMethodStart = ~nextMethodStart;
+                    var length = nextMethodStart >= context.MethodStartAddresses.Count ? 1024 * 1024 : (context.MethodStartAddresses[nextMethodStart] - address);
+                    foreach (var callTargetGlobal in XrefScanner.XrefScanImpl(XrefScanner.DecoderForAddress(IntPtr.Add(gameAssemblyPtr, (int) address), (int) length), true))
                     {
                         var callTarget = callTargetGlobal.RelativeToBase((long) gameAssemblyPtr + originalTypeMethod.FileOffset - originalTypeMethod.Rva);
                         if (callTarget.Type == XrefType.Method)

@@ -20,6 +20,8 @@ namespace AssemblyUnhollower.Contexts
         internal readonly Dictionary<TypeDefinition, string> RenamedTypes = new Dictionary<TypeDefinition, string>();
         internal readonly Dictionary<TypeDefinition, string> PreviousRenamedTypes = new Dictionary<TypeDefinition, string>();
 
+        internal readonly List<long> MethodStartAddresses = new List<long>();
+
         public IEnumerable<AssemblyRewriteContext> Assemblies => myAssemblies.Values;
         
         public RewriteGlobalContext(UnhollowerOptions options, IIl2CppMetadataAccess gameAssemblies, IMetadataAccess systemAssemblies, IMetadataAccess unityAssemblies)

@@ -69,6 +69,8 @@ namespace AssemblyUnhollower.Contexts
 
             FileOffset = originalMethod.ExtractOffset();
             Rva = originalMethod.ExtractRva();
+            if (FileOffset != 0)
+                declaringType.AssemblyContext.GlobalContext.MethodStartAddresses.Add(FileOffset);
         }
 
         public void CtorPhase2()
