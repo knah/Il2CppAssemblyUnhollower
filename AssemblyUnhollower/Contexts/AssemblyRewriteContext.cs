@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Mono.Cecil;
 using UnhollowerBaseLib;
 
@@ -28,7 +29,7 @@ namespace AssemblyUnhollower.Contexts
             Imports = AssemblyKnownImports.For(newAssembly.MainModule, globalContext);
         }
 
-        public TypeRewriteContext GetContextForOriginalType(TypeDefinition type) => myOldTypeMap[type];
+        public TypeRewriteContext GetContextForOriginalType(TypeDefinition type) => myNameTypeMap[type.FullName];
         public TypeRewriteContext? TryGetContextForOriginalType(TypeDefinition type) => myOldTypeMap.TryGetValue(type, out var result) ? result : null;
         public TypeRewriteContext GetContextForNewType(TypeDefinition type) => myNewTypeMap[type];
 
@@ -43,12 +44,15 @@ namespace AssemblyUnhollower.Contexts
         public MethodReference RewriteMethodRef(MethodReference methodRef)
         {
             var newType = GlobalContext.GetNewTypeForOriginal(methodRef.DeclaringType.Resolve());
+            if (newType.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.UseSystemInterface)
+                return newType.NewType.Methods.Single(it => it.Name == methodRef.Name);
+            
             return newType.GetMethodByOldMethod(methodRef.Resolve()).NewMethod; 
         }
         
         public TypeReference RewriteTypeRef(TypeReference? typeRef)
         {
-            if (typeRef == null) return Imports.Il2CppObjectBase;
+            if (typeRef == null) return Imports.Object;
             
             var sourceModule = NewAssembly.MainModule;
 
@@ -58,8 +62,6 @@ namespace AssemblyUnhollower.Contexts
                     return Imports.Il2CppObjectBase;
                 
                 var elementType = arrayType.ElementType;
-                if (elementType.FullName == "System.String")
-                    return Imports.Il2CppStringArray;
 
                 var convertedElementType = RewriteTypeRef(elementType);
                 if (elementType.IsGenericParameter)
@@ -100,14 +102,8 @@ namespace AssemblyUnhollower.Contexts
             if (typeRef.FullName == "System.Void")
                 return Imports.Void;
 
-            if (typeRef.FullName == "System.String")
-                return Imports.String;
-
-            if(typeRef.FullName == "System.Object")
-                return sourceModule.ImportReference(GlobalContext.GetAssemblyByName("mscorlib").GetTypeByName("System.Object").NewType);
-
-            if (typeRef.FullName == "System.Attribute")
-                return sourceModule.ImportReference(GlobalContext.GetAssemblyByName("mscorlib").GetTypeByName("System.Attribute").NewType);
+            if (typeRef.FullName == "System.Object")
+                return Imports.Object;
 
             var originalTypeDef = typeRef.Resolve();
             var targetAssembly = GlobalContext.GetNewAssemblyForOriginal(originalTypeDef.Module.Assembly);

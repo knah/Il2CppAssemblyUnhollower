@@ -5,21 +5,22 @@ using UnhollowerRuntimeLib;
 
 namespace UnhollowerBaseLib
 {
-    public abstract class Il2CppArrayBase<T> : Il2CppObjectBase, IList<T>
+    public class Il2CppArrayBase<T> : Il2CppObjectBase, IList<T>
     {
-        protected static void StaticCtorBody(Type ownType)
+        private static readonly int ElementTypeSize;
+        private static readonly bool ElementIsValueType;
+
+        static Il2CppArrayBase()
         {
+            ElementTypeSize = IntPtr.Size;
             var nativeClassPtr = Il2CppClassPointerStore<T>.NativeClassPtr;
-            if (nativeClassPtr == IntPtr.Zero)
-                return;
-            
-            var targetClassType = IL2CPP.il2cpp_array_class_get(nativeClassPtr, 1);
-            if (targetClassType == IntPtr.Zero)
-                return;
-            
-            ClassInjector.WriteClassPointerForType(ownType, targetClassType);
-            ClassInjector.WriteClassPointerForType(typeof(Il2CppArrayBase<T>), targetClassType);
-            Il2CppClassPointerStore<Il2CppArrayBase<T>>.CreatedTypeRedirect = ownType;
+            if (nativeClassPtr == IntPtr.Zero) return;
+            uint align = 0;
+            if (IL2CPP.il2cpp_class_is_valuetype(nativeClassPtr))
+            {
+                ElementIsValueType = true;
+                ElementTypeSize = IL2CPP.il2cpp_class_value_size(nativeClassPtr, ref align);
+            }
         }
 
         protected Il2CppArrayBase(IntPtr pointer) : base(pointer)
@@ -83,18 +84,30 @@ namespace UnhollowerBaseLib
             return arr;
         }
 
-        public abstract T this[int index]
+        public virtual T this[int index]
         {
-            get;
-            set;
+            get
+            {
+                if(index < 0 || index >= Length)
+                    throw new ArgumentOutOfRangeException(nameof(index), "Array index may not be negative or above length of the array");
+                var arrayStartPointer = IntPtr.Add(Pointer, 4 * IntPtr.Size);
+                var elementPointer = IntPtr.Add(arrayStartPointer, index * ElementTypeSize);
+                return GenericMarshallingUtils.ReadFieldGeneric<T>(elementPointer);
+            }
+            set
+            {
+                if(index < 0 || index >= Length)
+                    throw new ArgumentOutOfRangeException(nameof(index), "Array index may not be negative or above length of the array");
+                var arrayStartPointer = IntPtr.Add(Pointer, 4 * IntPtr.Size);
+                var elementPointer = IntPtr.Add(arrayStartPointer, index * ElementTypeSize);
+                GenericMarshallingUtils.WriteFieldGeneric(elementPointer, value);
+            }
         }
 
         public static Il2CppArrayBase<T> WrapNativeGenericArrayPointer(IntPtr pointer)
         {
             if (pointer == IntPtr.Zero) return null;
 
-            if (typeof(T) == typeof(string)) 
-                return new Il2CppStringArray(pointer) as Il2CppArrayBase<T>;
             if (typeof(T).IsValueType) // can't construct required types here directly because of unfulfilled generic constraint
                 return Activator.CreateInstance(typeof(Il2CppStructArray<>).MakeGenericType(typeof(T)), pointer) as Il2CppArrayBase<T>;
             if (typeof(Il2CppObjectBase).IsAssignableFrom(typeof(T)))

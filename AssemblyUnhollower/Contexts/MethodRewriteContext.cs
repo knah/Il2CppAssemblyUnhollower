@@ -77,55 +77,91 @@ namespace AssemblyUnhollower.Contexts
         {
             UnmangledName = UnmangleMethodName();
             UnmangledNameWithSignature = UnmangleMethodNameWithSignature();
+            
+            // todo: translate explicit overrides based on names perhaps?; dumper doesn't generate those though, so interface implementations can end up scuffed
+            foreach (var originalMethodOverride in OriginalMethod.Overrides)
+            {
+                var specificOverride = DeclaringType.AssemblyContext.NewAssembly.MainModule.ImportReference(DeclaringType.AssemblyContext.RewriteMethodRef(originalMethodOverride));
+                
+                NewMethod.Overrides.Add(specificOverride);
+            }
 
             NewMethod.Name = UnmangledName;
             NewMethod.ReturnType = DeclaringType.AssemblyContext.RewriteTypeRef(OriginalMethod.ReturnType);
-                
-            var nonGenericMethodInfoPointerField = new FieldDefinition(
-                "NativeMethodInfoPtr_" + UnmangledNameWithSignature,
-                FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly,
-                DeclaringType.AssemblyContext.Imports.IntPtr);
-            DeclaringType.NewType.Fields.Add(nonGenericMethodInfoPointerField);
-
-            NonGenericMethodInfoPointerField = new FieldReference(nonGenericMethodInfoPointerField.Name,
-                nonGenericMethodInfoPointerField.FieldType, DeclaringType.SelfSubstitutedRef);
             
+            if (OriginalNameObfuscated)
+                NewMethod.CustomAttributes.Add(
+                    new CustomAttribute(DeclaringType.AssemblyContext.Imports.ObfuscatedNameAttributeCtor)
+                    {
+                        ConstructorArguments = {new CustomAttributeArgument(DeclaringType.AssemblyContext.Imports.String, OriginalMethod.Name)}
+                    });
+
+            if (DeclaringType.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.Default)
+            {
+                var nonGenericMethodInfoPointerField = new FieldDefinition(
+                    "NativeMethodInfoPtr_" + UnmangledNameWithSignature,
+                    FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly,
+                    DeclaringType.AssemblyContext.Imports.IntPtr);
+                DeclaringType.NewType.Fields.Add(nonGenericMethodInfoPointerField);
+
+                NonGenericMethodInfoPointerField = new FieldReference(nonGenericMethodInfoPointerField.Name,
+                    nonGenericMethodInfoPointerField.FieldType, DeclaringType.SelfSubstitutedRef);
+
+
+                if (OriginalMethod.HasGenericParameters)
+                {
+                    var genericParams = OriginalMethod.GenericParameters;
+                    var genericMethodInfoStoreType = new TypeDefinition("",
+                        "MethodInfoStoreGeneric_" + UnmangledNameWithSignature + "`" + genericParams.Count,
+                        TypeAttributes.NestedPrivate | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+                        DeclaringType.AssemblyContext.Imports.Object);
+                    genericMethodInfoStoreType.DeclaringType = DeclaringType.NewType;
+                    DeclaringType.NewType.NestedTypes.Add(genericMethodInfoStoreType);
+                    GenericInstantiationsStore = genericMethodInfoStoreType;
+
+                    var selfSubstRef = new GenericInstanceType(genericMethodInfoStoreType);
+                    var selfSubstMethodRef = new GenericInstanceType(genericMethodInfoStoreType);
+
+                    for (var index = 0; index < genericParams.Count; index++)
+                    {
+                        var oldParameter = genericParams[index];
+                        var genericParameter = new GenericParameter(oldParameter.Name, genericMethodInfoStoreType);
+                        genericMethodInfoStoreType.GenericParameters.Add(genericParameter);
+                        selfSubstRef.GenericArguments.Add(genericParameter);
+                        var newParameter = NewMethod.GenericParameters[index];
+                        selfSubstMethodRef.GenericArguments.Add(newParameter);
+                    }
+
+                    var pointerField = new FieldDefinition("Pointer", FieldAttributes.Assembly | FieldAttributes.Static,
+                        DeclaringType.AssemblyContext.Imports.IntPtr);
+                    genericMethodInfoStoreType.Fields.Add(pointerField);
+
+                    GenericInstantiationsStoreSelfSubstRef = DeclaringType.NewType.Module.ImportReference(selfSubstRef);
+                    GenericInstantiationsStoreSelfSubstMethodRef =
+                        DeclaringType.NewType.Module.ImportReference(selfSubstMethodRef);
+                }
+            }
+
             if (OriginalMethod.HasGenericParameters)
             {
                 var genericParams = OriginalMethod.GenericParameters;
-                var genericMethodInfoStoreType = new TypeDefinition("", "MethodInfoStoreGeneric_" + UnmangledNameWithSignature + "`" + genericParams.Count, TypeAttributes.NestedPrivate | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, DeclaringType.AssemblyContext.Imports.Object);
-                genericMethodInfoStoreType.DeclaringType = DeclaringType.NewType;
-                DeclaringType.NewType.NestedTypes.Add(genericMethodInfoStoreType);
-                GenericInstantiationsStore = genericMethodInfoStoreType;
-                
-                var selfSubstRef = new GenericInstanceType(genericMethodInfoStoreType);
-                var selfSubstMethodRef = new GenericInstanceType(genericMethodInfoStoreType);
 
                 for (var index = 0; index < genericParams.Count; index++)
                 {
                     var oldParameter = genericParams[index];
-                    var genericParameter = new GenericParameter(oldParameter.Name, genericMethodInfoStoreType);
-                    genericMethodInfoStoreType.GenericParameters.Add(genericParameter);
-                    selfSubstRef.GenericArguments.Add(genericParameter);
                     var newParameter = NewMethod.GenericParameters[index];
-                    selfSubstMethodRef.GenericArguments.Add(newParameter);
-                    
+
                     foreach (var oldConstraint in oldParameter.Constraints)
                     {
-                        if (oldConstraint.ConstraintType.FullName == "System.ValueType" || oldConstraint.ConstraintType.Resolve()?.IsInterface == true) continue;
-                        
+                        if (oldConstraint.ConstraintType.FullName == "System.ValueType" ||
+                            oldConstraint.ConstraintType.Resolve()?.IsInterface == true) continue;
+
                         newParameter.Constraints.Add(new GenericParameterConstraint(
                             DeclaringType.AssemblyContext.RewriteTypeRef(oldConstraint.ConstraintType)));
                     }
                 }
-
-                var pointerField = new FieldDefinition("Pointer", FieldAttributes.Assembly | FieldAttributes.Static, DeclaringType.AssemblyContext.Imports.IntPtr);
-                genericMethodInfoStoreType.Fields.Add(pointerField);
-
-                GenericInstantiationsStoreSelfSubstRef = DeclaringType.NewType.Module.ImportReference(selfSubstRef);
-                GenericInstantiationsStoreSelfSubstMethodRef = DeclaringType.NewType.Module.ImportReference(selfSubstMethodRef);
             }
-            
+
             DeclaringType.NewType.Methods.Add(NewMethod);
         }
 

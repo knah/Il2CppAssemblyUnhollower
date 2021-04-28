@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using AssemblyUnhollower.Contexts;
 using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
@@ -9,20 +10,38 @@ namespace AssemblyUnhollower.Passes
 {
     public static class Pass20GenerateStaticConstructors
     {
-        private static int ourTokenlessMethods = 0;
-        
         public static void DoPass(RewriteGlobalContext context)
         {
+            var baseLibModule = context.GetAssemblyByName("mscorlib");
+            var moduleType = baseLibModule.NewAssembly.MainModule.GetType("<Module>");
+            var moduleStaticCtor = new MethodDefinition(".cctor",
+                MethodAttributes.Static | MethodAttributes.Private | MethodAttributes.SpecialName |
+                MethodAttributes.HideBySig | MethodAttributes.RTSpecialName, baseLibModule.Imports.Void);
+            moduleType.Methods.Add(moduleStaticCtor);
+            
+            
             foreach (var assemblyContext in context.Assemblies)
             foreach (var typeContext in assemblyContext.Types)
-                GenerateStaticProxy(assemblyContext, typeContext);
+                GenerateStaticProxy(assemblyContext, typeContext, moduleStaticCtor.Body.GetILProcessor(), baseLibModule);
             
-            LogSupport.Trace($"\nTokenless method count: {ourTokenlessMethods}");
+            moduleStaticCtor.Body.GetILProcessor().Emit(OpCodes.Ret);
+            
+            LogSupport.Trace($"\nTokenless method count: {context.Statistics.TokenLessMethods}");
         }
 
-        private static void GenerateStaticProxy(AssemblyRewriteContext assemblyContext, TypeRewriteContext typeContext)
+        private static void GenerateStaticProxy(AssemblyRewriteContext assemblyContext, TypeRewriteContext typeContext, ILProcessor systemTypeInitializer, AssemblyRewriteContext systemContext)
         {
+            if (typeContext.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.UseSystemValueType || typeContext.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.UseSystemInterface)
+            {
+                GenerateSystemTypeData(systemContext, typeContext, systemTypeInitializer);
+                return;
+            }
+            
             var oldType = typeContext.OriginalType;
+            if (typeContext.RewriteSemantic != TypeRewriteContext.TypeRewriteSemantic.Default || oldType.IsEnum) 
+                return;
+            
+            
             var newType = typeContext.NewType;
 
             var staticCtorMethod = new MethodDefinition(".cctor",
@@ -32,70 +51,10 @@ namespace AssemblyUnhollower.Passes
             
             var ctorBuilder = staticCtorMethod.Body.GetILProcessor();
 
-            if (newType.IsNested) {
-                ctorBuilder.Emit(OpCodes.Ldsfld, assemblyContext.GlobalContext.GetNewTypeForOriginal(oldType.DeclaringType).ClassPointerFieldRef);
-                ctorBuilder.Emit(OpCodes.Ldstr, oldType.Name);
-                ctorBuilder.Emit(OpCodes.Call, assemblyContext.Imports.GetIl2CppNestedClass);
-            } else {
-                ctorBuilder.Emit(OpCodes.Ldstr, oldType.Module.Name);
-                ctorBuilder.Emit(OpCodes.Ldstr, oldType.Namespace);
-                ctorBuilder.Emit(OpCodes.Ldstr, oldType.Name);
-                ctorBuilder.Emit(OpCodes.Call, assemblyContext.Imports.GetIl2CppGlobalClass);
-            }
-
-            if (oldType.HasGenericParameters)
-            {
-                var il2CppTypeTypeRewriteContext = assemblyContext.GlobalContext.GetAssemblyByName("mscorlib").GetTypeByName("System.Type");
-                var il2CppSystemTypeRef = newType.Module.ImportReference(il2CppTypeTypeRewriteContext.NewType);
-                
-                var il2CppTypeHandleTypeRewriteContext = assemblyContext.GlobalContext.GetAssemblyByName("mscorlib").GetTypeByName("System.RuntimeTypeHandle");
-                var il2CppSystemTypeHandleRef = newType.Module.ImportReference(il2CppTypeHandleTypeRewriteContext.NewType);
-                
-                ctorBuilder.Emit(OpCodes.Call, assemblyContext.Imports.GetIl2CppTypeFromClass);
-                ctorBuilder.Emit(OpCodes.Call, new MethodReference("internal_from_handle", il2CppSystemTypeRef, il2CppSystemTypeRef) { Parameters = { new ParameterDefinition(assemblyContext.Imports.IntPtr) }});
-
-                ctorBuilder.EmitLdcI4(oldType.GenericParameters.Count);
-                
-                ctorBuilder.Emit(OpCodes.Newarr, il2CppSystemTypeRef);
-                
-                for (var i = 0; i < oldType.GenericParameters.Count; i++)
-                {
-                    ctorBuilder.Emit(OpCodes.Dup);
-                    ctorBuilder.EmitLdcI4(i);
-                    
-                    var param = oldType.GenericParameters[i];
-                    var storeRef = new GenericInstanceType(assemblyContext.Imports.Il2CppClassPointerStore) { GenericArguments = { param }};
-                    var fieldRef = new FieldReference(nameof(Il2CppClassPointerStore<object>.NativeClassPtr), assemblyContext.Imports.IntPtr, storeRef);
-                    ctorBuilder.Emit(OpCodes.Ldsfld, fieldRef);
-                    
-                    ctorBuilder.Emit(OpCodes.Call, assemblyContext.Imports.GetIl2CppTypeFromClass);
-                    
-                    ctorBuilder.Emit(OpCodes.Call, new MethodReference("internal_from_handle", il2CppSystemTypeRef, il2CppSystemTypeRef) { Parameters = { new ParameterDefinition(assemblyContext.Imports.IntPtr) }});
-                    ctorBuilder.Emit(OpCodes.Stelem_Ref);
-                }
-
-                var il2CppTypeArray = new GenericInstanceType(assemblyContext.Imports.Il2CppReferenceArray) { GenericArguments = { il2CppSystemTypeRef }};
-                ctorBuilder.Emit(OpCodes.Newobj, new MethodReference(".ctor", assemblyContext.Imports.Void, il2CppTypeArray) {HasThis = true, Parameters = { new ParameterDefinition(new ArrayType(assemblyContext.Imports.Il2CppReferenceArray.GenericParameters[0])) }});
-                ctorBuilder.Emit(OpCodes.Call, new MethodReference(nameof(Type.MakeGenericType), il2CppSystemTypeRef, il2CppSystemTypeRef) { HasThis = true, Parameters = { new ParameterDefinition(il2CppTypeArray) }});
-                
-                ctorBuilder.Emit(OpCodes.Call, new MethodReference(typeof(Type).GetProperty(nameof(Type.TypeHandle))!.GetMethod!.Name, il2CppSystemTypeHandleRef, il2CppSystemTypeRef) { HasThis = true });
-                ctorBuilder.Emit(OpCodes.Ldfld, new FieldReference("value", assemblyContext.Imports.IntPtr, il2CppSystemTypeHandleRef));
-                
-                ctorBuilder.Emit(OpCodes.Call, assemblyContext.Imports.GetIl2CppTypeToClass);
-            }
-            
-            ctorBuilder.Emit(OpCodes.Stsfld, typeContext.ClassPointerFieldRef);
-            
             if (oldType.IsBeforeFieldInit)
             {
                 ctorBuilder.Emit(OpCodes.Ldsfld, typeContext.ClassPointerFieldRef);
                 ctorBuilder.Emit(OpCodes.Call, assemblyContext.Imports.RuntimeClassInit);
-            }
-
-            if (oldType.IsEnum)
-            {
-                ctorBuilder.Emit(OpCodes.Ret);
-                return;
             }
 
             foreach (var field in typeContext.Fields)
@@ -113,7 +72,7 @@ namespace AssemblyUnhollower.Passes
                 var token = method.OriginalMethod.ExtractToken();
                 if (token == 0)
                 {
-                    ourTokenlessMethods++;
+                    typeContext.AssemblyContext.GlobalContext.Statistics.TokenLessMethods++;
                     
                     ctorBuilder.Emit(method.OriginalMethod.GenericParameters.Count > 0 ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
                     ctorBuilder.Emit(OpCodes.Ldstr, method.OriginalMethod.Name);
@@ -141,6 +100,15 @@ namespace AssemblyUnhollower.Passes
             }
             
             ctorBuilder.Emit(OpCodes.Ret);
+        }
+
+        private static void GenerateSystemTypeData(AssemblyRewriteContext systemContext, TypeRewriteContext typeContext, ILProcessor systemTypeInitializer)
+        {
+            systemTypeInitializer.Emit(OpCodes.Ldtoken, systemContext.NewAssembly.MainModule.ImportReference(typeContext.NewType));
+            systemTypeInitializer.Emit(OpCodes.Call, systemContext.Imports.TypeFromToken);
+            systemTypeInitializer.Emit(OpCodes.Ldstr, typeContext.AssemblyContext.OriginalAssembly.Name.Name);
+            systemTypeInitializer.Emit(OpCodes.Ldc_I4, typeContext.Il2CppToken);
+            systemTypeInitializer.Emit(OpCodes.Call, systemContext.Imports.RegisterTypeTokenExplicit);
         }
 
         private static void EmitLoadTypeNameString(this ILProcessor ctorBuilder, AssemblyKnownImports imports, MethodDefinition originalMethod, TypeReference originalTypeReference, TypeReference newTypeReference)

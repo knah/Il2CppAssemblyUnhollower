@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using AssemblyUnhollower.Contexts;
+using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -13,6 +15,8 @@ namespace AssemblyUnhollower.Passes
             {
                 foreach (var typeContext in assemblyContext.Types)
                 {
+                    if (typeContext.RewriteSemantic != TypeRewriteContext.TypeRewriteSemantic.Default) continue;
+                    
                     foreach (var methodRewriteContext in typeContext.Methods)
                     {
                         var originalMethod = methodRewriteContext.OriginalMethod;
@@ -30,6 +34,13 @@ namespace AssemblyUnhollower.Passes
 
                         if (valueTypeLocal.VariableType.FullName != "System.Void")
                             newMethod.Body.Variables.Add(valueTypeLocal);
+
+                        var needScratchSpace =
+                            newMethod.Parameters.Any(it => it.ParameterType.MayRequireScratchSpace()) ||
+                            newMethod.ReturnType.MayRequireScratchSpace();
+
+                        if (needScratchSpace) 
+                            bodyBuilder.Emit(OpCodes.Call, imports.ScratchSpaceEnter);
 
                         if (!originalMethod.DeclaringType.IsValueType)
                         {
@@ -67,7 +78,7 @@ namespace AssemblyUnhollower.Passes
 
                         var argOffset = originalMethod.IsStatic ? 0 : 1;
 
-                        var byRefParams = new List<(int, VariableDefinition)>();
+                        var byRefParams = new List<(int, VariableDefinition, TypeReference)>();
 
                         for (var i = 0; i < newMethod.Parameters.Count; i++)
                         {
@@ -78,12 +89,26 @@ namespace AssemblyUnhollower.Passes
                             bodyBuilder.Emit(OpCodes.Mul_Ovf_Un);
                             bodyBuilder.Emit(OpCodes.Add);
 
+                            // todo: for non-generic parameters, call the appropriate marshaller directly
                             var newParam = newMethod.Parameters[i];
-                            bodyBuilder.EmitObjectToPointer(originalMethod.Parameters[i].ParameterType, newParam.ParameterType, methodRewriteContext.DeclaringType, argOffset + i, false, true, true, out var refVar);
-                            bodyBuilder.Emit(OpCodes.Stind_I);
+                            if (newParam.ParameterType.IsByReference)
+                            {
+                                var scratchLocal = new VariableDefinition(imports.IntPtr);
+                                newMethod.Body.Variables.Add(scratchLocal);
+                                
+                                byRefParams.Add((i, scratchLocal, newParam.ParameterType.GetElementType()));
+                                
+                                bodyBuilder.Emit(OpCodes.Ldarga, i + argOffset);
+                                bodyBuilder.Emit(OpCodes.Ldloca, scratchLocal);
+                                bodyBuilder.Emit(OpCodes.Call, imports.Module.ImportReference(new GenericInstanceMethod(imports.MarshalMethodParameterByRef) { GenericArguments = { newParam.ParameterType.GetElementType() } }));
+                            }
+                            else
+                            {
+                                bodyBuilder.Emit(OpCodes.Ldarga, i + argOffset);
+                                bodyBuilder.Emit(OpCodes.Call, imports.Module.ImportReference(new GenericInstanceMethod(imports.MarshalMethodParameter) { GenericArguments = { newParam.ParameterType } }));
+                            }
                             
-                            if(refVar != null)
-                                byRefParams.Add((i, refVar));
+                            bodyBuilder.Emit(OpCodes.Stind_I);
                         }
 
                         if (originalMethod.IsVirtual && !originalMethod.DeclaringType.IsValueType || originalMethod.IsAbstract)
@@ -102,7 +127,7 @@ namespace AssemblyUnhollower.Passes
                         if (originalMethod.IsStatic)
                             bodyBuilder.Emit(OpCodes.Ldc_I4_0);
                         else
-                            bodyBuilder.EmitObjectToPointer(originalMethod.DeclaringType, newMethod.DeclaringType, typeContext, 0, true, false, true, out _);
+                            bodyBuilder.EmitMethodThisToPointer(originalMethod.DeclaringType, newMethod.DeclaringType, typeContext, 0);
 
                         bodyBuilder.Emit(OpCodes.Ldloc, argArray);
                         bodyBuilder.Emit(OpCodes.Ldloca, exceptionLocal);
@@ -116,10 +141,24 @@ namespace AssemblyUnhollower.Passes
                         {
                             var paramIndex = byRefParam.Item1;
                             var paramVariable = byRefParam.Item2;
-                            bodyBuilder.EmitUpdateRef(newMethod.Parameters[paramIndex], paramIndex + argOffset, paramVariable, imports);
+                            bodyBuilder.Emit(OpCodes.Ldarga, paramIndex + argOffset);
+                            bodyBuilder.Emit(OpCodes.Ldloca, paramVariable);
+                            bodyBuilder.Emit(OpCodes.Call, imports.Module.ImportReference(new GenericInstanceMethod(imports.MarshalMethodParameterByRefRestore) { GenericArguments = { byRefParam.Item3 } }));
                         }
 
-                        bodyBuilder.EmitPointerToObject(originalMethod.ReturnType, newMethod.ReturnType, typeContext, bodyBuilder.Create(OpCodes.Ldloc, resultVar), false, true);
+                        if (newMethod.ReturnType.FullName != "System.Void") {
+                            // todo: for non-generic return types, call the appropriate marshaller directly
+                            bodyBuilder.Emit(OpCodes.Ldloc, resultVar);
+                            bodyBuilder.Emit(OpCodes.Call,
+                                imports.Module.ImportReference(new GenericInstanceMethod(imports.MarshalMethodReturn)
+                                    {GenericArguments = {newMethod.ReturnType}}));
+                        }
+
+                        if (needScratchSpace)
+                        {
+                            newMethod.GenerateExitMethodCallFinallyBlock(imports);
+                            continue;
+                        }
 
                         bodyBuilder.Emit(OpCodes.Ret);
                     }

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
+using UnhollowerBaseLib.Attributes;
 
 namespace AssemblyUnhollower.Contexts
 {
@@ -9,6 +11,9 @@ namespace AssemblyUnhollower.Contexts
         public readonly AssemblyRewriteContext AssemblyContext;
         public readonly TypeDefinition OriginalType;
         public readonly TypeDefinition NewType;
+        public readonly int Il2CppToken;
+
+        public readonly TypeRewriteSemantic RewriteSemantic;
 
         public readonly bool OriginalNameWasObfuscated;
 
@@ -24,29 +29,63 @@ namespace AssemblyUnhollower.Contexts
         public IEnumerable<FieldRewriteContext> Fields => myFieldContexts.Values;
         public IEnumerable<MethodRewriteContext> Methods => myMethodContexts.Values;
 
-        public TypeRewriteContext(AssemblyRewriteContext assemblyContext, TypeDefinition originalType, TypeDefinition newType)
+        public TypeRewriteContext(AssemblyRewriteContext assemblyContext, TypeDefinition originalType, TypeDefinition newType, TypeRewriteSemantic semantic)
         {
             AssemblyContext = assemblyContext ?? throw new ArgumentNullException(nameof(assemblyContext));
             OriginalType = originalType;
             NewType = newType ?? throw new ArgumentNullException(nameof(newType));
+            RewriteSemantic = semantic;
 
-            if (OriginalType == null) return;
-            
-            OriginalNameWasObfuscated = OriginalType.Name != NewType.Name;
-            if (OriginalNameWasObfuscated)
-                NewType.CustomAttributes.Add(new CustomAttribute(assemblyContext.Imports.ObfuscatedNameAttributeCtor)
-                    {ConstructorArguments = {new CustomAttributeArgument(assemblyContext.Imports.String, originalType.FullName)}});
+            if (semantic != TypeRewriteSemantic.Unstripped)
+            {
+                Il2CppToken = originalType.ExtractToken();
 
+                OriginalNameWasObfuscated = OriginalType.Name != NewType.Name;
+                if (OriginalNameWasObfuscated)
+                    NewType.CustomAttributes.Add(
+                        new CustomAttribute(assemblyContext.Imports.ObfuscatedNameAttributeCtor)
+                        {
+                            ConstructorArguments = {new CustomAttributeArgument(assemblyContext.Imports.String, originalType.FullName)}
+                        });
+            }
+
+            if (semantic == TypeRewriteSemantic.Default || semantic == TypeRewriteSemantic.Interface)
+            {
+                NewType.CustomAttributes.Add(new CustomAttribute(assemblyContext.Imports.NativeTypeTokenAttributeCtor)
+                {
+                    Fields =
+                    {
+                        new CustomAttributeNamedArgument(nameof(NativeTypeTokenAttribute.AssemblyName),
+                            new CustomAttributeArgument(assemblyContext.Imports.String, originalType.Module.Assembly.Name.Name)),
+                        
+                        new CustomAttributeNamedArgument(nameof(NativeTypeTokenAttribute.Token),
+                            new CustomAttributeArgument(assemblyContext.Imports.UInt, Il2CppToken))
+                    }
+                });
+            }
             if (!OriginalType.IsValueType)
                 ComputedTypeSpecifics = TypeSpecifics.ReferenceType;
             else if (OriginalType.IsEnum)
                 ComputedTypeSpecifics = TypeSpecifics.BlittableStruct;
-            else if (OriginalType.HasGenericParameters)
-                ComputedTypeSpecifics = TypeSpecifics.NonBlittableStruct; // not reference type, covered by first if
+            else if (OriginalType.IsValueType && OriginalType.HasGenericParameters)
+                ComputedTypeSpecifics = TypeSpecifics.NonBlittableStruct;
         }
 
         public void AddMembers()
         {
+            foreach (var originalTypeMethod in OriginalType.Methods)
+            {
+                if (originalTypeMethod.Name == ".cctor") continue;
+                if (originalTypeMethod.Name == ".ctor" && originalTypeMethod.Parameters.Count == 1 &&
+                    originalTypeMethod.Parameters[0].ParameterType.FullName == "System.IntPtr") continue;
+
+                var methodRewriteContext = new MethodRewriteContext(this, originalTypeMethod);
+                myMethodContexts[originalTypeMethod] = methodRewriteContext;
+                myMethodContextsByName[originalTypeMethod.Name] = methodRewriteContext;
+            }
+            
+            if (RewriteSemantic != TypeRewriteSemantic.Default) return;
+            
             if (NewType.HasGenericParameters)
             {
                 var genericInstanceType = new GenericInstanceType(NewType);
@@ -70,23 +109,13 @@ namespace AssemblyUnhollower.Contexts
                     NewType.Module.ImportReference(genericTypeRef));
             }
 
+            // enums are filled in Pass22GenerateEnums
             if (OriginalType.IsEnum) return;
 
             var renamedFieldCounts = new Dictionary<string, int>();
             
             foreach (var originalTypeField in OriginalType.Fields)
                 myFieldContexts[originalTypeField] = new FieldRewriteContext(this, originalTypeField, renamedFieldCounts);
-
-            foreach (var originalTypeMethod in OriginalType.Methods)
-            {
-                if (originalTypeMethod.Name == ".cctor") continue;
-                if (originalTypeMethod.Name == ".ctor" && originalTypeMethod.Parameters.Count == 1 &&
-                    originalTypeMethod.Parameters[0].ParameterType.FullName == "System.IntPtr") continue;
-
-                var methodRewriteContext = new MethodRewriteContext(this, originalTypeMethod);
-                myMethodContexts[originalTypeMethod] = methodRewriteContext;
-                myMethodContextsByName[originalTypeMethod.Name] = methodRewriteContext;
-            }
         }
 
         public FieldRewriteContext GetFieldByOldField(FieldDefinition field) => myFieldContexts[field];
@@ -140,6 +169,15 @@ namespace AssemblyUnhollower.Contexts
             ReferenceType,
             BlittableStruct,
             NonBlittableStruct
+        }
+
+        public enum TypeRewriteSemantic
+        {
+            Default,
+            Interface,
+            UseSystemInterface,
+            UseSystemValueType,
+            Unstripped
         }
     }
 }

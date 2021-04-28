@@ -45,7 +45,7 @@ namespace AssemblyUnhollower.Extensions
 
             foreach (var it in str)
             {
-                if (!char.IsDigit(it) && !(it >= 'a' && it <= 'z' || it >= 'A' && it <= 'Z') && it != '_' && it != '`' && it != '.' && it != '<' && it != '>') return true;
+                if (!char.IsDigit(it) && !(it >= 'a' && it <= 'z' || it >= 'A' && it <= 'Z') && it != '_' && it != '`' && it != '.' && it != '<' && it != '>' && it != ',') return true;
             }
 
             return false;

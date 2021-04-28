@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 using Iced.Intel;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Attributes;
-using Type = Il2CppSystem.Type;
 
 namespace UnhollowerRuntimeLib.XrefScans
 {

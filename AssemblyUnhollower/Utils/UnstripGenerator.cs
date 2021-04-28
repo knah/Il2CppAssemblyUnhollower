@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using AssemblyUnhollower.Contexts;
+using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using UnhollowerBaseLib;
@@ -38,6 +40,15 @@ namespace AssemblyUnhollower.Utils
         {
             var body = newMethod.Body.GetILProcessor();
             
+            // todo: support non-blittable structs here
+            
+            var needScratchSpace =
+                newMethod.Parameters.Any(it => it.ParameterType.MayRequireScratchSpace()) ||
+                newMethod.ReturnType.MayRequireScratchSpace();
+
+            if (needScratchSpace) 
+                body.Emit(OpCodes.Call, imports.ScratchSpaceEnter);
+            
             body.Emit(OpCodes.Ldsfld, delegateField);
             if (newMethod.HasThis)
             {
@@ -46,30 +57,61 @@ namespace AssemblyUnhollower.Utils
             }
 
             var argOffset = newMethod.HasThis ? 1 : 0;
+            var byRefParams = new List<(int, VariableDefinition, TypeReference)>();
 
             for (var i = 0; i < newMethod.Parameters.Count; i++)
             {
                 var param = newMethod.Parameters[i];
                 var paramType = param.ParameterType;
-                if(paramType.IsValueType || paramType.IsByReference && paramType.GetElementType().IsValueType)
+                if (paramType.IsValueType || paramType.IsByReference && paramType.GetElementType().IsValueType)
                     body.Emit(OpCodes.Ldarg, i + argOffset);
                 else
                 {
-                    body.EmitObjectToPointer(param.ParameterType, param.ParameterType, enclosingType, i + argOffset, false, true, true, out var refVar);
-                    if (refVar != null)
-                        LogSupport.Trace($"Method {newMethod} has a reference-typed ref parameter, this will be ignored");
+                    var newParam = newMethod.Parameters[i];
+                    if (newParam.ParameterType.IsByReference)
+                    {
+                        var scratchLocal = new VariableDefinition(imports.IntPtr);
+                        newMethod.Body.Variables.Add(scratchLocal);
+                                
+                        byRefParams.Add((i, scratchLocal, newParam.ParameterType.GetElementType()));
+                                
+                        body.Emit(OpCodes.Ldarga, i + argOffset);
+                        body.Emit(OpCodes.Ldloca, scratchLocal);
+                        body.Emit(OpCodes.Call, imports.Module.ImportReference(new GenericInstanceMethod(imports.MarshalMethodParameterByRef) { GenericArguments = { newParam.ParameterType.GetElementType() } }));
+                    }
+                    else
+                    {
+                        body.Emit(OpCodes.Ldarga, i + argOffset);
+                        body.Emit(OpCodes.Call, imports.Module.ImportReference(new GenericInstanceMethod(imports.MarshalMethodParameter) { GenericArguments = { newParam.ParameterType } }));
+                    }
                 }
             }
 
             body.Emit(OpCodes.Call, delegateType.Methods.Single(it => it.Name == "Invoke"));
-            if (!newMethod.ReturnType.IsValueType)
+            // todo: handle exceptions somehow? do icalls even throw them?
+            
+            foreach (var byRefParam in byRefParams)
             {
-                var pointerVar = new VariableDefinition(imports.IntPtr);
-                newMethod.Body.Variables.Add(pointerVar);
-                body.Emit(OpCodes.Stloc, pointerVar);
-                var loadInstr = body.Create(OpCodes.Ldloc, pointerVar);
-                body.EmitPointerToObject(newMethod.ReturnType, newMethod.ReturnType, enclosingType, loadInstr, false, false);
+                var paramIndex = byRefParam.Item1;
+                var paramVariable = byRefParam.Item2;
+                body.Emit(OpCodes.Ldarga, paramIndex + argOffset);
+                body.Emit(OpCodes.Ldloca, paramVariable);
+                body.Emit(OpCodes.Call, imports.Module.ImportReference(new GenericInstanceMethod(imports.MarshalMethodParameterByRefRestore) { GenericArguments = { byRefParam.Item3 } }));
             }
+            
+            if (!newMethod.ReturnType.IsValueType && newMethod.ReturnType.FullName != "System.Void")
+            {
+                body.Emit(OpCodes.Call,
+                    imports.Module.ImportReference(new GenericInstanceMethod(imports.MarshalMethodReturn)
+                        {GenericArguments = {newMethod.ReturnType}}));
+            }
+            
+            if (needScratchSpace)
+            {
+                newMethod.GenerateExitMethodCallFinallyBlock(imports);
+                return;
+            }
+            
             body.Emit(OpCodes.Ret);
         }
 

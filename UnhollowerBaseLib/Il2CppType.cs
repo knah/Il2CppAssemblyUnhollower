@@ -27,23 +27,22 @@ namespace UnhollowerRuntimeLib
 
         public static Il2CppSystem.Type From(Type type, bool throwOnFailure)
         {
-            var pointer = ClassInjector.ReadClassPointerForType(type);
+            var pointer = Il2CppClassPointerStore.GetClassPointerForType(type);
             return TypeFromPointerInternal(pointer, type.Name, throwOnFailure);
         }
 
-        public static Il2CppSystem.Type Of<T>() => Of<T>(true);
+        public static Type FromNative(Il2CppSystem.Type type)
+        {
+            var classPointer = IL2CPP.il2cpp_class_from_type(type.TypeHandle.value);
+            return MarshallingUtils.TokensMap.LookupByClass(classPointer);
+        }
+        
+        public static Il2CppSystem.Type Of<T>()=> Of<T>(true);
 
         public static Il2CppSystem.Type Of<T>(bool throwOnFailure)
         {
             var classPointer = Il2CppClassPointerStore<T>.NativeClassPtr;
             return TypeFromPointerInternal(classPointer, typeof(T).Name, throwOnFailure);
         }
-    }
-
-    [Obsolete("Use Il2CppType.Of<T>()", false)]
-    public static class Il2CppTypeOf<T>
-    {
-        [Obsolete("Use Il2CppType.Of<T>()", true)]
-        public static Il2CppSystem.Type Type => Il2CppType.Of<T>();
     }
 }

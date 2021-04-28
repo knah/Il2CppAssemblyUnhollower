@@ -26,10 +26,7 @@ namespace AssemblyUnhollower.MetadataAccess
             {
                 var sourceAssemblyName = sourceAssembly.Name.Name;
                 foreach (var type in sourceAssembly.MainModule.Types)
-                {
-                    // todo: nested types?
                     myTypesByName[(sourceAssemblyName, type.FullName)] = type;
-                }
             }
         }
 
@@ -53,7 +50,7 @@ namespace AssemblyUnhollower.MetadataAccess
         public string? GetStringStoredAtAddress(long offsetInMemory) => null;
         public MethodReference? GetMethodRefStoredAt(long offsetInMemory) => null;
         
-        private class Resolver : DefaultAssemblyResolver
+        internal class Resolver : DefaultAssemblyResolver
         {
             public void Register(AssemblyDefinition ass) => RegisterAssembly(ass);
         }

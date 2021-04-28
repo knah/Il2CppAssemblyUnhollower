@@ -39,6 +39,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
         INativeTypeStruct ByValArg { get; }
         INativeTypeStruct ThisArg { get; }
 
+        ref byte Rank { get; }
+        
         unsafe ref Il2CppImage* Image { get; }
         unsafe ref Il2CppClass* Parent { get; }
         unsafe ref Il2CppClass* ElementClass { get; }

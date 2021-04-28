@@ -19,7 +19,7 @@ namespace AssemblyUnhollower.Passes
                 {
                     var newAssembly = new AssemblyRewriteContext(context, unityAssembly,
                         AssemblyDefinition.CreateAssembly(unityAssembly.Name, unityAssembly.MainModule.Name,
-                            ModuleKind.Dll));
+                            new ModuleParameters { Kind = ModuleKind.Dll, MetadataResolver = context.NewMetadataResolver}));
                     context.AddAssemblyContext(unityAssembly.Name.Name, newAssembly);
                     processedAssembly = newAssembly;
                 }
@@ -51,7 +51,7 @@ namespace AssemblyUnhollower.Passes
                     clonedType.DeclaringType = enclosingNewType;
                 }
 
-                processedAssembly.RegisterTypeRewrite(new TypeRewriteContext(processedAssembly, null, clonedType));
+                processedAssembly.RegisterTypeRewrite(new TypeRewriteContext(processedAssembly, unityType, clonedType, TypeRewriteContext.TypeRewriteSemantic.Unstripped));
                 
                 return;
             }
@@ -68,7 +68,7 @@ namespace AssemblyUnhollower.Passes
                     clonedType.DeclaringType = enclosingNewType;
                 }
 
-                processedAssembly.RegisterTypeRewrite(new TypeRewriteContext(processedAssembly, null, clonedType));
+                processedAssembly.RegisterTypeRewrite(new TypeRewriteContext(processedAssembly, unityType, clonedType, TypeRewriteContext.TypeRewriteSemantic.Unstripped));
             }
 
             foreach (var nestedUnityType in unityType.NestedTypes)

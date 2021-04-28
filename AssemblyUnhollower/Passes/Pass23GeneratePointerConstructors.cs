@@ -12,6 +12,7 @@ namespace AssemblyUnhollower.Passes
             {
                 foreach (var typeContext in assemblyContext.Types)
                 {
+                    if (typeContext.RewriteSemantic != TypeRewriteContext.TypeRewriteSemantic.Default) continue;
                     if (typeContext.ComputedTypeSpecifics == TypeRewriteContext.TypeSpecifics.BlittableStruct || typeContext.OriginalType.IsEnum) continue;
                     
                     var newType = typeContext.NewType;

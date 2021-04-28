@@ -24,6 +24,7 @@
 
     <ItemGroup>
         <PackageReference Include="Iced" Version="1.10.0" />
+        <PackageReference Include="System.Memory" Version="4.5.4" />
         <PackageReference Include="IsExternalInit" Version="1.0.0">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
