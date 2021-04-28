@@ -237,6 +237,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
 
             public ref Il2CppMethodInfo** Methods => ref NativeClass->methods;
 
+            public ref byte Rank => ref NativeClass->rank;
+
             public ref Il2CppClass** ImplementedInterfaces => ref NativeClass->implementedInterfaces;
 
             public ref Il2CppRuntimeInterfaceOffsetPair* InterfaceOffsets => ref NativeClass->interfaceOffsets;

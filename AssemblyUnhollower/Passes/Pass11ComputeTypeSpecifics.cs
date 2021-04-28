@@ -1,5 +1,6 @@
 using System;
 using AssemblyUnhollower.Contexts;
+using AssemblyUnhollower.Extensions;
 
 namespace AssemblyUnhollower.Passes
 {
@@ -17,6 +18,8 @@ namespace AssemblyUnhollower.Passes
         private static void ComputeSpecifics(TypeRewriteContext typeContext)
         {
             if (typeContext.ComputedTypeSpecifics != TypeRewriteContext.TypeSpecifics.NotComputed) return;
+            if (typeContext.RewriteSemantic != TypeRewriteContext.TypeRewriteSemantic.Default) return;
+            
             typeContext.ComputedTypeSpecifics = TypeRewriteContext.TypeSpecifics.Computing;
             
             foreach (var originalField in typeContext.OriginalType.Fields)

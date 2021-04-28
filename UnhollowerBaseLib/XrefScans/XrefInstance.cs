@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using UnhollowerBaseLib;
 
 namespace UnhollowerRuntimeLib.XrefScans
 {
@@ -22,15 +23,12 @@ namespace UnhollowerRuntimeLib.XrefScans
             return new XrefInstance(Type, (IntPtr) ((long) Pointer - baseAddress), (IntPtr) ((long) FoundAt - baseAddress));
         }
 
-        public Il2CppSystem.Object ReadAsObject()
+        public Il2CppObjectBase ReadAsObject()
         {
             if (Type != XrefType.Global) throw new InvalidOperationException("Can't read non-global xref as object");
 
             var valueAtPointer = Marshal.ReadIntPtr(Pointer);
-            if (valueAtPointer == IntPtr.Zero)
-                return null;
-            
-            return new Il2CppSystem.Object(valueAtPointer);
+            return MarshallingUtils.MarshalObjectFromPointer(valueAtPointer);
         }
 
         public MethodBase TryResolve()

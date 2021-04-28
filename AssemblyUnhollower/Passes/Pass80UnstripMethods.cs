@@ -147,8 +147,8 @@ namespace AssemblyUnhollower.Passes
                 if (arrayType.Rank != 1) return null;
                 var resolvedElementType = ResolveTypeInNewAssemblies(context, unityType.GetElementType(), imports);
                 if (resolvedElementType == null) return null;
-                if (resolvedElementType.FullName == "System.String")
-                    return imports.Il2CppStringArray;
+                // if (resolvedElementType.FullName == "System.String") // todo: delete
+                    // return imports.Il2CppStringArray;
                 var genericBase = resolvedElementType.IsValueType
                     ? imports.Il2CppStructArray
                     : imports.Il2CppReferenceArray;

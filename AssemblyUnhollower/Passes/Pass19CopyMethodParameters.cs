@@ -27,9 +27,7 @@ namespace AssemblyUnhollower.Passes
                                 originalMethodParameter.Attributes & ~ParameterAttributes.HasFieldMarshal,
                                 assemblyContext.RewriteTypeRef(originalMethodParameter.ParameterType));
 
-                            if (originalMethodParameter.HasConstant && (originalMethodParameter.Constant == null ||
-                                                                        originalMethodParameter.Constant is string ||
-                                                                        originalMethodParameter.Constant is bool))
+                            if (originalMethodParameter.HasConstant && originalMethodParameter.Constant is null or int or byte or sbyte or char or short or ushort or uint or long or ulong or bool)
                                 newParameter.Constant = originalMethodParameter.Constant;
                             else
                                 newParameter.Attributes &= ~ParameterAttributes.HasDefault;

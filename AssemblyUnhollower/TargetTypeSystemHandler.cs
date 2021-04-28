@@ -10,6 +10,7 @@ namespace AssemblyUnhollower
         public static TypeReference IntPtr { get; private set; }
         public static TypeDefinition String { get; private set; }
         public static TypeDefinition Int { get; private set; }
+        public static TypeDefinition UInt { get; private set; }
         public static TypeDefinition Long { get; private set; }
         public static TypeDefinition Type { get; private set; }
         public static TypeReference Object { get; private set; }
@@ -31,6 +32,7 @@ namespace AssemblyUnhollower
             IntPtr = mscorlib.MainModule.TypeSystem.IntPtr;
             String = mscorlib.MainModule.GetType("System.String");
             Int = mscorlib.MainModule.GetType("System.Int32");
+            UInt = mscorlib.MainModule.GetType("System.UInt32");
             Long = mscorlib.MainModule.GetType("System.Int64");
             Type = mscorlib.MainModule.GetType("System.Type");
             Object = mscorlib.MainModule.TypeSystem.Object;
