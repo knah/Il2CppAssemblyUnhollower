@@ -246,11 +246,11 @@ namespace UnhollowerRuntimeLib
             {
                 converted.ParametersCount = (byte) parameters.Length;
                 var paramsArray = UnityVersionHandler.NewMethodParameterArray(parameters.Length);
-                converted.Parameters = paramsArray;
+                converted.Parameters = paramsArray[0];
                 for (var i = 0; i < parameters.Length; i++)
                 {
                     var parameterInfo = parameters[i];
-                    var param = UnityVersionHandler.Wrap(&paramsArray[i]);
+                    var param = UnityVersionHandler.Wrap(paramsArray[i]);
                     param.Name = Marshal.StringToHGlobalAnsi(parameterInfo.Name);
                     param.Position = i;
                     param.Token = 0;
