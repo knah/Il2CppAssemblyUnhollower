@@ -301,12 +301,16 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific
                 return new NativeMethodInfoStructWrapper((IntPtr) methodPointer);
             }
 
-            public Il2CppParameterInfo* CreateNewParameterInfoArray(int paramCount)
+            public Il2CppParameterInfo*[] CreateNewParameterInfoArray(int paramCount)
             {
                 var ptr = (Il2CppParameterInfoU2018_1*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppParameterInfoU2018_1>() * paramCount);
-                for (int i = 0; i < paramCount; i++)
+                var res = new Il2CppParameterInfo*[paramCount];
+                for (var i = 0; i < paramCount; i++)
+                {
                     ptr[i] = default;
-                return (Il2CppParameterInfo*) ptr;
+                    res[i] = (Il2CppParameterInfo*) &ptr[i];
+                }
+                return res;
             }
 
             public INativeParameterInfoStruct Wrap(Il2CppParameterInfo* paramInfoPointer)

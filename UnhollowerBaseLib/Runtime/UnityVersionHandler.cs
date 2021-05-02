@@ -146,7 +146,7 @@ namespace UnhollowerBaseLib.Runtime
         public static INativeMethodStruct NewMethod() =>
             GetHandler<INativeMethodStructHandler>().CreateNewMethodStruct();
 
-        public static unsafe Il2CppParameterInfo* NewMethodParameterArray(int count) =>
+        public static unsafe Il2CppParameterInfo*[] NewMethodParameterArray(int count) =>
             GetHandler<INativeMethodStructHandler>().CreateNewParameterInfoArray(count);
 
         public static unsafe INativeMethodStruct Wrap(Il2CppMethodInfo* methodPointer) =>

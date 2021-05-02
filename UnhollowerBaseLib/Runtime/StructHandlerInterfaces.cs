@@ -74,7 +74,7 @@ namespace UnhollowerBaseLib.Runtime
     {
         INativeMethodStruct CreateNewMethodStruct();
         unsafe INativeMethodStruct Wrap(Il2CppMethodInfo* methodPointer);
-        unsafe Il2CppParameterInfo* CreateNewParameterInfoArray(int paramCount);
+        unsafe Il2CppParameterInfo*[] CreateNewParameterInfoArray(int paramCount);
         unsafe INativeParameterInfoStruct Wrap(Il2CppParameterInfo* paramInfoPointer);
         IntPtr GetMethodFromReflection(IntPtr method);
     }
