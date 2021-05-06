@@ -199,7 +199,7 @@ namespace AssemblyUnhollower
             using (new TimingCookie("Reading system assemblies"))
             {
                 if (!string.IsNullOrEmpty(options.SystemLibrariesPath)) 
-                    systemAssemblies = new CecilMetadataAccess(Directory.EnumerateFiles(options.MscorlibPath, "*.dll")
+                    systemAssemblies = new CecilMetadataAccess(Directory.EnumerateFiles(options.SystemLibrariesPath, "*.dll")
                         .Where(it => Path.GetFileName(it).StartsWith("System.") || Path.GetFileName(it) == "mscorlib.dll" || Path.GetFileName(it) == "netstandard.dll"));
                 else
                     systemAssemblies = new CecilMetadataAccess(new[] {options.MscorlibPath});
