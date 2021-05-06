@@ -36,10 +36,13 @@ namespace AssemblyUnhollower.Contexts
             if (OriginalNameWasObfuscated)
                 NewType.CustomAttributes.Add(new CustomAttribute(assemblyContext.Imports.ObfuscatedNameAttributeCtor)
                     {ConstructorArguments = {new CustomAttributeArgument(assemblyContext.Imports.String, originalType.FullName)}});
+
             if (!OriginalType.IsValueType)
                 ComputedTypeSpecifics = TypeSpecifics.ReferenceType;
             else if (OriginalType.IsEnum)
                 ComputedTypeSpecifics = TypeSpecifics.BlittableStruct;
+            else if (OriginalType.HasGenericParameters)
+                ComputedTypeSpecifics = TypeSpecifics.NonBlittableStruct; // not reference type, covered by first if
         }
 
         public void AddMembers()
