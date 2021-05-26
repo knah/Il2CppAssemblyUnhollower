@@ -8,15 +8,15 @@ namespace UnhollowerRuntimeLib
         public static Il2CppSystem.Type TypeFromPointer(IntPtr classPointer, string typeName = "<unknown type>") => TypeFromPointerInternal(classPointer, typeName, true);
 
         private static Il2CppSystem.Type TypeFromPointerInternal(IntPtr classPointer, string typeName, bool throwOnFailure)
-		{
+        {
             if (classPointer == IntPtr.Zero)
-			{
+            {
                 if (throwOnFailure) throw new ArgumentException($"{typeName} does not have a corresponding IL2CPP class pointer");
                 else return null;
             }
             var il2CppType = IL2CPP.il2cpp_class_get_type(classPointer);
             if (il2CppType == IntPtr.Zero)
-			{
+            {
                 if (throwOnFailure) throw new ArgumentException($"{typeName} does not have a corresponding IL2CPP type pointer");
                 else return null;
             }
