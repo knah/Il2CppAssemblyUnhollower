@@ -18,8 +18,8 @@ namespace UnhollowerBaseLib
 
         public bool WasCollected
         {
-			get
-			{
+            get
+            {
                 var handleTarget = IL2CPP.il2cpp_gchandle_get_target(myGcHandle);
                 if (handleTarget == IntPtr.Zero) return true;
                 return false;
