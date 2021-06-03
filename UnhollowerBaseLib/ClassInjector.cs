@@ -10,6 +10,8 @@ using System.Threading;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Attributes;
 using UnhollowerBaseLib.Runtime;
+using UnhollowerBaseLib.Runtime.VersionSpecific.Class;
+using UnhollowerBaseLib.Runtime.VersionSpecific.Image;
 using UnhollowerRuntimeLib.XrefScans;
 using Void = Il2CppSystem.Void;
 
@@ -33,7 +35,8 @@ namespace UnhollowerRuntimeLib
             FakeImage.Assembly = FakeAssembly;
             FakeImage.Dynamic = 1;
             FakeImage.Name = FakeAssembly->aname.name;
-            FakeImage.NameNoExt = FakeImage.Name;
+            if (FakeImage.HasNameNoExt)
+                FakeImage.NameNoExt = FakeImage.Name;
         }
 
         public static void ProcessNewObject(Il2CppObjectBase obj)
