@@ -22,7 +22,8 @@ namespace UnhollowerRuntimeLib
         private static readonly Il2CppAssembly* FakeAssembly;
         private static readonly INativeImageStruct FakeImage;
 
-        private static readonly HashSet<string> InjectedTypes = new HashSet<string>(); 
+        private static readonly HashSet<string> InjectedTypes = new HashSet<string>();
+        private static readonly Dictionary<string, Dictionary<string, IntPtr>> ClassFromNameDictionary = new Dictionary<string, Dictionary<string, IntPtr>>();
 
         static ClassInjector()
         {
@@ -98,9 +99,9 @@ namespace UnhollowerRuntimeLib
             lock (InjectedTypes)
                 if (!InjectedTypes.Add(typeof(T).FullName))
                     throw new ArgumentException($"Type with FullName {typeof(T).FullName} is already injected. Don't inject the same type twice, or use a different namespace");
-            
-            if (ourOriginalTypeToClassMethod == null)
-                HookClassFromType();
+
+            if (ourOriginalTypeToClassMethod == null) HookClassFromType();
+            if (originalClassFromNameMethod == null) HookClassFromName();
 
             var classPointer = UnityVersionHandler.NewClass(baseClassPointer.VtableCount);
 
@@ -161,7 +162,21 @@ namespace UnhollowerRuntimeLib
             RuntimeSpecificsStore.SetClassInfo(classPointer.Pointer, true, true);
             Il2CppClassPointerStore<T>.NativeClassPtr = classPointer.Pointer;
 
+            AddToClassFromNameDictionary<T>(classPointer.Pointer);
+
             if (logSuccess) LogSupport.Info($"Registered mono type {typeof(T)} in il2cpp domain");
+        }
+
+        private static void AddToClassFromNameDictionary<T>(IntPtr intPtr)
+        {
+            string klass = typeof(T).Name;
+            if (klass == null) return;
+            string namespaze = typeof(T).Namespace ?? string.Empty;
+
+            if (!ClassFromNameDictionary.ContainsKey(namespaze)) ClassFromNameDictionary.Add(namespaze, new Dictionary<string, IntPtr>());
+
+            if (!ClassFromNameDictionary[namespaze].ContainsKey(klass)) ClassFromNameDictionary[namespaze].Add(klass, intPtr);
+            else throw new ArgumentException($"Class {klass} of namespace {namespaze} is already registered in the injected types dictionary.");
         }
 
         internal static IntPtr ReadClassPointerForType(Type type)
@@ -497,6 +512,48 @@ namespace UnhollowerRuntimeLib
             while (ourOriginalTypeToClassMethod == null) Thread.Sleep(1);
             return ourOriginalTypeToClassMethod(type);
         }
+
+        #region Class From Name Patch
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr ClassFromNameDelegate(IntPtr intPtr, string str1, string str2);
+
+        private static ClassFromNameDelegate originalClassFromNameMethod;
+        private static readonly ClassFromNameDelegate hookedClassFromName = new ClassFromNameDelegate(ClassFromNamePatch);
+
+        private static void HookClassFromName()
+        {
+            var lib = LoadLibrary("GameAssembly.dll");
+            var classFromNameEntryPoint = GetProcAddress(lib, nameof(IL2CPP.il2cpp_class_from_name));
+            LogSupport.Trace($"il2cpp_class_from_il2cpp_type entry address: {classFromNameEntryPoint}");
+
+            if (classFromNameEntryPoint == IntPtr.Zero) return;
+
+            originalClassFromNameMethod = Detour.Detour(classFromNameEntryPoint, hookedClassFromName);
+            LogSupport.Trace("il2cpp_class_from_name patched");
+        }
+
+        private static IntPtr ClassFromNamePatch(IntPtr param1, string param2, string param3)
+        {
+            try
+            {
+                if (ClassFromNameDictionary.ContainsKey(param2) && ClassFromNameDictionary[param2].ContainsKey(param3))
+                {
+                    return ClassFromNameDictionary[param2][param3];
+                }
+                else
+                {
+                    // possible race: other threads can try resolving classes after the hook is installed but before delegate field is set
+                    while (originalClassFromNameMethod == null) Thread.Sleep(1);
+                    return originalClassFromNameMethod.Invoke(param1, param2, param3);
+                }
+            }
+            catch (Exception e)
+            {
+                LogSupport.Error(e.Message);
+                return IntPtr.Zero;
+            }
+        }
+        #endregion
 
         [DllImport("kernel32", CharSet=CharSet.Ansi, ExactSpelling=true, SetLastError=true)]
         static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
