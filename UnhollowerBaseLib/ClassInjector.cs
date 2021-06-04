@@ -515,7 +515,7 @@ namespace UnhollowerRuntimeLib
 
         #region Class From Name Patch
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate IntPtr ClassFromNameDelegate(IntPtr intPtr, string str1, string str2);
+        private delegate IntPtr ClassFromNameDelegate(IntPtr intPtr, IntPtr str1, IntPtr str2);
 
         private static ClassFromNameDelegate originalClassFromNameMethod;
         private static readonly ClassFromNameDelegate hookedClassFromName = new ClassFromNameDelegate(ClassFromNamePatch);
@@ -532,20 +532,25 @@ namespace UnhollowerRuntimeLib
             LogSupport.Trace("il2cpp_class_from_name patched");
         }
 
-        private static IntPtr ClassFromNamePatch(IntPtr param1, string param2, string param3)
+        private static IntPtr ClassFromNamePatch(IntPtr param1, IntPtr param2, IntPtr param3)
         {
             try
             {
-                if (ClassFromNameDictionary.ContainsKey(param2) && ClassFromNameDictionary[param2].ContainsKey(param3))
+                // possible race: other threads can try resolving classes after the hook is installed but before delegate field is set
+                while (originalClassFromNameMethod == null) Thread.Sleep(1);
+                IntPtr intPtr = originalClassFromNameMethod.Invoke(param1, param2, param3);
+                
+                if (intPtr == IntPtr.Zero)
                 {
-                    return ClassFromNameDictionary[param2][param3];
+                    string namespaze = Marshal.PtrToStringAnsi(param2);
+                    string klass = Marshal.PtrToStringAnsi(param3);
+                    if(ClassFromNameDictionary.ContainsKey(namespaze) && ClassFromNameDictionary[namespaze].ContainsKey(klass))
+                    {
+                        return ClassFromNameDictionary[namespaze][klass];
+                    }
                 }
-                else
-                {
-                    // possible race: other threads can try resolving classes after the hook is installed but before delegate field is set
-                    while (originalClassFromNameMethod == null) Thread.Sleep(1);
-                    return originalClassFromNameMethod.Invoke(param1, param2, param3);
-                }
+
+                return intPtr;
             }
             catch (Exception e)
             {
