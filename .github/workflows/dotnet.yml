@@ -1,0 +1,63 @@
+name: .NET
+
+on:
+  push:
+    branches: [ master ]
+  create:
+    tags:
+     - '*'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+      
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore
+
+    - name: Extract Release Version
+      id: get_version
+      shell: bash
+      run: |
+        if [ "${GITHUB_REF#refs/tags/v}" != "$GITHUB_REF" ]; then
+        echo ::set-output name=version::${GITHUB_REF#refs/tags/v}
+        else
+        echo ::set-output name=version::${GITHUB_SHA}
+        fi
+      
+    - name: Zip release files
+      uses: thedoctor0/zip-release@master
+      with:
+        directory: AssemblyUnhollower/bin/Debug/net4.7.2/
+        filename: Il2CppAssemblyUnhollower.${{ steps.get_version.outputs.version }}.zip
+        exclusions: '*.pdb'
+        
+    - name: Move release zip to root
+      shell: bash
+      run: mv AssemblyUnhollower/bin/Debug/net4.7.2/Il2CppAssemblyUnhollower.${{ steps.get_version.outputs.version }}.zip .
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        path: Il2CppAssemblyUnhollower.${{ steps.get_version.outputs.version }}.zip
+      
+    - name: Publish a release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        body_path: ReleaseChangelog.md
+        files: |
+          Il2CppAssemblyUnhollower.${{ steps.get_version.outputs.version }}.zip
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
