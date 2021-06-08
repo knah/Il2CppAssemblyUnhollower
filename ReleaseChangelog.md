@@ -9,4 +9,5 @@ Changes:
  * Added `Il2CppObjectBase.WasCollected` (contributed by @ds5678 in #37)
  * Added basic support for loading custom components (of injected types) from assetbundles (contributed by @ds5678 in #38)
  * Added an overload of `Il2CppType.Of` method that doesn't throw exceptions for non-found types (contributed by @ds5678 in #36)
+ * Field writes now use `il2cpp_gc_wbarrier_set_field` if it exists in GameAssembly
  

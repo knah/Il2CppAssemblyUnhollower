@@ -69,6 +69,7 @@ namespace AssemblyUnhollower
         public MethodReference Il2CppObjectCast => myIl2CppObjectCast.Value;
         public MethodReference Il2CppObjectTryCast => myIl2CppObjectTryCast.Value;
         public MethodReference Il2CppResolveICall => myIl2CppResolveICall.Value;
+        public MethodReference WriteFieldWBarrier => myWriteFieldWBarrier.Value;
 
         private readonly Lazy<MethodReference> myIl2CppObjectToPointer;
         private readonly Lazy<MethodReference> myIl2CppObjectToPointerNotNull;
@@ -77,6 +78,7 @@ namespace AssemblyUnhollower
         private readonly Lazy<MethodReference> myIl2CppObjectCast;
         private readonly Lazy<MethodReference> myIl2CppObjectTryCast;
         private readonly Lazy<MethodReference> myIl2CppResolveICall;
+        private readonly Lazy<MethodReference> myWriteFieldWBarrier;
         
         private readonly Lazy<MethodReference> myFieldGetOffset;
         private readonly Lazy<MethodReference> myFieldStaticGet;
@@ -184,6 +186,10 @@ namespace AssemblyUnhollower
             myIl2CppObjectCast = new Lazy<MethodReference>(() => Module.ImportReference(typeof(Il2CppObjectBase).GetMethod("Cast")));
             myIl2CppObjectTryCast = new Lazy<MethodReference>(() => Module.ImportReference(typeof(Il2CppObjectBase).GetMethod("TryCast")));
             myIl2CppResolveICall = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.ResolveICall))));
+            myWriteFieldWBarrier = new Lazy<MethodReference>(() =>
+                Module.ImportReference(myContext.HasGcWbarrierFieldWrite
+                    ? typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_gc_wbarrier_set_field))
+                    : typeof(IL2CPP).GetMethod(nameof(IL2CPP.FieldWriteWbarrierStub))));
             
             myFieldGetOffset = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("il2cpp_field_get_offset")));
             myFieldStaticGet = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("il2cpp_field_static_get_value")));

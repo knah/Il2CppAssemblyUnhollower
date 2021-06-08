@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -337,6 +338,14 @@ namespace UnhollowerBaseLib
             return TypeHasIl2CppArrayBase(type.BaseType);
         }
 
+        // this is called if there's no actual il2cpp_gc_wbarrier_set_field()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void FieldWriteWbarrierStub(IntPtr obj, IntPtr targetAddress, IntPtr value)
+        {
+            // ignore obj
+            *(IntPtr*)targetAddress = value;
+        }
+
         // IL2CPP Functions
         [DllImport("GameAssembly", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern void il2cpp_init(IntPtr domain_name);
@@ -533,7 +542,7 @@ namespace UnhollowerBaseLib
         [DllImport("GameAssembly", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern long il2cpp_gc_get_heap_size();
         [DllImport("GameAssembly", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern void il2cpp_gc_wbarrier_set_field(IntPtr obj, out IntPtr targetAddress, IntPtr gcObj);
+        public static extern void il2cpp_gc_wbarrier_set_field(IntPtr obj, IntPtr targetAddress, IntPtr gcObj);
         [DllImport("GameAssembly", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern uint il2cpp_gchandle_new(IntPtr obj, bool pinned);
         [DllImport("GameAssembly", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]

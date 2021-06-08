@@ -24,6 +24,8 @@ namespace AssemblyUnhollower.Contexts
 
         public IEnumerable<AssemblyRewriteContext> Assemblies => myAssemblies.Values;
         
+        internal bool HasGcWbarrierFieldWrite { get; set; }
+        
         public RewriteGlobalContext(UnhollowerOptions options, IIl2CppMetadataAccess gameAssemblies, IMetadataAccess systemAssemblies, IMetadataAccess unityAssemblies)
         {
             Options = options;

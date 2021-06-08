@@ -34,7 +34,7 @@ namespace AssemblyUnhollower
 
         public static void EmitObjectStore(this ILProcessor body, TypeReference originalType, TypeReference newType, TypeRewriteContext enclosingType, int argumentIndex)
         {
-            // input stack: target address
+            // input stack: object address, target address
             // output: nothing
             if (originalType is GenericParameter)
             {
@@ -48,7 +48,7 @@ namespace AssemblyUnhollower
             {
                 body.Emit(OpCodes.Ldarg, argumentIndex);
                 body.Emit(OpCodes.Call, imports.StringToNative);
-                body.Emit(OpCodes.Stobj, imports.IntPtr);
+                body.Emit(OpCodes.Call, imports.WriteFieldWBarrier);
             } else if (originalType.IsValueType)
             {
                 var typeSpecifics =  enclosingType.AssemblyContext.GlobalContext.JudgeSpecificsByOriginalType(originalType);
@@ -56,6 +56,7 @@ namespace AssemblyUnhollower
                 {
                     body.Emit(OpCodes.Ldarg, argumentIndex);
                     body.Emit(OpCodes.Stobj, newType);
+                    body.Emit(OpCodes.Pop);
                 }
                 else
                 {
@@ -68,17 +69,18 @@ namespace AssemblyUnhollower
                     body.Emit(OpCodes.Ldc_I4_0);
                     body.Emit(OpCodes.Call, imports.ValueSizeGet);
                     body.Emit(OpCodes.Cpblk);
+                    body.Emit(OpCodes.Pop);
                 }
             } else {
                 body.Emit(OpCodes.Ldarg, argumentIndex);
                 body.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointer);
-                body.Emit(OpCodes.Stobj, imports.IntPtr);
+                body.Emit(OpCodes.Call, imports.WriteFieldWBarrier);
             }
         }
 
         private static void EmitObjectStoreGeneric(ILProcessor body, TypeReference originalType, TypeReference newType, TypeRewriteContext enclosingType, int argumentIndex)
         {
-            // input stack: target address
+            // input stack: object address, target address
             // output: nothing
             
             var imports = enclosingType.AssemblyContext.Imports;
@@ -123,10 +125,11 @@ namespace AssemblyUnhollower
             body.Emit(OpCodes.Conv_U);
             body.Emit(OpCodes.Call, imports.ValueSizeGet);
             body.Emit(OpCodes.Cpblk);
+            body.Emit(OpCodes.Pop);
             body.Emit(OpCodes.Br_S, finalNop);
 
             body.Append(storePointerNop);
-            body.Emit(OpCodes.Stind_I);
+            body.Emit(OpCodes.Call, imports.WriteFieldWBarrier);
             body.Emit(OpCodes.Br_S, finalNop);
             
             body.Append(stringNop);
@@ -134,13 +137,14 @@ namespace AssemblyUnhollower
             body.Emit(OpCodes.Box, newType);
             body.Emit(OpCodes.Isinst, imports.String);
             body.Emit(OpCodes.Call, imports.StringToNative);
-            body.Emit(OpCodes.Stind_I);
+            body.Emit(OpCodes.Call, imports.WriteFieldWBarrier);
             body.Emit(OpCodes.Br_S, finalNop);
             
             body.Append(valueTypeNop);
             body.Emit(OpCodes.Pop); // pop extra typeof(T)
             body.Emit(OpCodes.Ldarg, argumentIndex);
             body.Emit(OpCodes.Stobj, newType);
+            body.Emit(OpCodes.Pop);
             
             body.Append(finalNop);
         }

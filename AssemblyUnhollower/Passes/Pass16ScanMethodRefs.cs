@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
+using System.Text;
 using AssemblyUnhollower.Contexts;
 using AssemblyUnhollower.Extensions;
+using UnhollowerBaseLib;
 using UnhollowerRuntimeLib.XrefScans;
 
 namespace AssemblyUnhollower.Passes
@@ -22,11 +24,7 @@ namespace AssemblyUnhollower.Passes
                 Pass15GenerateMemberContexts.HasObfuscatedMethods = false;
                 return;
             }
-            if (!Pass15GenerateMemberContexts.HasObfuscatedMethods) return;
-
-            var methodToCallersMap = new ConcurrentDictionary<long, List<XrefInstance>>();
-            var methodToCalleesMap = new ConcurrentDictionary<long, List<long>>();
-
+            
             using var mappedFile = MemoryMappedFile.CreateFromFile(options.GameAssemblyPath, FileMode.Open, null, 0, MemoryMappedFileAccess.Read);
             using var accessor = mappedFile.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
 
@@ -38,6 +36,13 @@ namespace AssemblyUnhollower.Passes
                 accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref fileStartPtr);
                 gameAssemblyPtr = (IntPtr) fileStartPtr;
             }
+            
+            context.HasGcWbarrierFieldWrite = FindByteSequence(gameAssemblyPtr, accessor.Capacity, nameof(IL2CPP.il2cpp_gc_wbarrier_set_field));
+            
+            if (!Pass15GenerateMemberContexts.HasObfuscatedMethods) return;
+
+            var methodToCallersMap = new ConcurrentDictionary<long, List<XrefInstance>>();
+            var methodToCalleesMap = new ConcurrentDictionary<long, List<long>>();
             
             context.MethodStartAddresses.Sort();
 
@@ -95,6 +100,26 @@ namespace AssemblyUnhollower.Passes
                 if (!originalMethod.Name.IsObfuscated(options) || originalMethod.IsVirtual)
                     MarkMethodAlive(methodRewriteContext.Rva);
             }
+        }
+
+        private unsafe static bool FindByteSequence(IntPtr basePtr, long length, string str)
+        {
+            byte* bytes = (byte*)basePtr;
+            var sequence = Encoding.UTF8.GetBytes(str);
+            for (var i = 0L; i < length; i++)
+            {
+                for (var j = 0; j < sequence.Length; j++)
+                {
+                    if (bytes[i + j] != sequence[j])
+                        goto next;
+                }
+
+                return true;
+                
+                next: ;
+            }
+
+            return false;
         }
     }
 }

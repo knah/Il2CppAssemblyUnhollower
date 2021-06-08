@@ -88,6 +88,7 @@ namespace AssemblyUnhollower
             else
             {
                 setterBody.EmitObjectToPointer(fieldContext.DeclaringType.OriginalType, fieldContext.DeclaringType.NewType, fieldContext.DeclaringType, 0, false, false, false, out _);
+                setterBody.Emit(OpCodes.Dup);
                 setterBody.Emit(OpCodes.Ldsfld, fieldContext.PointerField);
                 setterBody.Emit(OpCodes.Call, imports.FieldGetOffset);
                 setterBody.Emit(OpCodes.Add);
