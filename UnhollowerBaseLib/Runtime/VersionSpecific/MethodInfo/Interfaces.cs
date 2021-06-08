@@ -7,6 +7,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
         INativeMethodStruct CreateNewMethodStruct();
         unsafe INativeMethodStruct Wrap(Il2CppMethodInfo* methodPointer);
         IntPtr GetMethodFromReflection(IntPtr method);
+        Type StructType { get; }
     }
 
 

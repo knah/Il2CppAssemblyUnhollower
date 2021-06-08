@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Class;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Image;
 using UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo;
@@ -74,6 +75,22 @@ namespace UnhollowerBaseLib.Runtime
             LogSupport.Error($"No direct for {typeof(T).FullName} found for Unity {UnityVersion}; this likely indicates a severe error somewhere");
 
             throw new ApplicationException("No handler");
+        }
+
+        private static Type GetMethodInfoStructType()
+		{
+            return GetHandler<INativeMethodStructHandler>().StructType;
+		}
+
+        public static IntPtr CopyMethodInfoStruct(IntPtr origMethodInfo)
+        {
+            int sizeOfMethodInfo = Marshal.SizeOf(GetMethodInfoStructType());
+            IntPtr copiedMethodInfo = Marshal.AllocHGlobal(sizeOfMethodInfo);
+
+            object temp = Marshal.PtrToStructure(origMethodInfo, GetMethodInfoStructType());
+            Marshal.StructureToPtr(temp, copiedMethodInfo, false);
+
+            return copiedMethodInfo;
         }
 
         private static Type[] GetAllTypesSafe()
