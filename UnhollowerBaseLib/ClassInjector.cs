@@ -167,7 +167,7 @@ namespace UnhollowerRuntimeLib
             if (logSuccess) LogSupport.Info($"Registered mono type {typeof(T)} in il2cpp domain");
         }
 
-        private static void AddToClassFromNameDictionary<T>(IntPtr intPtr)
+        private static void AddToClassFromNameDictionary<T>(IntPtr intPtr) where T : class
         {
             string klass = typeof(T).Name;
             if (klass == null) return;
