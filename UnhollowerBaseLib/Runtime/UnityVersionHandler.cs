@@ -78,9 +78,9 @@ namespace UnhollowerBaseLib.Runtime
         }
 
         private static Type GetMethodInfoStructType()
-		{
+        {
             return GetHandler<INativeMethodStructHandler>().StructType;
-		}
+        }
 
         public static IntPtr CopyMethodInfoStruct(IntPtr origMethodInfo)
         {
