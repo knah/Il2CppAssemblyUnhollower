@@ -95,10 +95,20 @@ Limitations:
  * Only instance methods are exposed to IL2CPP side - no fields, properties, events or static methods will be visible to IL2CPP reflection
  * Only a limited set of types is supported for method signatures
  
+ ## Injected components in asset bundles
+ Starting with version 0.4.15.0, injected components can be used in asset bundles. Currently, deserialization for component fields is not supported. Any fields on the component will initially have their default value as defined in the mono assembly.
+
+ How-to:
+ * Your class must meet the above critereon mentioned in Class Injection.
+ * Add a dummy script for your component into Unity. Remove any methods, constructors, and properties. Fields can optionally be left in for future deserialization support.
+ * Apply the component to your intended objects in Unity and build the asset bundle.
+ * At runtime, register your component with `RegisterTypeInIl2Cpp` before loading any objects from the asset bundle.
+
 ## Upcoming features (aka TODO list)
  * Unstripping engine code - fix current issues with unstripping failing or generating invalid bytecode
  * Proper interface support - IL2CPP interfaces will be generated as interfaces and properly implemented by IL2CPP types
  * Improve class injection to support virtual methods and interfaces
+ * Improve class injection to support deserializing fields
 
 ## Used libraries
 Bundled into output files:
