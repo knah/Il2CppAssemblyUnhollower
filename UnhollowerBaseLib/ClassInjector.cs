@@ -67,15 +67,15 @@ namespace UnhollowerRuntimeLib
             *(IntPtr*) targetGcHandlePointer = handleAsPointer;
         }
 
-        public static void RegisterTypeInIl2Cpp<T>() where T : class => RegisterTypeInIl2Cpp<T>(true);
-        public static void RegisterTypeInIl2Cpp<T>(bool logSuccess) where T : class
+        public static void RegisterTypeInIl2Cpp<T>() where T : class => RegisterTypeInIl2Cpp(typeof(T), true);
+        public static void RegisterTypeInIl2Cpp<T>(bool logSuccess) where T : class => RegisterTypeInIl2Cpp(typeof(T), logSuccess);
+        public static void RegisterTypeInIl2Cpp(Type type) => RegisterTypeInIl2Cpp(type, true);
+        public static void RegisterTypeInIl2Cpp(Type type, bool logSuccess)
         {
-            var type = typeof(T);
-            
             if(type.IsGenericType || type.IsGenericTypeDefinition)
                 throw new ArgumentException($"Type {type} is generic and can't be used in il2cpp");
             
-            var currentPointer = Il2CppClassPointerStore<T>.NativeClassPtr;
+            var currentPointer = ReadClassPointerForType(type);
             if (currentPointer != IntPtr.Zero)
                 throw new ArgumentException($"Type {type} is already registered in il2cpp");
 
@@ -97,8 +97,8 @@ namespace UnhollowerRuntimeLib
                 throw new ArgumentException($"Base class {baseType} is an interface and can't be inherited from");
             
             lock (InjectedTypes)
-                if (!InjectedTypes.Add(typeof(T).FullName))
-                    throw new ArgumentException($"Type with FullName {typeof(T).FullName} is already injected. Don't inject the same type twice, or use a different namespace");
+                if (!InjectedTypes.Add(type.FullName))
+                    throw new ArgumentException($"Type with FullName {type.FullName} is already injected. Don't inject the same type twice, or use a different namespace");
 
             if (ourOriginalTypeToClassMethod == null) HookClassFromType();
             if (originalClassFromNameMethod == null) HookClassFromName();
@@ -160,18 +160,19 @@ namespace UnhollowerRuntimeLib
             classPointer.ByValArg.data = classPointer.ThisArg.data = (IntPtr) newCounter;
 
             RuntimeSpecificsStore.SetClassInfo(classPointer.Pointer, true, true);
-            Il2CppClassPointerStore<T>.NativeClassPtr = classPointer.Pointer;
+            WriteClassPointerForType(type,classPointer.Pointer);
 
-            AddToClassFromNameDictionary<T>(classPointer.Pointer);
+            AddToClassFromNameDictionary(type,classPointer.Pointer);
 
-            if (logSuccess) LogSupport.Info($"Registered mono type {typeof(T)} in il2cpp domain");
+            if (logSuccess) LogSupport.Info($"Registered mono type {type} in il2cpp domain");
         }
 
-        private static void AddToClassFromNameDictionary<T>(IntPtr intPtr) where T : class
+        private static void AddToClassFromNameDictionary<T>(IntPtr intPtr) where T : class => AddToClassFromNameDictionary(typeof(T), intPtr);
+        private static void AddToClassFromNameDictionary(Type type, IntPtr intPtr)
         {
-            string klass = typeof(T).Name;
+            string klass = type.Name;
             if (klass == null) return;
-            string namespaze = typeof(T).Namespace ?? string.Empty;
+            string namespaze = type.Namespace ?? string.Empty;
 
             if (!ClassFromNameDictionary.ContainsKey(namespaze)) ClassFromNameDictionary.Add(namespaze, new Dictionary<string, IntPtr>());
 
@@ -524,7 +525,7 @@ namespace UnhollowerRuntimeLib
         {
             var lib = LoadLibrary("GameAssembly.dll");
             var classFromNameEntryPoint = GetProcAddress(lib, nameof(IL2CPP.il2cpp_class_from_name));
-            LogSupport.Trace($"il2cpp_class_from_il2cpp_type entry address: {classFromNameEntryPoint}");
+            LogSupport.Trace($"il2cpp_class_from_name entry address: {classFromNameEntryPoint}");
 
             if (classFromNameEntryPoint == IntPtr.Zero) return;
 
