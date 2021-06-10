@@ -22,8 +22,10 @@ namespace UnhollowerRuntimeLib
         private static readonly Il2CppAssembly* FakeAssembly;
         private static readonly INativeImageStruct FakeImage;
 
+        /// <summary> type.FullName </summary>
         private static readonly HashSet<string> InjectedTypes = new HashSet<string>();
-        private static readonly Dictionary<string, Dictionary<string, IntPtr>> ClassFromNameDictionary = new Dictionary<string, Dictionary<string, IntPtr>>();
+        /// <summary> namespace, class, image, pointer </summary>
+        private static readonly MultiDictionary<string, string, IntPtr, IntPtr> ClassFromNameDictionary = new MultiDictionary<string, string, IntPtr, IntPtr>();
 
         static ClassInjector()
         {
@@ -167,17 +169,28 @@ namespace UnhollowerRuntimeLib
             if (logSuccess) LogSupport.Info($"Registered mono type {type} in il2cpp domain");
         }
 
-        private static void AddToClassFromNameDictionary<T>(IntPtr intPtr) where T : class => AddToClassFromNameDictionary(typeof(T), intPtr);
-        private static void AddToClassFromNameDictionary(Type type, IntPtr intPtr)
+        private static void AddToClassFromNameDictionary<T>(IntPtr typePointer) where T : class => AddToClassFromNameDictionary(typeof(T), typePointer);
+        private static void AddToClassFromNameDictionary(Type type, IntPtr typePointer)
         {
             string klass = type.Name;
             if (klass == null) return;
             string namespaze = type.Namespace ?? string.Empty;
+            ClassInjectionAssemblyTargetAttribute attribute = Attribute.GetCustomAttribute(type, typeof(ClassInjectionAssemblyTargetAttribute)) as ClassInjectionAssemblyTargetAttribute;
 
-            if (!ClassFromNameDictionary.ContainsKey(namespaze)) ClassFromNameDictionary.Add(namespaze, new Dictionary<string, IntPtr>());
-
-            if (!ClassFromNameDictionary[namespaze].ContainsKey(klass)) ClassFromNameDictionary[namespaze].Add(klass, intPtr);
-            else throw new ArgumentException($"Class {klass} of namespace {namespaze} is already registered in the injected types dictionary.");
+            if(attribute is null)
+            {
+                foreach (IntPtr image in IL2CPP.GetIl2CppImages())
+                {
+                    ClassFromNameDictionary.Add(namespaze, klass, image, typePointer, $"Class {klass} of namespace {namespaze} is already registered in the injected types dictionary.");
+                }
+            }
+            else
+            {
+                foreach (IntPtr image in attribute.GetImagePointers())
+                {
+                    ClassFromNameDictionary.Add(namespaze, klass, image, typePointer, $"Class {klass} of namespace {namespaze} is already registered in the injected types dictionary.");
+                }
+            }
         }
 
         internal static IntPtr ReadClassPointerForType(Type type)
@@ -545,10 +558,7 @@ namespace UnhollowerRuntimeLib
                 {
                     string namespaze = Marshal.PtrToStringAnsi(param2);
                     string klass = Marshal.PtrToStringAnsi(param3);
-                    if(ClassFromNameDictionary.ContainsKey(namespaze) && ClassFromNameDictionary[namespaze].ContainsKey(klass))
-                    {
-                        return ClassFromNameDictionary[namespaze][klass];
-                    }
+                    intPtr = ClassFromNameDictionary.Get(namespaze, klass, param1, false);
                 }
 
                 return intPtr;

@@ -35,6 +35,17 @@ namespace UnhollowerBaseLib
             }
         }
 
+        internal static IntPtr GetIl2CppImage(string name)
+        {
+            if (ourImagesMap.ContainsKey(name)) return ourImagesMap[name];
+            else return IntPtr.Zero;
+        }
+
+        internal static IntPtr[] GetIl2CppImages()
+        {
+            return ourImagesMap.Values.ToArray<IntPtr>();
+        }
+
         public static IntPtr GetIl2CppClass(string assemblyName, string namespaze, string className)
         {
             if (!ourImagesMap.TryGetValue(assemblyName, out var image))
