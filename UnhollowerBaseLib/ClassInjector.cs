@@ -177,19 +177,9 @@ namespace UnhollowerRuntimeLib
             string namespaze = type.Namespace ?? string.Empty;
             ClassInjectionAssemblyTargetAttribute attribute = Attribute.GetCustomAttribute(type, typeof(ClassInjectionAssemblyTargetAttribute)) as ClassInjectionAssemblyTargetAttribute;
 
-            if(attribute is null)
+            foreach (IntPtr image in ((attribute is null) ? IL2CPP.GetIl2CppImages() : attribute.GetImagePointers()) )
             {
-                foreach (IntPtr image in IL2CPP.GetIl2CppImages())
-                {
-                    ClassFromNameDictionary.Add((namespaze, klass, image), typePointer);
-                }
-            }
-            else
-            {
-                foreach (IntPtr image in attribute.GetImagePointers())
-                {
-                    ClassFromNameDictionary.Add((namespaze, klass, image), typePointer);
-                }
+                ClassFromNameDictionary.Add((namespaze, klass, image), typePointer);
             }
         }
 
