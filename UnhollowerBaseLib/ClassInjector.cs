@@ -25,7 +25,7 @@ namespace UnhollowerRuntimeLib
         /// <summary> type.FullName </summary>
         private static readonly HashSet<string> InjectedTypes = new HashSet<string>();
         /// <summary> namespace, class, image, pointer </summary>
-        private static readonly MultiDictionary<string, string, IntPtr, IntPtr> ClassFromNameDictionary = new MultiDictionary<string, string, IntPtr, IntPtr>();
+        private static readonly Dictionary<(string, string, IntPtr), IntPtr> ClassFromNameDictionary = new Dictionary<(string, string, IntPtr), IntPtr>();
 
         static ClassInjector()
         {
@@ -181,14 +181,14 @@ namespace UnhollowerRuntimeLib
             {
                 foreach (IntPtr image in IL2CPP.GetIl2CppImages())
                 {
-                    ClassFromNameDictionary.Add(namespaze, klass, image, typePointer, $"Class {klass} of namespace {namespaze} is already registered in the injected types dictionary.");
+                    ClassFromNameDictionary.Add((namespaze, klass, image), typePointer);
                 }
             }
             else
             {
                 foreach (IntPtr image in attribute.GetImagePointers())
                 {
-                    ClassFromNameDictionary.Add(namespaze, klass, image, typePointer, $"Class {klass} of namespace {namespaze} is already registered in the injected types dictionary.");
+                    ClassFromNameDictionary.Add((namespaze, klass, image), typePointer);
                 }
             }
         }
@@ -558,7 +558,7 @@ namespace UnhollowerRuntimeLib
                 {
                     string namespaze = Marshal.PtrToStringAnsi(param2);
                     string klass = Marshal.PtrToStringAnsi(param3);
-                    intPtr = ClassFromNameDictionary.Get(namespaze, klass, param1, false);
+                    ClassFromNameDictionary.TryGetValue((namespaze, klass, param1),out intPtr);
                 }
 
                 return intPtr;
