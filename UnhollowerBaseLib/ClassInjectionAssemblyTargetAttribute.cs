@@ -9,15 +9,15 @@ namespace UnhollowerRuntimeLib
     {
         string[] assemblies;
 
-        public ClassInjectionAssemblyTargetAttribute(string[] assemblies)
-        {
-            if (assemblies is null) this.assemblies = new string[0];
-            else this.assemblies = assemblies;
-        }
         public ClassInjectionAssemblyTargetAttribute(string assembly)
         {
             if (string.IsNullOrWhiteSpace(assembly)) assemblies = new string[0];
             else assemblies = new string[] { assembly };
+        }
+        public ClassInjectionAssemblyTargetAttribute(string[] assemblies)
+        {
+            if (assemblies is null) this.assemblies = new string[0];
+            else this.assemblies = assemblies;
         }
         internal IntPtr[] GetImagePointers()
         {
