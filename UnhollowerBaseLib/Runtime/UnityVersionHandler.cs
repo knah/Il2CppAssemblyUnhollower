@@ -72,7 +72,7 @@ namespace UnhollowerBaseLib.Runtime
         private static T GetHandler<T>()
         {
             if (Handlers.TryGetValue(typeof(T), out var result))
-                return (T)result;
+                return (T) result;
 
             LogSupport.Error($"No direct for {typeof(T).FullName} found for Unity {UnityVersion}; this likely indicates a severe error somewhere");
 
