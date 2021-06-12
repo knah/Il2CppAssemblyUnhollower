@@ -267,33 +267,12 @@ namespace UnhollowerBaseLib.Runtime
         size_inited = 0x80
     }
     
-    public unsafe struct Il2CppAssemblyName
-    {
-        public IntPtr name; // const char* 
-        public IntPtr culture; // const char*
-        public IntPtr hash_value; // const char*
-        public IntPtr public_key; // const char*
-        public uint hash_alg;
-        public int hash_len;
-        public uint flags;
-        public int major;
-        public int minor;
-        public int build;
-        public int revision;
-        public fixed byte public_key_token[16]; // PUBLIC_KEY_BYTE_LENGTH
-    }
-
     public struct Il2CppImage
     {
     }
 
-    public unsafe struct Il2CppAssembly
+    public struct Il2CppAssembly
     {
-        public Il2CppImage* image;
-        public uint token;
-        public int referencedAssemblyStart;
-        public int referencedAssemblyCount;
-        public Il2CppAssemblyName aname;
     }
 
     [StructLayout(LayoutKind.Sequential)]

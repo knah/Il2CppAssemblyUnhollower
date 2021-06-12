@@ -16,6 +16,7 @@
 
     <ItemGroup>
         <Folder Include="Libs" />
+        <Folder Include="Runtime\VersionSpecific\Type\" />
     </ItemGroup>
 
     <ItemGroup>

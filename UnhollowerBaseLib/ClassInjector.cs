@@ -10,6 +10,7 @@ using System.Threading;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Attributes;
 using UnhollowerBaseLib.Runtime;
+using UnhollowerBaseLib.Runtime.VersionSpecific.Assembly;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Class;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Image;
 using UnhollowerRuntimeLib.XrefScans;
@@ -19,8 +20,8 @@ namespace UnhollowerRuntimeLib
 {
     public unsafe static class ClassInjector
     {
-        private static Il2CppAssembly* FakeAssembly;
-        private static INativeImageStruct FakeImage;
+        private static readonly INativeAssemblyStruct FakeAssembly;
+        private static readonly INativeImageStruct FakeImage;
 
         /// <summary> type.FullName </summary>
         private static readonly HashSet<string> InjectedTypes = new HashSet<string>();
@@ -29,15 +30,14 @@ namespace UnhollowerRuntimeLib
 
         static void CreateFakeAssembly()
         {
-            FakeAssembly = (Il2CppAssembly*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppAssembly>());
+            FakeAssembly = UnityVersionHandler.NewAssembly(); //(Il2CppAssembly*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppAssembly>());
             FakeImage = UnityVersionHandler.NewImage(); //(Il2CppImage*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImage>());
 
-            *FakeAssembly = default;
-            FakeAssembly->aname.name = Marshal.StringToHGlobalAnsi("InjectedMonoTypes");
+            FakeAssembly.Name = Marshal.StringToHGlobalAnsi("InjectedMonoTypes");
 
-            FakeImage.Assembly = FakeAssembly;
+            FakeImage.Assembly = FakeAssembly.AssemblyPointer;
             FakeImage.Dynamic = 1;
-            FakeImage.Name = FakeAssembly->aname.name;
+            FakeImage.Name = FakeAssembly.Name;
             if (FakeImage.HasNameNoExt)
                 FakeImage.NameNoExt = FakeImage.Name;
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using UnhollowerBaseLib.Runtime.VersionSpecific.Assembly;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Class;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Image;
 using UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo;
@@ -133,6 +134,18 @@ namespace UnhollowerBaseLib.Runtime
         public static unsafe INativeImageStruct Wrap(Il2CppImage* classPointer)
         {
             return GetHandler<INativeImageStructHandler>().Wrap(classPointer);
+        }
+
+        //public unsafe static Il2CppAssembly* NewAssembly()
+        public static INativeAssemblyStruct NewAssembly()
+        {
+            //return (Il2CppAssembly*)Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppAssembly>());
+            return GetHandler<INativeAssemblyStructHandler>().CreateNewAssemblyStruct();
+        }
+
+        public static unsafe INativeAssemblyStruct Wrap(Il2CppAssembly* assemblyPointer)
+        {
+            return GetHandler<INativeAssemblyStructHandler>().Wrap(assemblyPointer);
         }
 
         public static INativeMethodStruct NewMethod() =>
