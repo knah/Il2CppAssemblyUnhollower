@@ -8,6 +8,7 @@ using UnhollowerBaseLib.Runtime.VersionSpecific.Class;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Image;
 using UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo;
 using UnhollowerBaseLib.Runtime.VersionSpecific.ParameterInfo;
+using UnhollowerBaseLib.Runtime.VersionSpecific.Type;
 
 namespace UnhollowerBaseLib.Runtime
 {
@@ -25,7 +26,7 @@ namespace UnhollowerBaseLib.Runtime
     public static class UnityVersionHandler
     {
         private static readonly Type[] InterfacesOfInterest;
-        private static readonly Dictionary<Type, List<(Version Version, object Handler)>> VersionedHandlers = new ();
+        private static readonly Dictionary<Type, List<(Version Version, object Handler)>> VersionedHandlers = new();
         private static readonly Dictionary<Type, object> Handlers = new();
 
         private static Version UnityVersion = new(2018, 4, 20);
@@ -35,18 +36,18 @@ namespace UnhollowerBaseLib.Runtime
             var allTypes = GetAllTypesSafe();
             var interfacesOfInterest = allTypes.Where(t => t.IsInterface && typeof(INativeStructHandler).IsAssignableFrom(t) && t != typeof(INativeStructHandler)).ToArray();
             InterfacesOfInterest = interfacesOfInterest;
-            
+
             foreach (var i in interfacesOfInterest) VersionedHandlers[i] = new();
-            
+
             foreach (var handlerImpl in allTypes.Where(t => !t.IsAbstract && interfacesOfInterest.Any(i => i.IsAssignableFrom(t))))
-            foreach (var startVersion in handlerImpl.GetCustomAttributes<ApplicableToUnityVersionsSinceAttribute>())
-            {
-                var instance = Activator.CreateInstance(handlerImpl);
-                foreach (var i in handlerImpl.GetInterfaces())
-                    if (interfacesOfInterest.Contains(i))
-                        VersionedHandlers[i].Add((Version.Parse(startVersion.StartVersion), instance));
-            }
-            
+                foreach (var startVersion in handlerImpl.GetCustomAttributes<ApplicableToUnityVersionsSinceAttribute>())
+                {
+                    var instance = Activator.CreateInstance(handlerImpl);
+                    foreach (var i in handlerImpl.GetInterfaces())
+                        if (interfacesOfInterest.Contains(i))
+                            VersionedHandlers[i].Add((Version.Parse(startVersion.StartVersion), instance));
+                }
+
             foreach (var handlerList in VersionedHandlers.Values)
                 handlerList.Sort((a, b) => -a.Version.CompareTo(b.Version));
 
@@ -61,7 +62,7 @@ namespace UnhollowerBaseLib.Runtime
                 foreach (var valueTuple in VersionedHandlers[type])
                 {
                     if (valueTuple.Version > UnityVersion) continue;
-                    
+
                     Handlers[type] = valueTuple.Handler;
                     break;
                 }
@@ -71,7 +72,7 @@ namespace UnhollowerBaseLib.Runtime
         private static T GetHandler<T>()
         {
             if (Handlers.TryGetValue(typeof(T), out var result))
-                return (T) result;
+                return (T)result;
 
             LogSupport.Error($"No direct for {typeof(T).FullName} found for Unity {UnityVersion}; this likely indicates a severe error somewhere");
 
@@ -136,16 +137,24 @@ namespace UnhollowerBaseLib.Runtime
             return GetHandler<INativeImageStructHandler>().Wrap(classPointer);
         }
 
-        //public unsafe static Il2CppAssembly* NewAssembly()
         public static INativeAssemblyStruct NewAssembly()
         {
-            //return (Il2CppAssembly*)Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppAssembly>());
             return GetHandler<INativeAssemblyStructHandler>().CreateNewAssemblyStruct();
         }
 
         public static unsafe INativeAssemblyStruct Wrap(Il2CppAssembly* assemblyPointer)
         {
             return GetHandler<INativeAssemblyStructHandler>().Wrap(assemblyPointer);
+        }
+
+        public static INativeTypeStruct NewType()
+        {
+            return GetHandler<INativeTypeStructHandler>().CreateNewTypeStruct();
+        }
+
+        public static unsafe INativeTypeStruct Wrap(Il2CppTypeStruct* typePointer)
+        {
+            return GetHandler<INativeTypeStructHandler>().Wrap(typePointer);
         }
 
         public static INativeMethodStruct NewMethod() =>
@@ -156,7 +165,7 @@ namespace UnhollowerBaseLib.Runtime
 
         public static unsafe INativeMethodStruct Wrap(Il2CppMethodInfo* methodPointer) =>
             GetHandler<INativeMethodStructHandler>().Wrap(methodPointer);
-        
+
         public static unsafe INativeParameterInfoStruct Wrap(Il2CppParameterInfo* parameterInfo) =>
             GetHandler<INativeParameterInfoStructHandler>().Wrap(parameterInfo);
 

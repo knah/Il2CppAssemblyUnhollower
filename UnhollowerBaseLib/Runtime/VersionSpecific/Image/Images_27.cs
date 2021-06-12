@@ -8,7 +8,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
     {
         public INativeImageStruct CreateNewImageStruct()
         {
-            var pointer = (Il2CppImageU2019*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImageU2019>());
+            var pointer = (Il2CppImageU2020*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImageU2020>());
             var metadataPointer = (Il2CppImageGlobalMetadata*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImageGlobalMetadata>());
 
             *pointer = default;
@@ -25,7 +25,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct Il2CppImageU2019
+        private struct Il2CppImageU2020
         {
             public IntPtr name; // const char*
             public IntPtr nameNoExt; // const char*
@@ -66,7 +66,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
 
             public Il2CppImage* ImagePointer => (Il2CppImage*)Pointer;
 
-            private Il2CppImageU2019* NativeImage => (Il2CppImageU2019*)ImagePointer;
+            private Il2CppImageU2020* NativeImage => (Il2CppImageU2020*)ImagePointer;
 
             public ref Il2CppAssembly* Assembly => ref NativeImage->assembly;
 

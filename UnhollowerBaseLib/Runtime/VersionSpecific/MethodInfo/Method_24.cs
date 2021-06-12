@@ -27,7 +27,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
             return il2cpp_method_get_from_reflection(method);
         }
 
-        public Type StructType => typeof(Il2CppMethodInfoU2018);
+        public System.Type StructType => typeof(Il2CppMethodInfoU2018);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct Il2CppMethodInfoU2018

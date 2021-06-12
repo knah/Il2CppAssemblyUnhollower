@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using TypeStruct = UnhollowerBaseLib.Runtime.VersionSpecific.Type.NativeTypeStructHandler_24.Il2CppType_24;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
 {
@@ -15,7 +16,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             *il2CppClassU20181 = default;
 
             il2CppClassU20181->byval_arg = il2CppClassU20181->this_arg =
-                (Il2CppTypeStruct*)Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppTypeStruct>());
+                (TypeStruct*)Marshal.AllocHGlobal(Marshal.SizeOf<TypeStruct>());
             *il2CppClassU20181->byval_arg = *il2CppClassU20181->this_arg = default;
 
 
@@ -35,8 +36,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public IntPtr gc_desc;
             public IntPtr name; // const char*
             public IntPtr namespaze; // const char*
-            public Il2CppTypeStruct* byval_arg; // not const
-            public Il2CppTypeStruct* this_arg; // not const
+            public TypeStruct* byval_arg; // not const
+            public TypeStruct* this_arg; // not const
             public Il2CppClass* element_class; // not const
             public Il2CppClass* castClass; // not const
             public Il2CppClass* declaringType; // not const
@@ -209,9 +210,13 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
 
             public ref IntPtr Namespace => ref NativeClass->namespaze;
 
-            public ref Il2CppTypeStruct ByValArg => ref *NativeClass->byval_arg;
+            public ref Il2CppTypeEnum ByValArgType => ref NativeClass->byval_arg->type;
 
-            public ref Il2CppTypeStruct ThisArg => ref *NativeClass->this_arg;
+            public ref IntPtr ByValArgData => ref NativeClass->byval_arg->data;
+
+            public ref Il2CppTypeEnum ThisArgType => ref NativeClass->this_arg->type;
+
+            public ref IntPtr ThisArgData => ref NativeClass->this_arg->data;
 
             public ref Il2CppImage* Image => ref NativeClass->image;
 
