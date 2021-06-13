@@ -19,15 +19,15 @@ namespace UnhollowerRuntimeLib
 {
     public unsafe static class ClassInjector
     {
-        private static readonly Il2CppAssembly* FakeAssembly;
-        private static readonly INativeImageStruct FakeImage;
+        private static Il2CppAssembly* FakeAssembly;
+        private static INativeImageStruct FakeImage;
 
         /// <summary> type.FullName </summary>
         private static readonly HashSet<string> InjectedTypes = new HashSet<string>();
         /// <summary> namespace, class, image, pointer </summary>
         private static readonly Dictionary<(string, string, IntPtr), IntPtr> ClassFromNameDictionary = new Dictionary<(string, string, IntPtr), IntPtr>();
 
-        static ClassInjector()
+        static void CreateFakeAssembly()
         {
             FakeAssembly = (Il2CppAssembly*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppAssembly>());
             FakeImage = UnityVersionHandler.NewImage(); //(Il2CppImage*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImage>());
@@ -104,6 +104,7 @@ namespace UnhollowerRuntimeLib
 
             if (ourOriginalTypeToClassMethod == null) HookClassFromType();
             if (originalClassFromNameMethod == null) HookClassFromName();
+            if (FakeAssembly == null) CreateFakeAssembly();
 
             var classPointer = UnityVersionHandler.NewClass(baseClassPointer.VtableCount);
 

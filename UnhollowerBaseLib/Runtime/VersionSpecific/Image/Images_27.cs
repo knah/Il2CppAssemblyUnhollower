@@ -8,11 +8,15 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
     {
         public INativeImageStruct CreateNewImageStruct()
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImageU2019>());
+            var pointer = (Il2CppImageU2019*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImageU2019>());
+            var metadataPointer = (Il2CppImageGlobalMetadata*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImageGlobalMetadata>());
 
-            *(Il2CppImageU2019*)pointer = default;
+            *pointer = default;
+            *metadataPointer = default;
+            pointer->metadataHandle = metadataPointer;
+            metadataPointer->image = pointer;
 
-            return new NativeImageStruct(pointer);
+            return new NativeImageStruct((IntPtr) pointer);
         }
 
         public INativeImageStruct Wrap(Il2CppImage* imagePointer)
@@ -32,13 +36,23 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
             public uint exportedTypeCount;
             public uint customAttributeCount;
 
-            public IntPtr metadataHandle;
+            public Il2CppImageGlobalMetadata* metadataHandle;
 
             public /*Il2CppNameToTypeDefinitionIndexHashTable **/ IntPtr nameToClassHashTable;
             public IntPtr codeGenModule;
 
             public uint token;
             public byte dynamic;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct Il2CppImageGlobalMetadata
+        {
+            public int typeStart;
+            public int exportedTypeStart;
+            public int customAttributeStart;
+            public int entryPointIndex;
+            public Il2CppImageU2019* image;
         }
 
         private class NativeImageStruct : INativeImageStruct
