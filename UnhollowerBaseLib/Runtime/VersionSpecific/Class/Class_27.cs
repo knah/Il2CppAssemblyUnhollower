@@ -227,6 +227,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public ref Il2CppTypeEnum ThisArgType => ref NativeClass->this_arg.type;
 
             public ref IntPtr ThisArgData => ref NativeClass->this_arg.data;
+            public bool ByValArg_byref { get; set; }
+            public bool ThisArg_byref { get; set; }
 
             public ref Il2CppImage* Image => ref NativeClass->image;
 

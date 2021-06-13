@@ -156,6 +156,12 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             private static int bitfield2offset =
                 Marshal.OffsetOf<Il2CppClassU2019>(nameof(Il2CppClassU2019.bitfield_2)).ToInt32();
 
+            private static int byValArg_byref_offset =
+                Marshal.OffsetOf<Il2CppClassU2019>(nameof(Il2CppClassU2019.byval_arg.mods_byref_pin)).ToInt32();
+
+            private static int thisArg_byref_offset =
+                Marshal.OffsetOf<Il2CppClassU2019>(nameof(Il2CppClassU2019.this_arg.mods_byref_pin)).ToInt32();
+
             public bool ValueType
             {
                 get => this.CheckBit(bitfield1offset, 1);
@@ -215,6 +221,18 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public ref IntPtr ByValArgData => ref NativeClass->byval_arg.data;
 
             public ref Il2CppTypeEnum ThisArgType => ref NativeClass->this_arg.type;
+
+            bool ByValArg_byref 
+            {
+                get => this.CheckBit(byValArg_byref_offset, 6);
+                set => this.SetBit(byValArg_byref_offset, 6, value);
+            }
+
+            bool ThisArg_byref 
+            {
+                get => this.CheckBit(thisArg_byref_offset, 6);
+                set => this.SetBit(thisArg_byref_offset, 6, value);
+            }
 
             public ref IntPtr ThisArgData => ref NativeClass->this_arg.data;
 

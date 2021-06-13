@@ -152,6 +152,12 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             private static int bitfield2offset =
                 Marshal.OffsetOf<Il2CppClassU2018_4>(nameof(Il2CppClassU2018_4.bitfield_2)).ToInt32();
 
+            private static int byValArg_byref_offset =
+                Marshal.OffsetOf<Il2CppClassU2018_4>(nameof(Il2CppClassU2018_4.byval_arg.mods_byref_pin)).ToInt32();
+
+            private static int thisArg_byref_offset =
+                Marshal.OffsetOf<Il2CppClassU2019>(nameof(Il2CppClassU2019.this_arg.mods_byref_pin)).ToInt32();
+
             public bool ValueType
             {
                 get => this.CheckBit(bitfield1offset, 1);
