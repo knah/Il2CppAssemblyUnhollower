@@ -12,8 +12,12 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Type
     {
         unsafe Il2CppTypeStruct* TypePointer { get; }
 
+        ref IntPtr Data { get; }
+
         ref Il2CppTypeEnum Type { get; }
 
-        ref IntPtr Data { get; }
+        bool ByRef { get; set; }
+
+        bool Pinned { get; set; }
     }
 }

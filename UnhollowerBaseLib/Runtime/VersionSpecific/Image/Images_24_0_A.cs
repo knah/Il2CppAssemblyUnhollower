@@ -5,13 +5,13 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
 {
     [ApplicableToUnityVersionsSince("2017.1.0")]
     [ApplicableToUnityVersionsSince("2017.2.0")]
-    public unsafe class NativeImageStructHandler_24_A : INativeImageStructHandler
+    public unsafe class NativeImageStructHandler_24_0_A : INativeImageStructHandler
         {
             public INativeImageStruct CreateNewImageStruct()
             {
-                var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImage_24>());
+                var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImage_24_0_A>());
 
-                *(Il2CppImage_24*) pointer = default;
+                *(Il2CppImage_24_0_A*) pointer = default;
 
                 return new NativeImageStruct(pointer);
             }
@@ -22,7 +22,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
             }
             
             [StructLayout(LayoutKind.Sequential)]
-            private struct Il2CppImage_24
+            private struct Il2CppImage_24_0_A
             {
                 public IntPtr name;      // const char*
                 public int assemblyIndex;
@@ -56,7 +56,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
 
                 public Il2CppImage* ImagePointer => (Il2CppImage*) Pointer;
                 
-                private Il2CppImage_24* NativeImage => (Il2CppImage_24*) ImagePointer;
+                private Il2CppImage_24_0_A* NativeImage => (Il2CppImage_24_0_A*) ImagePointer;
                 
                 public ref Il2CppAssembly* Assembly => throw new NotSupportedException();
 

@@ -57,15 +57,30 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Type
                 Pointer = pointer;
             }
 
+            private static int mods_byref_pin_offset =
+                Marshal.OffsetOf<Il2CppType_27_2>(nameof(Il2CppType_27_2.mods_byref_pin)).ToInt32();
+
             public IntPtr Pointer { get; }
 
             public Il2CppTypeStruct* TypePointer => (Il2CppTypeStruct*)Pointer;
 
-            private Il2CppType_27_2* NativeType => (Il2CppType_27_2*)TypePointer;
+            private Il2CppType_27_2* NativeType => (Il2CppType_27_2*)Pointer;
+
+            public ref IntPtr Data => ref NativeType->data;
 
             public ref Il2CppTypeEnum Type => ref NativeType->type;
 
-            public ref IntPtr Data => ref NativeType->data;
+            public bool ByRef
+            {
+                get => this.CheckBit(mods_byref_pin_offset, 5);
+                set => this.SetBit(mods_byref_pin_offset, 5, value);
+            }
+
+            public bool Pinned
+            {
+                get => this.CheckBit(mods_byref_pin_offset, 6);
+                set => this.SetBit(mods_byref_pin_offset, 6, value);
+            }
         }
     }
 }

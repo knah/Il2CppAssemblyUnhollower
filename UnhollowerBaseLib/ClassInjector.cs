@@ -20,18 +20,18 @@ namespace UnhollowerRuntimeLib
 {
     public unsafe static class ClassInjector
     {
-        private static readonly INativeAssemblyStruct FakeAssembly;
-        private static readonly INativeImageStruct FakeImage;
+        private static INativeAssemblyStruct FakeAssembly;
+        private static INativeImageStruct FakeImage;
 
         /// <summary> type.FullName </summary>
         private static readonly HashSet<string> InjectedTypes = new HashSet<string>();
-        /// <summary> namespace, class, image, pointer </summary>
+        /// <summary> (namespace, class, image) : pointer </summary>
         private static readonly Dictionary<(string, string, IntPtr), IntPtr> ClassFromNameDictionary = new Dictionary<(string, string, IntPtr), IntPtr>();
 
         static void CreateFakeAssembly()
         {
-            FakeAssembly = UnityVersionHandler.NewAssembly(); //(Il2CppAssembly*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppAssembly>());
-            FakeImage = UnityVersionHandler.NewImage(); //(Il2CppImage*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImage>());
+            FakeAssembly = UnityVersionHandler.NewAssembly();
+            FakeImage = UnityVersionHandler.NewImage();
 
             FakeAssembly.Name = Marshal.StringToHGlobalAnsi("InjectedMonoTypes");
 
@@ -123,8 +123,8 @@ namespace UnhollowerRuntimeLib
             classPointer.Name = Marshal.StringToHGlobalAnsi(type.Name);
             classPointer.Namespace = Marshal.StringToHGlobalAnsi(type.Namespace);
 
-            classPointer.ThisArgType = classPointer.ByValArgType = Il2CppTypeEnum.IL2CPP_TYPE_CLASS;
-            //classPointer.ThisArg.mods_byref_pin = 64;//<==============================================================================
+            classPointer.ThisArg.Type = classPointer.ByValArg.Type = Il2CppTypeEnum.IL2CPP_TYPE_CLASS;
+            classPointer.ThisArg.ByRef = true;
 
             classPointer.Flags = baseClassPointer.Flags; // todo: adjust flags?
 
@@ -160,7 +160,7 @@ namespace UnhollowerRuntimeLib
 
             var newCounter = Interlocked.Decrement(ref ourClassOverrideCounter);
             FakeTokenClasses[newCounter] = classPointer.Pointer;
-            classPointer.ByValArgData = classPointer.ThisArgData = (IntPtr)newCounter;
+            classPointer.ByValArg.Data = classPointer.ThisArg.Data = (IntPtr)newCounter;
 
             RuntimeSpecificsStore.SetClassInfo(classPointer.Pointer, true, true);
             WriteClassPointerForType(type, classPointer.Pointer);

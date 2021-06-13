@@ -4,13 +4,13 @@ using System.Runtime.InteropServices;
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.Type
 {
     [ApplicableToUnityVersionsSince("2017.1.0")]
-    public unsafe class NativeTypeStructHandler_24 : INativeTypeStructHandler
+    public unsafe class NativeTypeStructHandler_24_0 : INativeTypeStructHandler
     {
         public INativeTypeStruct CreateNewTypeStruct()
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppType_24>());
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppType_24_0>());
 
-            *(Il2CppType_24*)pointer = default;
+            *(Il2CppType_24_0*)pointer = default;
 
             return new NativeTypeStruct(pointer);
         }
@@ -21,7 +21,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Type
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct Il2CppType_24
+        internal struct Il2CppType_24_0
         {
             /*union
             {
@@ -54,15 +54,30 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Type
                 Pointer = pointer;
             }
 
+            private static int mods_byref_pin_offset =
+                Marshal.OffsetOf<Il2CppType_24_0>(nameof(Il2CppType_24_0.mods_byref_pin)).ToInt32();
+
             public IntPtr Pointer { get; }
 
             public Il2CppTypeStruct* TypePointer => (Il2CppTypeStruct*)Pointer;
 
-            private Il2CppType_24* NativeType => (Il2CppType_24*)TypePointer;
+            private Il2CppType_24_0* NativeType => (Il2CppType_24_0*)Pointer;
+
+            public ref IntPtr Data => ref NativeType->data;
 
             public ref Il2CppTypeEnum Type => ref NativeType->type;
 
-            public ref IntPtr Data => ref NativeType->data;
+            public bool ByRef
+            {
+                get => this.CheckBit(mods_byref_pin_offset, 6);
+                set => this.SetBit(mods_byref_pin_offset, 6, value);
+            }
+
+            public bool Pinned
+            {
+                get => this.CheckBit(mods_byref_pin_offset, 7);
+                set => this.SetBit(mods_byref_pin_offset, 7, value);
+            }
         }
     }
 }

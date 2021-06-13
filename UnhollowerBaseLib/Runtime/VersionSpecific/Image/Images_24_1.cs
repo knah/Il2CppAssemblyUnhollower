@@ -8,9 +8,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
     {
         public INativeImageStruct CreateNewImageStruct()
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImageU2019>());
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImage_24_1>());
 
-            *(Il2CppImageU2019*)pointer = default;
+            *(Il2CppImage_24_1*)pointer = default;
 
             return new NativeImageStruct(pointer);
         }
@@ -21,7 +21,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct Il2CppImageU2019
+        private struct Il2CppImage_24_1
         {
             public IntPtr name; // const char*
             public IntPtr nameNoExt; // const char*
@@ -55,13 +55,14 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
 
             public Il2CppImage* ImagePointer => (Il2CppImage*)Pointer;
 
-            private Il2CppImageU2019* NativeImage => (Il2CppImageU2019*)ImagePointer;
+            private Il2CppImage_24_1* NativeImage => (Il2CppImage_24_1*)ImagePointer;
 
             public ref Il2CppAssembly* Assembly => ref NativeImage->assembly;
 
             public ref byte Dynamic => ref NativeImage->dynamic;
 
             public ref IntPtr Name => ref NativeImage->name;
+
             public bool HasNameNoExt => true;
 
             public ref IntPtr NameNoExt => ref NativeImage->nameNoExt;

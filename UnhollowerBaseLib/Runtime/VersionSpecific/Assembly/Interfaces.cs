@@ -15,5 +15,13 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
         unsafe ref Il2CppImage* Image { get; }
 
         ref IntPtr Name { get; }
+
+        ref int Major { get; }
+
+        ref int Minor { get; }
+
+        ref int Build { get; }
+
+        ref int Revision { get; }
     }
 }

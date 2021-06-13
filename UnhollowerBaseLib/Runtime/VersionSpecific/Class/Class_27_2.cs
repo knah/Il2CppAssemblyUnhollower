@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using UnhollowerBaseLib.Runtime.VersionSpecific.Type;
 using TypeStruct = UnhollowerBaseLib.Runtime.VersionSpecific.Type.NativeTypeStructHandler_27_2.Il2CppType_27_2;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
@@ -9,10 +10,10 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
     {
         public unsafe INativeClassStruct CreateNewClassStruct(int vTableSlots)
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppClassU2021>() +
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppClass_27_2>() +
                                                Marshal.SizeOf<VirtualInvokeData>() * vTableSlots);
 
-            *(Il2CppClassU2021*)pointer = default;
+            *(Il2CppClass_27_2*)pointer = default;
 
             return new NativeClassStruct(pointer);
         }
@@ -23,7 +24,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private unsafe struct Il2CppClassU2021
+        private unsafe struct Il2CppClass_27_2
         {
             // The following fields are always valid for a Il2CppClass structure
             public Il2CppImage* image; // const
@@ -141,9 +142,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public IntPtr Pointer { get; }
             public Il2CppClass* ClassPointer => (Il2CppClass*)Pointer;
 
-            public IntPtr VTable => IntPtr.Add(Pointer, Marshal.SizeOf<Il2CppClassU2021>());
+            public IntPtr VTable => IntPtr.Add(Pointer, Marshal.SizeOf<Il2CppClass_27_2>());
 
-            private Il2CppClassU2021* NativeClass => (Il2CppClassU2021*)ClassPointer;
+            private Il2CppClass_27_2* NativeClass => (Il2CppClass_27_2*)ClassPointer;
 
             public ref uint InstanceSize => ref NativeClass->instance_size;
 
@@ -162,16 +163,16 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public ref Il2CppClassAttributes Flags => ref NativeClass->flags;
 
             private static int bitfield1offset =
-                Marshal.OffsetOf<Il2CppClassU2021>(nameof(Il2CppClassU2021.bitfield_1)).ToInt32();
+                Marshal.OffsetOf<Il2CppClass_27_2>(nameof(Il2CppClass_27_2.bitfield_1)).ToInt32();
 
             private static int bitfield2offset =
-                Marshal.OffsetOf<Il2CppClassU2021>(nameof(Il2CppClassU2021.bitfield_2)).ToInt32();
+                Marshal.OffsetOf<Il2CppClass_27_2>(nameof(Il2CppClass_27_2.bitfield_2)).ToInt32();
 
             private static int byval_arg_mods_byref_pin_offset =
-                Marshal.OffsetOf<Il2CppClassU2021>(nameof(Il2CppClassU2021.byval_arg.mods_byref_pin)).ToInt32();
+                Marshal.OffsetOf<Il2CppClass_27_2>(nameof(Il2CppClass_27_2.byval_arg.mods_byref_pin)).ToInt32();
 
             private static int this_arg_mods_byref_pin_offset =
-                Marshal.OffsetOf<Il2CppClassU2021>(nameof(Il2CppClassU2021.this_arg.mods_byref_pin)).ToInt32();
+                Marshal.OffsetOf<Il2CppClass_27_2>(nameof(Il2CppClass_27_2.this_arg.mods_byref_pin)).ToInt32();
 
             public bool InitializedAndNoError
             {
@@ -232,13 +233,13 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
 
             public ref IntPtr Namespace => ref NativeClass->namespaze;
 
-            public ref Il2CppTypeEnum ByValArgType => ref NativeClass->byval_arg.type;
+            private Il2CppTypeStruct* ByValArgPointer => (Il2CppTypeStruct*)(&(NativeClass->byval_arg));
 
-            public ref IntPtr ByValArgData => ref NativeClass->byval_arg.data;
+            private Il2CppTypeStruct* ThisArgPointer => (Il2CppTypeStruct*)(&(NativeClass->this_arg));
 
-            public ref Il2CppTypeEnum ThisArgType => ref NativeClass->this_arg.type;
+            public INativeTypeStruct ByValArg => UnityVersionHandler.Wrap(ByValArgPointer);
 
-            public ref IntPtr ThisArgData => ref NativeClass->this_arg.data;
+            public INativeTypeStruct ThisArg => UnityVersionHandler.Wrap(ThisArgPointer);
 
             public ref Il2CppImage* Image => ref NativeClass->image;
 

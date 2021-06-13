@@ -63,6 +63,14 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
             public ref Il2CppImage* Image => ref NativeAssembly->image;
 
             public ref IntPtr Name => ref NativeAssembly->aname.name;
+
+            public ref int Major => ref NativeAssembly->aname.major;
+
+            public ref int Minor => ref NativeAssembly->aname.minor;
+
+            public ref int Build => ref NativeAssembly->aname.build;
+
+            public ref int Revision => ref NativeAssembly->aname.revision;
         }
     }
 }

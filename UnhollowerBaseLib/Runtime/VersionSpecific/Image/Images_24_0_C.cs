@@ -3,15 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
 {
-    [ApplicableToUnityVersionsSince("2017.1.3")]
-    [ApplicableToUnityVersionsSince("2017.2.1")]
-    public unsafe class NativeImageStructHandler_24_B : INativeImageStructHandler
+    [ApplicableToUnityVersionsSince("2018.1.0")]
+    public unsafe class NativeImageStructHandler_24_0_C : INativeImageStructHandler
     {
         public INativeImageStruct CreateNewImageStruct()
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImage_24>());
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImage_24_0_C>());
 
-            *(Il2CppImage_24*)pointer = default;
+            *(Il2CppImage_24_0_C*)pointer = default;
 
             return new NativeImageStruct(pointer);
         }
@@ -22,11 +21,11 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct Il2CppImage_24
+        private struct Il2CppImage_24_0_C
         {
             public IntPtr name; // const char*
             public IntPtr nameNoExt; // const char*
-            public int assemblyIndex;
+            public Il2CppAssembly* assembly;
 
             public /*TypeDefinitionIndex*/ int typeStart;
             public uint typeCount;
@@ -34,20 +33,16 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
             public /*TypeDefinitionIndex*/ int exportedTypeStart;
             public uint exportedTypeCount;
 
-            public /*CustomAttributeIndex*/ int customAttributeStart;
-            public uint customAttributeCount;
-
             public /*MethodIndex*/ int entryPointIndex;
 
             public /*Il2CppNameToTypeDefinitionIndexHashTable **/ IntPtr nameToClassHashTable;
 
             public uint token;
+            public byte dynamic;
         }
 
         private class NativeImageStruct : INativeImageStruct
         {
-            private static byte dynamicDummy;
-
             public NativeImageStruct(IntPtr pointer)
             {
                 Pointer = pointer;
@@ -57,11 +52,11 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
 
             public Il2CppImage* ImagePointer => (Il2CppImage*)Pointer;
 
-            private Il2CppImage_24* NativeImage => (Il2CppImage_24*)ImagePointer;
+            private Il2CppImage_24_0_C* NativeImage => (Il2CppImage_24_0_C*)ImagePointer;
 
-            public ref Il2CppAssembly* Assembly => throw new NotSupportedException();
+            public ref Il2CppAssembly* Assembly => ref NativeImage->assembly;
 
-            public ref byte Dynamic => ref dynamicDummy;
+            public ref byte Dynamic => ref NativeImage->dynamic;
 
             public ref IntPtr Name => ref NativeImage->name;
 
