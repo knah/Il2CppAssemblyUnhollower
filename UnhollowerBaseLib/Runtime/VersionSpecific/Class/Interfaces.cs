@@ -36,6 +36,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
         ref IntPtr ByValArgData { get; }
         ref Il2CppTypeEnum ThisArgType { get; }
         ref IntPtr ThisArgData { get; }
+        bool ByValArg_byref { get; set; }
+        bool ThisArg_byref { get; set; }
 
         unsafe ref Il2CppImage* Image { get; }
         unsafe ref Il2CppClass* Parent { get; }
