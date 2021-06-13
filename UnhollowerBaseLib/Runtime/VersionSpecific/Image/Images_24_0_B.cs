@@ -3,14 +3,15 @@ using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
 {
-    [ApplicableToUnityVersionsSince("2019.1.0")]
-    public unsafe class NativeImageStructHandler_24_2 : INativeImageStructHandler
+    [ApplicableToUnityVersionsSince("2017.1.3")]
+    [ApplicableToUnityVersionsSince("2017.2.1")]
+    public unsafe class NativeImageStructHandler_24_0_B : INativeImageStructHandler
     {
         public INativeImageStruct CreateNewImageStruct()
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImage_24_2>());
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppImage_24_0_B>());
 
-            *(Il2CppImage_24_2*)pointer = default;
+            *(Il2CppImage_24_0_B*)pointer = default;
 
             return new NativeImageStruct(pointer);
         }
@@ -21,11 +22,11 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct Il2CppImage_24_2
+        private struct Il2CppImage_24_0_B
         {
             public IntPtr name; // const char*
             public IntPtr nameNoExt; // const char*
-            public Il2CppAssembly* assembly;
+            public int assemblyIndex;
 
             public /*TypeDefinitionIndex*/ int typeStart;
             public uint typeCount;
@@ -40,14 +41,13 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
 
             public /*Il2CppNameToTypeDefinitionIndexHashTable **/ IntPtr nameToClassHashTable;
 
-            public /*Il2CppCodeGenModule*/ IntPtr codeGenModule;
-
             public uint token;
-            public byte dynamic;
         }
 
         private class NativeImageStruct : INativeImageStruct
         {
+            private static byte dynamicDummy;
+
             public NativeImageStruct(IntPtr pointer)
             {
                 Pointer = pointer;
@@ -57,11 +57,11 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
 
             public Il2CppImage* ImagePointer => (Il2CppImage*)Pointer;
 
-            private Il2CppImage_24_2* NativeImage => (Il2CppImage_24_2*)ImagePointer;
+            private Il2CppImage_24_0_B* NativeImage => (Il2CppImage_24_0_B*)ImagePointer;
 
-            public ref Il2CppAssembly* Assembly => ref NativeImage->assembly;
+            public ref Il2CppAssembly* Assembly => throw new NotSupportedException();
 
-            public ref byte Dynamic => ref NativeImage->dynamic;
+            public ref byte Dynamic => ref dynamicDummy;
 
             public ref IntPtr Name => ref NativeImage->name;
 

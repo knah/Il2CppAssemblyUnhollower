@@ -1,51 +1,46 @@
 using System;
 using System.Runtime.InteropServices;
-using TypeStruct = UnhollowerBaseLib.Runtime.VersionSpecific.Type.NativeTypeStructHandler_24.Il2CppType_24;
+using UnhollowerBaseLib.Runtime.VersionSpecific.Type;
+using TypeStruct = UnhollowerBaseLib.Runtime.VersionSpecific.Type.NativeTypeStructHandler_27_0.Il2CppType_27_0;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
 {
-    [ApplicableToUnityVersionsSince("2017.1.0")]
-    public class NativeClassStructHandler_24_A : INativeClassStructHandler
+    [ApplicableToUnityVersionsSince("2020.2.0")]
+    public class NativeClassStructHandler_27_0 : INativeClassStructHandler
     {
         public unsafe INativeClassStruct CreateNewClassStruct(int vTableSlots)
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppClassU2018_1>() +
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppClass_27_0>() +
                                                Marshal.SizeOf<VirtualInvokeData>() * vTableSlots);
 
-            var il2CppClassU20181 = (Il2CppClassU2018_1*)pointer;
-            *il2CppClassU20181 = default;
+            *(Il2CppClass_27_0*)pointer = default;
 
-            il2CppClassU20181->byval_arg = il2CppClassU20181->this_arg =
-                (TypeStruct*)Marshal.AllocHGlobal(Marshal.SizeOf<TypeStruct>());
-            *il2CppClassU20181->byval_arg = *il2CppClassU20181->this_arg = default;
-
-
-            return new NativeClassStructWrapper(pointer);
+            return new NativeClassStruct(pointer);
         }
 
         public unsafe INativeClassStruct Wrap(Il2CppClass* classPointer)
         {
-            return new NativeClassStructWrapper((IntPtr)classPointer);
+            return new NativeClassStruct((IntPtr)classPointer);
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private unsafe struct Il2CppClassU2018_1
+        private unsafe struct Il2CppClass_27_0
         {
             // The following fields are always valid for a Il2CppClass structure
             public Il2CppImage* image; // const
             public IntPtr gc_desc;
             public IntPtr name; // const char*
             public IntPtr namespaze; // const char*
-            public TypeStruct* byval_arg; // not const
-            public TypeStruct* this_arg; // not const
+            public TypeStruct byval_arg; // not const, no ptr
+            public TypeStruct this_arg; // not const, no ptr
             public Il2CppClass* element_class; // not const
             public Il2CppClass* castClass; // not const
             public Il2CppClass* declaringType; // not const
             public Il2CppClass* parent; // not const
             public /*Il2CppGenericClass**/ IntPtr generic_class;
 
-            public /*Il2CppTypeDefinition**/
-                IntPtr typeDefinition; // const; non-NULL for Il2CppClass's constructed from type defintions
+            public IntPtr
+                typeMetadataHandle; //  // const; non-NULL for Il2CppClass's constructed from type defintions
 
             public /*Il2CppInteropData**/ IntPtr interopData; // const
 
@@ -61,23 +56,33 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public Il2CppClass** implementedInterfaces; // not const; Initialized in SetupInterfaces
             public Il2CppRuntimeInterfaceOffsetPair* interfaceOffsets; // not const; Initialized in Init
             public IntPtr static_fields; // not const; Initialized in Init
-
             public /*Il2CppRGCTXData**/ IntPtr rgctx_data; // const; Initialized in Init
 
             // used for fast parent checks
             public Il2CppClass** typeHierarchy; // not const; Initialized in SetupTypeHierachy
             // End initialization required fields
 
-            public uint cctor_started;
+            // public IntPtr typeDefinition;
 
+            // U2020 specific field
+            public IntPtr unity_user_data;
+
+            public uint initializationExceptionGCHandle;
+
+
+            public uint cctor_started;
             public uint cctor_finished;
 
-            /*ALIGN_TYPE(8)*/
-            private ulong cctor_thread;
+            ///*ALIGN_TYPE(8)*/
+            public IntPtr cctor_thread; // was uint64 in 2018.4, is size_t in >=2019.3.1
+
+
+            ///*ALIGN_TYPE(8)*/ IntPtr cctor_thread; // was uint64 in 2018.4, is size_t in 2020.3.1
 
             // Remaining fields are always valid except where noted
-            public /*GenericContainerIndex*/ int genericContainerIndex;
-            public int customAttributeIndex;
+            //public /*GenericContainerIndex*/ int genericContainerIndex;
+            public IntPtr genericContainerHandle;
+
             public uint instance_size;
             public uint actualSize;
             public uint element_size;
@@ -101,33 +106,36 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public byte genericRecursionDepth;
             public byte rank;
             public byte minimumAlignment; // Alignment of this type
+            public byte naturalAligment; // Alignment of this type without accounting for packing
             public byte packingSize;
 
             // this is critical for performance of Class::InitFromCodegen. Equals to initialized && !has_initialization_error at all times.
             // Use Class::UpdateInitializedAndNoError to update
             public byte bitfield_1;
-            /*
-            uint8_t valuetype : 1;
-            uint8_t initialized : 1;
-            uint8_t enumtype : 1;
-            uint8_t is_generic : 1;
-            uint8_t has_references : 1;
-            uint8_t init_pending : 1;
-            uint8_t size_inited : 1;
-            uint8_t has_finalize : 1;*/
+            //uint8_t initialized_and_no_error : 1;
+
+            //uint8_t valuetype : 1;
+            //uint8_t initialized : 1;
+            //uint8_t enumtype : 1;
+            //uint8_t is_generic : 1;
+            //uint8_t has_references : 1;
+            //uint8_t init_pending : 1;
+            //uint8_t size_inited : 1;
 
             public byte bitfield_2;
-            /*uint8_t has_cctor : 1;
+            /*uint8_t has_finalize : 1;
+            uint8_t has_cctor : 1;
             uint8_t is_blittable : 1;
             uint8_t is_import_or_windows_runtime : 1;
-            uint8_t is_vtable_initialized : 1;*/
+            uint8_t is_vtable_initialized : 1;
+            uint8_t has_initialization_error : 1;*/
 
             //VirtualInvokeData vtable[IL2CPP_ZERO_LEN_ARRAY];
         }
 
-        private unsafe class NativeClassStructWrapper : INativeClassStruct
+        private unsafe class NativeClassStruct : INativeClassStruct
         {
-            public NativeClassStructWrapper(IntPtr pointer)
+            public NativeClassStruct(IntPtr pointer)
             {
                 Pointer = pointer;
             }
@@ -135,9 +143,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public IntPtr Pointer { get; }
             public Il2CppClass* ClassPointer => (Il2CppClass*)Pointer;
 
-            public IntPtr VTable => IntPtr.Add(Pointer, Marshal.SizeOf<Il2CppClassU2018_1>());
+            public IntPtr VTable => IntPtr.Add(Pointer, Marshal.SizeOf<Il2CppClass_27_0>());
 
-            private Il2CppClassU2018_1* NativeClass => (Il2CppClassU2018_1*)ClassPointer;
+            private Il2CppClass_27_0* NativeClass => (Il2CppClass_27_0*)ClassPointer;
 
             public ref uint InstanceSize => ref NativeClass->instance_size;
 
@@ -149,74 +157,77 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
 
             public ref ushort MethodCount => ref NativeClass->method_count;
 
+            // public ref ClassBitfield1 Bitfield1 => ref NativeClass->bitfield_1;
+
+            // public ref ClassBitfield2 Bitfield2 => ref NativeClass->bitfield_2;
+
+            public ref Il2CppClassAttributes Flags => ref NativeClass->flags;
+
             private static int bitfield1offset =
-                Marshal.OffsetOf<Il2CppClassU2018_1>(nameof(Il2CppClassU2018_1.bitfield_1)).ToInt32();
+                Marshal.OffsetOf<Il2CppClass_27_0>(nameof(Il2CppClass_27_0.bitfield_1)).ToInt32();
 
             private static int bitfield2offset =
-                Marshal.OffsetOf<Il2CppClassU2018_1>(nameof(Il2CppClassU2018_1.bitfield_2)).ToInt32();
+                Marshal.OffsetOf<Il2CppClass_27_0>(nameof(Il2CppClass_27_0.bitfield_2)).ToInt32();
 
             public bool ValueType
-            {
-                get => this.CheckBit(bitfield1offset, 0);
-                set => this.SetBit(bitfield1offset, 0, value);
-            }
-
-            public bool EnumType
-            {
-                get => this.CheckBit(bitfield1offset, 2);
-                set => this.SetBit(bitfield1offset, 2, value);
-            }
-
-            public bool IsGeneric
-            {
-                get => this.CheckBit(bitfield1offset, 3);
-                set => this.SetBit(bitfield1offset, 3, value);
-            }
-
-            public bool Initialized
             {
                 get => this.CheckBit(bitfield1offset, 1);
                 set => this.SetBit(bitfield1offset, 1, value);
             }
 
-            // Not present
+            public bool EnumType
+            {
+                get => this.CheckBit(bitfield1offset, 3);
+                set => this.SetBit(bitfield1offset, 3, value);
+            }
+
+            public bool IsGeneric
+            {
+                get => this.CheckBit(bitfield1offset, 4);
+                set => this.SetBit(bitfield1offset, 4, value);
+            }
+
+            public bool Initialized
+            {
+                get => this.CheckBit(bitfield1offset, 2);
+                set => this.SetBit(bitfield1offset, 2, value);
+            }
+
             public bool InitializedAndNoError
             {
-                get => true;
-                set { }
+                get => this.CheckBit(bitfield1offset, 0);
+                set => this.SetBit(bitfield1offset, 0, value);
             }
 
             public bool SizeInited
-            {
-                get => this.CheckBit(bitfield1offset, 6);
-                set => this.SetBit(bitfield1offset, 6, value);
-            }
-
-            public bool HasFinalize
             {
                 get => this.CheckBit(bitfield1offset, 7);
                 set => this.SetBit(bitfield1offset, 7, value);
             }
 
-            public bool IsVtableInitialized
+            public bool HasFinalize
             {
-                get => this.CheckBit(bitfield2offset, 3);
-                set => this.SetBit(bitfield2offset, 3, value);
+                get => this.CheckBit(bitfield2offset, 0);
+                set => this.SetBit(bitfield2offset, 0, value);
             }
 
-            public ref Il2CppClassAttributes Flags => ref NativeClass->flags;
+            public bool IsVtableInitialized
+            {
+                get => this.CheckBit(bitfield2offset, 4);
+                set => this.SetBit(bitfield2offset, 4, value);
+            }
 
             public ref IntPtr Name => ref NativeClass->name;
 
             public ref IntPtr Namespace => ref NativeClass->namespaze;
 
-            public ref Il2CppTypeEnum ByValArgType => ref NativeClass->byval_arg->type;
+            private Il2CppTypeStruct* ByValArgPointer => (Il2CppTypeStruct*)(&(NativeClass->byval_arg));
 
-            public ref IntPtr ByValArgData => ref NativeClass->byval_arg->data;
+            private Il2CppTypeStruct* ThisArgPointer => (Il2CppTypeStruct*)(&(NativeClass->this_arg));
 
-            public ref Il2CppTypeEnum ThisArgType => ref NativeClass->this_arg->type;
+            public INativeTypeStruct ByValArg => UnityVersionHandler.Wrap(ByValArgPointer);
 
-            public ref IntPtr ThisArgData => ref NativeClass->this_arg->data;
+            public INativeTypeStruct ThisArg => UnityVersionHandler.Wrap(ThisArgPointer);
 
             public ref Il2CppImage* Image => ref NativeClass->image;
 

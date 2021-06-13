@@ -117,59 +117,50 @@ namespace UnhollowerBaseLib.Runtime
             RecalculateHandlers();
         }
 
-        public static INativeClassStruct NewClass(int vTableSlots)
-        {
-            return GetHandler<INativeClassStructHandler>().CreateNewClassStruct(vTableSlots);
-        }
 
-        public static unsafe INativeClassStruct Wrap(Il2CppClass* classPointer)
-        {
-            return GetHandler<INativeClassStructHandler>().Wrap(classPointer);
-        }
+        public static IntPtr GetMethodFromReflection(IntPtr method) =>
+            GetHandler<INativeMethodStructHandler>().GetMethodFromReflection(method);
 
-        public static INativeImageStruct NewImage()
-        {
-            return GetHandler<INativeImageStructHandler>().CreateNewImageStruct();
-        }
 
-        public static unsafe INativeImageStruct Wrap(Il2CppImage* classPointer)
-        {
-            return GetHandler<INativeImageStructHandler>().Wrap(classPointer);
-        }
+        public static INativeClassStruct NewClass(int vTableSlots) =>
+            GetHandler<INativeClassStructHandler>().CreateNewClassStruct(vTableSlots);
 
-        public static INativeAssemblyStruct NewAssembly()
-        {
-            return GetHandler<INativeAssemblyStructHandler>().CreateNewAssemblyStruct();
-        }
+        public static unsafe INativeClassStruct Wrap(Il2CppClass* classPointer) =>
+            GetHandler<INativeClassStructHandler>().Wrap(classPointer);
+        
 
-        public static unsafe INativeAssemblyStruct Wrap(Il2CppAssembly* assemblyPointer)
-        {
-            return GetHandler<INativeAssemblyStructHandler>().Wrap(assemblyPointer);
-        }
+        public static INativeImageStruct NewImage() =>
+            GetHandler<INativeImageStructHandler>().CreateNewImageStruct();
+        
+        public static unsafe INativeImageStruct Wrap(Il2CppImage* imagePointer) =>
+            GetHandler<INativeImageStructHandler>().Wrap(imagePointer);
+        
 
-        public static INativeTypeStruct NewType()
-        {
-            return GetHandler<INativeTypeStructHandler>().CreateNewTypeStruct();
-        }
+        public static INativeAssemblyStruct NewAssembly() =>
+            GetHandler<INativeAssemblyStructHandler>().CreateNewAssemblyStruct();
 
-        public static unsafe INativeTypeStruct Wrap(Il2CppTypeStruct* typePointer)
-        {
-            return GetHandler<INativeTypeStructHandler>().Wrap(typePointer);
-        }
+        public static unsafe INativeAssemblyStruct Wrap(Il2CppAssembly* assemblyPointer) =>
+            GetHandler<INativeAssemblyStructHandler>().Wrap(assemblyPointer);
+
+
+        public static INativeTypeStruct NewType() =>
+            GetHandler<INativeTypeStructHandler>().CreateNewTypeStruct();
+        
+        public static unsafe INativeTypeStruct Wrap(Il2CppTypeStruct* typePointer) =>
+            GetHandler<INativeTypeStructHandler>().Wrap(typePointer);
+        
 
         public static INativeMethodStruct NewMethod() =>
             GetHandler<INativeMethodStructHandler>().CreateNewMethodStruct();
 
-        public static unsafe Il2CppParameterInfo*[] NewMethodParameterArray(int count) =>
-            GetHandler<INativeParameterInfoStructHandler>().CreateNewParameterInfoArray(count);
-
         public static unsafe INativeMethodStruct Wrap(Il2CppMethodInfo* methodPointer) =>
             GetHandler<INativeMethodStructHandler>().Wrap(methodPointer);
 
+
+        public static unsafe Il2CppParameterInfo*[] NewMethodParameterArray(int count) =>
+            GetHandler<INativeParameterInfoStructHandler>().CreateNewParameterInfoArray(count);
+
         public static unsafe INativeParameterInfoStruct Wrap(Il2CppParameterInfo* parameterInfo) =>
             GetHandler<INativeParameterInfoStructHandler>().Wrap(parameterInfo);
-
-        public static IntPtr GetMethodFromReflection(IntPtr method) =>
-            GetHandler<INativeMethodStructHandler>().GetMethodFromReflection(method);
     }
 }

@@ -3,13 +3,13 @@ using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
 {
-    [ApplicableToUnityVersionsSince("2018.3.0")]
-    public unsafe class NativeMethodStructHandler_24_1 : INativeMethodStructHandler
+    [ApplicableToUnityVersionsSince("2017.1.0")]
+    public unsafe class NativeMethodInfoStructHandler_24_0 : INativeMethodStructHandler
     {
         public INativeMethodStruct CreateNewMethodStruct()
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfoU2018>());
-            *(Il2CppMethodInfoU2018*)pointer = default;
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfo_24_0>());
+            *(Il2CppMethodInfo_24_0*)pointer = default;
 
             return new NativeMethodInfoStructWrapper(pointer);
         }
@@ -27,10 +27,10 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
             return il2cpp_method_get_from_reflection(method);
         }
 
-        public System.Type StructType => typeof(Il2CppMethodInfoU2018);
+        public System.Type StructType => typeof(Il2CppMethodInfo_24_0);
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct Il2CppMethodInfoU2018
+        private struct Il2CppMethodInfo_24_0
         {
             public IntPtr methodPointer;
             public IntPtr invoker_method;
@@ -54,6 +54,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
                 const Il2CppGenericContainer* genericContainer; /* is_inflated is false and is_generic is true #1#
             };*/
 
+            public int customAttributeIndex;
             public uint token;
             public Il2CppMethodFlags flags;
             public Il2CppMethodImplFlags iflags;
@@ -75,13 +76,13 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
                 Pointer = pointer;
             }
 
-            public int StructSize => Marshal.SizeOf<Il2CppMethodInfoU2018>();
+            public int StructSize => Marshal.SizeOf<Il2CppMethodInfo_24_0>();
 
             public IntPtr Pointer { get; }
 
             public Il2CppMethodInfo* MethodInfoPointer => (Il2CppMethodInfo*)Pointer;
 
-            private Il2CppMethodInfoU2018* NativeMethod => (Il2CppMethodInfoU2018*)Pointer;
+            private Il2CppMethodInfo_24_0* NativeMethod => (Il2CppMethodInfo_24_0*)Pointer;
 
             public ref IntPtr Name => ref NativeMethod->name;
 
