@@ -1,6 +1,13 @@
 using System;
 using System.Runtime.InteropServices;
 
+// ReSharper disable FieldCanBeMadeReadOnly.Global
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable NotAccessedField.Global
+// ReSharper disable IdentifierTypo
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
+
 namespace UnhollowerBaseLib.Runtime
 {
     //Stub structs
