@@ -1,15 +1,20 @@
 using System;
 using System.Runtime.InteropServices;
 
-// ReSharper disable FieldCanBeMadeReadOnly.Global
-// ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable NotAccessedField.Global
-// ReSharper disable IdentifierTypo
-// ReSharper disable InconsistentNaming
-// ReSharper disable UnusedMember.Global
-
 namespace UnhollowerBaseLib.Runtime
 {
+    //Stub structs
+    public struct Il2CppAssembly { }
+    public struct Il2CppClass { }
+    public struct Il2CppEventInfo { }
+    public struct Il2CppFieldInfo { }
+    public struct Il2CppImage { }
+    public struct Il2CppMethodInfo { }
+    public struct Il2CppParameterInfo { }
+    public struct Il2CppPropertyInfo { }
+    public struct Il2CppTypeStruct { }
+
+
     [Flags]
     public enum Il2CppMethodImplFlags : ushort
     {
@@ -152,10 +157,6 @@ namespace UnhollowerBaseLib.Runtime
         IL2CPP_TYPE_ENUM        = 0x55        /* an enumeration */
     }
 
-    public struct Il2CppMethodInfo
-    {
-    }
-
     [Flags]
     public enum MethodInfoExtraFlags : byte
     {
@@ -173,63 +174,12 @@ namespace UnhollowerBaseLib.Runtime
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FieldInfo
-    {
-        public IntPtr name; // const char*
-        public Il2CppTypeStruct* type; // const
-        public Il2CppClass* parent; // non-const?
-        public int offset; // If offset is -1, then it's thread static
-        public uint token;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct PropertyInfo
-    {
-        public Il2CppClass* parent;
-        public IntPtr name; // const char*
-        public Il2CppMethodInfo* get; // const
-        public Il2CppMethodInfo* set; // const
-        public uint attrs;
-        public uint token;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct EventInfo
-    {
-        public IntPtr name; // const char*
-        public Il2CppTypeStruct* eventType; // const
-        public Il2CppClass* parent; // non const
-        public Il2CppMethodInfo* add; // const
-        public Il2CppMethodInfo* remove; // const
-        public Il2CppMethodInfo* raise; // const
-        public uint token;
-    }
-
-    public struct Il2CppParameterInfo
-    {
-    }
-
-    public struct Il2CppTypeStruct
-    {
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct Il2CppRuntimeInterfaceOffsetPair
     {
         public Il2CppClass* interfaceType;
         public int offset;
     }
 
-    [Flags]
-    public enum ClassBitfield2 : byte
-    {
-        has_finalize = 0x1,
-        has_cctor = 0x2,
-        is_blittable = 0x4,
-        is_import_or_windows_runtime = 0x8,
-        is_vtable_initialized = 0x10,
-        has_initialization_error = 0x20
-    }
 
     [Flags]
     public enum ClassBitfield1 : byte
@@ -244,18 +194,16 @@ namespace UnhollowerBaseLib.Runtime
         size_inited = 0x80
     }
 
-    public struct Il2CppImage
+    [Flags]
+    public enum ClassBitfield2 : byte
     {
+        has_finalize = 0x1,
+        has_cctor = 0x2,
+        is_blittable = 0x4,
+        is_import_or_windows_runtime = 0x8,
+        is_vtable_initialized = 0x10,
+        has_initialization_error = 0x20
     }
-
-    public struct Il2CppAssembly
-    {
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct Il2CppClass
-    {
-    } // stub struct
 
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct Il2CppClassPart1
@@ -278,9 +226,9 @@ namespace UnhollowerBaseLib.Runtime
         // End always valid fields
 
         // The following fields need initialized before access. This can be done per field or as an aggregate via a call to Class::Init
-        public FieldInfo* fields; // Initialized in SetupFields
-        public EventInfo* events; // const; Initialized in SetupEvents
-        public PropertyInfo* properties; // const; Initialized in SetupProperties
+        public Il2CppFieldInfo* fields; // Initialized in SetupFields
+        public Il2CppEventInfo* events; // const; Initialized in SetupEvents
+        public Il2CppPropertyInfo* properties; // const; Initialized in SetupProperties
         public Il2CppMethodInfo** methods; // const; Initialized in SetupMethods
         public Il2CppClass** nestedTypes; // not const; Initialized in SetupNestedTypes
         public Il2CppClass** implementedInterfaces; // not const; Initialized in SetupInterfaces
