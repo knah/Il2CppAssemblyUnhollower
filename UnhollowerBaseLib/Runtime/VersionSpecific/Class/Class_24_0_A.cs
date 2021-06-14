@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Type;
-using TypeStruct = UnhollowerBaseLib.Runtime.VersionSpecific.Type.NativeTypeStructHandler_24_0.Il2CppType_24_0;
+using Il2CppType_24_0 = UnhollowerBaseLib.Runtime.VersionSpecific.Type.NativeTypeStructHandler_24_0.Il2CppType_24_0;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
 {
@@ -17,7 +17,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             *il2CppClassU20181 = default;
 
             il2CppClassU20181->byval_arg = il2CppClassU20181->this_arg =
-                (TypeStruct*)Marshal.AllocHGlobal(Marshal.SizeOf<TypeStruct>());
+                (Il2CppType_24_0*)Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppType_24_0>());
             *il2CppClassU20181->byval_arg = *il2CppClassU20181->this_arg = default;
 
 
@@ -37,8 +37,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public IntPtr gc_desc;
             public IntPtr name; // const char*
             public IntPtr namespaze; // const char*
-            public TypeStruct* byval_arg; // not const
-            public TypeStruct* this_arg; // not const
+            public Il2CppType_24_0* byval_arg; // not const
+            public Il2CppType_24_0* this_arg; // not const
             public Il2CppClass* element_class; // not const
             public Il2CppClass* castClass; // not const
             public Il2CppClass* declaringType; // not const
