@@ -57,7 +57,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
 
             public Il2CppImage* ImagePointer => (Il2CppImage*)Pointer;
 
-            private Il2CppImage_24_2* NativeImage => (Il2CppImage_24_2*)ImagePointer;
+            private Il2CppImage_24_2* NativeImage => (Il2CppImage_24_2*)Pointer;
 
             public ref Il2CppAssembly* Assembly => ref NativeImage->assembly;
 

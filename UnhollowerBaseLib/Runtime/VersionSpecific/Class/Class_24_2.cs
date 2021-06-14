@@ -48,9 +48,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             // End always valid fields
 
             // The following fields need initialized before access. This can be done per field or as an aggregate via a call to Class::Init
-            public FieldInfo* fields; // Initialized in SetupFields
-            public EventInfo* events; // const; Initialized in SetupEvents
-            public PropertyInfo* properties; // const; Initialized in SetupProperties
+            public Il2CppFieldInfo* fields; // Initialized in SetupFields
+            public Il2CppEventInfo* events; // const; Initialized in SetupEvents
+            public Il2CppPropertyInfo* properties; // const; Initialized in SetupProperties
             public Il2CppMethodInfo** methods; // const; Initialized in SetupMethods
             public Il2CppClass** nestedTypes; // not const; Initialized in SetupNestedTypes
             public Il2CppClass** implementedInterfaces; // not const; Initialized in SetupInterfaces
@@ -139,7 +139,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
 
             public IntPtr VTable => IntPtr.Add(Pointer, Marshal.SizeOf<Il2CppClass_24_2>());
 
-            private Il2CppClass_24_2* NativeClass => (Il2CppClass_24_2*)ClassPointer;
+            private Il2CppClass_24_2* NativeClass => (Il2CppClass_24_2*)Pointer;
 
             public ref uint InstanceSize => ref NativeClass->instance_size;
 

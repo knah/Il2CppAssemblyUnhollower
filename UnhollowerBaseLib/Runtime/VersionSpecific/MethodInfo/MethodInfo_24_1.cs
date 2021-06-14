@@ -4,9 +4,9 @@ using System.Runtime.InteropServices;
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
 {
     [ApplicableToUnityVersionsSince("2018.3.0")]
-    public unsafe class NativeMethodInfoStructHandler_24_1 : INativeMethodStructHandler
+    public unsafe class NativeMethodInfoStructHandler_24_1 : INativeMethodInfoStructHandler
     {
-        public INativeMethodStruct CreateNewMethodStruct()
+        public INativeMethodInfoStruct CreateNewMethodStruct()
         {
             var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppMethodInfo_24_1>());
             *(Il2CppMethodInfo_24_1*)pointer = default;
@@ -14,7 +14,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
             return new NativeMethodInfoStructWrapper(pointer);
         }
 
-        public INativeMethodStruct Wrap(Il2CppMethodInfo* methodPointer)
+        public INativeMethodInfoStruct Wrap(Il2CppMethodInfo* methodPointer)
         {
             return new NativeMethodInfoStructWrapper((IntPtr)methodPointer);
         }
@@ -68,7 +68,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
         }
 
 
-        private class NativeMethodInfoStructWrapper : INativeMethodStruct
+        private class NativeMethodInfoStructWrapper : INativeMethodInfoStruct
         {
             public NativeMethodInfoStructWrapper(IntPtr pointer)
             {
