@@ -176,7 +176,7 @@ namespace UnhollowerRuntimeLib
             string klass = type.Name;
             if (klass == null) return;
             string namespaze = type.Namespace ?? string.Empty;
-            ClassInjectionAssemblyTargetAttribute attribute = Attribute.GetCustomAttribute(type, typeof(ClassInjectionAssemblyTargetAttribute)) as ClassInjectionAssemblyTargetAttribute;
+            var attribute = Attribute.GetCustomAttribute(type, typeof(UnhollowerBaseLib.Attributes.ClassInjectionAssemblyTargetAttribute)) as UnhollowerBaseLib.Attributes.ClassInjectionAssemblyTargetAttribute;
 
             foreach (IntPtr image in ((attribute is null) ? IL2CPP.GetIl2CppImages() : attribute.GetImagePointers()) )
             {
