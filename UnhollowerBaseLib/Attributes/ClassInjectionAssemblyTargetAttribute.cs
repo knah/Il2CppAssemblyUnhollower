@@ -1,8 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnhollowerBaseLib;
 
 namespace UnhollowerRuntimeLib
+{
+    [Obsolete("UnhollowerRuntimeLib.ClassInjectionAssemblyTargetAttribute is obsolete. Use UnhollowerBaseLib.Attributes.ClassInjectionAssemblyTargetAttribute instead.")]
+    [AttributeUsage(AttributeTargets.Class)]
+    public class ClassInjectionAssemblyTargetAttribute : UnhollowerBaseLib.Attributes.ClassInjectionAssemblyTargetAttribute
+    {
+        public ClassInjectionAssemblyTargetAttribute(string assembly) : base(assembly) { }
+        public ClassInjectionAssemblyTargetAttribute(string[] assemblies) : base(assemblies) { }
+    }
+}
+
+namespace UnhollowerBaseLib.Attributes
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class ClassInjectionAssemblyTargetAttribute : Attribute
