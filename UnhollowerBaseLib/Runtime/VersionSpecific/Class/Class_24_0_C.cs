@@ -155,6 +155,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public ref uint ActualSize => ref NativeClass->actualSize;
 
             public ref ushort MethodCount => ref NativeClass->method_count;
+            
+            public ref byte Rank => ref NativeClass->rank;
 
             private static int bitfield1offset =
                 Marshal.OffsetOf<Il2CppClass_24_0_C>(nameof(Il2CppClass_24_0_C.bitfield_1)).ToInt32();
