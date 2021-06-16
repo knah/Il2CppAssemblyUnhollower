@@ -159,6 +159,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public ref uint ActualSize => ref NativeClass->actualSize;
 
             public ref ushort MethodCount => ref NativeClass->method_count;
+            
+            public ref byte Rank => ref NativeClass->rank;
 
             // public ref ClassBitfield1 Bitfield1 => ref NativeClass->bitfield_1;
 

@@ -80,6 +80,7 @@ namespace UnhollowerBaseLib
         public static unsafe void WriteReferenceField(IntPtr fieldPointer, Il2CppObjectBase value)
         {
             // todo: check that first argument is unused on all il2cpp versions
+            // todo: support unity versions that don't have this export
             IL2CPP.il2cpp_gc_wbarrier_set_field(IntPtr.Zero, fieldPointer, value?.PointerNullable ?? IntPtr.Zero);
         }
         public static unsafe void WriteInterfaceField<T>(IntPtr fieldPointer, T value)

@@ -124,7 +124,7 @@ namespace UnhollowerBaseLib.Maps
             
             // pointer and byref are Type but not Class
             var nativeClassStruct = UnityVersionHandler.Wrap((Il2CppClass*) clazz);
-            var byValTypeType = nativeClassStruct.ByValArg.type;
+            var byValTypeType = nativeClassStruct.ByValArg.Type;
             if (byValTypeType == Il2CppTypeEnum.IL2CPP_TYPE_SZARRAY || byValTypeType == Il2CppTypeEnum.IL2CPP_TYPE_ARRAY)
             {
                 if (nativeClassStruct.Rank > 1)
