@@ -3,14 +3,15 @@ using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
 {
-    [ApplicableToUnityVersionsSince("2021.1.0")]
-    public unsafe class NativeAssemblyStructHandler_27_2 : INativeAssemblyStructHandler
+    [ApplicableToUnityVersionsSince("2019.4.15")]
+    [ApplicableToUnityVersionsSince("2020.1.11")]
+    public unsafe class NativeAssemblyStructHandler_24_4 : INativeAssemblyStructHandler
     {
         public INativeAssemblyStruct CreateNewAssemblyStruct()
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppAssembly_27_2>());
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppAssembly_24_4>());
 
-            *(Il2CppAssembly_27_2*)pointer = default;
+            *(Il2CppAssembly_24_4*)pointer = default;
 
             return new NativeAssemblyStruct(pointer);
         }
@@ -20,20 +21,20 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
             return new NativeAssemblyStruct((IntPtr)assemblyPointer);
         }
 
-        public string GetName() => "NativeAssemblyStructHandler_27_2";
+        public string GetName() => "NativeAssemblyStructHandler_24_4";
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct Il2CppAssembly_27_2
+        internal struct Il2CppAssembly_24_4
         {
             public Il2CppImage* image;
             public uint token;
             public int referencedAssemblyStart;
             public int referencedAssemblyCount;
-            public Il2CppAssemblyName_27_2 aname;
+            public Il2CppAssemblyName_24_4 aname;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct Il2CppAssemblyName_27_2
+        internal struct Il2CppAssemblyName_24_4
         {
             public IntPtr name; // const char* 
             public IntPtr culture; // const char*
@@ -45,7 +46,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
             public int minor;
             public int build;
             public int revision;
-            public fixed byte public_key_token[16]; // PUBLIC_KEY_BYTE_LENGTH
+            public long public_key_token; // PUBLIC_KEY_BYTE_LENGTH
         }
 
         internal class NativeAssemblyStruct : INativeAssemblyStruct
@@ -59,7 +60,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
 
             public Il2CppAssembly* AssemblyPointer => (Il2CppAssembly*)Pointer;
 
-            private Il2CppAssembly_27_2* NativeAssembly => (Il2CppAssembly_27_2*)Pointer;
+            private Il2CppAssembly_24_4* NativeAssembly => (Il2CppAssembly_24_4*)Pointer;
 
             public ref Il2CppImage* Image => ref NativeAssembly->image;
 

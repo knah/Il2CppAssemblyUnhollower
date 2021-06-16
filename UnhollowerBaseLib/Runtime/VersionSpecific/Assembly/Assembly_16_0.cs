@@ -44,7 +44,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
             public int minor;
             public int build;
             public int revision;
-            public fixed byte public_key_token[16]; // PUBLIC_KEY_BYTE_LENGTH
+            public long public_key_token; // PUBLIC_KEY_BYTE_LENGTH
         }
 
         internal class NativeAssemblyStruct : INativeAssemblyStruct
