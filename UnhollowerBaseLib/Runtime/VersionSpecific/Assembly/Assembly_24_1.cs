@@ -20,6 +20,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
             return new NativeAssemblyStruct((IntPtr)assemblyPointer);
         }
 
+        public string GetName() => "NativeAssemblyStructHandler_24_1";
+
         [StructLayout(LayoutKind.Sequential)]
         internal struct Il2CppAssembly_24_1
         {

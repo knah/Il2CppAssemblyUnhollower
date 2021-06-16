@@ -20,6 +20,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.PropertyInfo
             return new NativePropertyInfoStruct((IntPtr)propertyInfoPointer);
         }
 
+        public string GetName() => "NativePropertyInfoStructHandler_19_0";
+
         [StructLayout(LayoutKind.Sequential)]
         internal struct Il2CppPropertyInfo_19_0
         {

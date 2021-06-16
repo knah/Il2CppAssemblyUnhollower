@@ -20,6 +20,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
             return new NativeImageStruct((IntPtr)imagePointer);
         }
 
+        public string GetName() => "NativeImageStructHandler_19_0";
+
         [StructLayout(LayoutKind.Sequential)]
         internal struct Il2CppImage_19_0
         {

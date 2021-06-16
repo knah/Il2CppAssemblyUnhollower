@@ -22,6 +22,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             return new NativeClassStruct((IntPtr)classPointer);
         }
 
+        public string GetName() => "NativeClassStructHandler_27_0";
+
         [StructLayout(LayoutKind.Sequential)]
         internal unsafe struct Il2CppClass_27_0
         {

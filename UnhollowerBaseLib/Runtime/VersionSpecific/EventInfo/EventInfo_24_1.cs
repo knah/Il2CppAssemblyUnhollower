@@ -20,6 +20,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
             return new NativeEventInfoStruct((IntPtr)eventInfoPointer);
         }
 
+        public string GetName() => "NativeEventInfoStructHandler_24_1";
+
         [StructLayout(LayoutKind.Sequential)]
         internal struct Il2CppEventInfo_24_1
         {

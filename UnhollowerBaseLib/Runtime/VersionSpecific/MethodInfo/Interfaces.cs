@@ -8,6 +8,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
         unsafe INativeMethodInfoStruct Wrap(Il2CppMethodInfo* methodPointer);
         IntPtr GetMethodFromReflection(IntPtr method);
         IntPtr CopyMethodInfoStruct(IntPtr origMethodInfo);
+        string GetName();
     }
 
 

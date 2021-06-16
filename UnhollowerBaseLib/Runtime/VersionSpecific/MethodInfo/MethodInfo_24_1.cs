@@ -38,6 +38,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
             return copiedMethodInfo;
         }
 
+        public string GetName() => "NativeMethodInfoStructHandler_24_1";
+
         [StructLayout(LayoutKind.Sequential)]
         internal struct Il2CppMethodInfo_24_1
         {
