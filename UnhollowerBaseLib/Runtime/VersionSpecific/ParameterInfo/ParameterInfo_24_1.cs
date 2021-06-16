@@ -6,15 +6,6 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.ParameterInfo
     [ApplicableToUnityVersionsSince("2018.3.0")]
     internal class NativeParameterInfoStructHandler_24_1 : INativeParameterInfoStructHandler
     {
-        [StructLayout(LayoutKind.Sequential)]
-        private unsafe struct Il2CppParameterInfo_24_1
-        {
-            public IntPtr name; // const char*
-            public int position;
-            public uint token;
-            public Il2CppTypeStruct* parameter_type; // const
-        }
-        
         public unsafe Il2CppParameterInfo*[] CreateNewParameterInfoArray(int paramCount)
         {
             var ptr = (Il2CppParameterInfo_24_1*) Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppParameterInfo_24_1>() * paramCount);
@@ -31,8 +22,17 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.ParameterInfo
         {
             return new NativeParameterInfoStructWrapper((IntPtr) paramInfoPointer);
         }
-        
-        private unsafe class NativeParameterInfoStructWrapper : INativeParameterInfoStruct
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal unsafe struct Il2CppParameterInfo_24_1
+        {
+            public IntPtr name; // const char*
+            public int position;
+            public uint token;
+            public Il2CppTypeStruct* parameter_type; // const
+        }
+
+        internal unsafe class NativeParameterInfoStructWrapper : INativeParameterInfoStruct
         {
             public NativeParameterInfoStructWrapper(IntPtr pointer)
             {

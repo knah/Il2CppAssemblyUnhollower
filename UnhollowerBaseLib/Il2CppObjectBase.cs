@@ -47,7 +47,7 @@ namespace UnhollowerBaseLib
         {
             var nestedTypeClassPointer = Il2CppClassPointerStore<T>.NativeClassPtr;
             if (nestedTypeClassPointer == IntPtr.Zero)
-                throw new ArgumentException($"{typeof(T)} is not al Il2Cpp reference type");
+                throw new ArgumentException($"{typeof(T)} is not an Il2Cpp reference type");
             
             var ownClass = IL2CPP.il2cpp_object_get_class(Pointer);
             if (!IL2CPP.il2cpp_class_is_assignable_from(nestedTypeClassPointer, ownClass))
@@ -60,7 +60,7 @@ namespace UnhollowerBaseLib
         {
             var nestedTypeClassPointer = Il2CppClassPointerStore<T>.NativeClassPtr;
             if (nestedTypeClassPointer == IntPtr.Zero)
-                throw new ArgumentException($"{typeof(T)} is not al Il2Cpp reference type");
+                throw new ArgumentException($"{typeof(T)} is not an Il2Cpp reference type");
 
             var ownClass = IL2CPP.il2cpp_object_get_class(Pointer);
             if (!IL2CPP.il2cpp_class_is_assignable_from(nestedTypeClassPointer, ownClass))

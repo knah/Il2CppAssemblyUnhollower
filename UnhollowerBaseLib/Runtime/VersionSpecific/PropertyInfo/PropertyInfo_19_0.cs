@@ -3,14 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.PropertyInfo
 {
-    [ApplicableToUnityVersionsSince("2018.3.0")]
-    public unsafe class NativePropertyInfoStructHandler_24_1 : INativePropertyInfoStructHandler
+    [ApplicableToUnityVersionsSince("5.3.2")]
+    public unsafe class NativePropertyInfoStructHandler_19_0 : INativePropertyInfoStructHandler
     {
         public INativePropertyInfoStruct CreateNewPropertyInfoStruct()
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppPropertyInfo_24_1>());
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppPropertyInfo_19_0>());
 
-            *(Il2CppPropertyInfo_24_1*)pointer = default;
+            *(Il2CppPropertyInfo_19_0*)pointer = default;
 
             return new NativePropertyInfoStruct(pointer);
         }
@@ -21,13 +21,14 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.PropertyInfo
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct Il2CppPropertyInfo_24_1
+        internal struct Il2CppPropertyInfo_19_0
         {
             public Il2CppClass* parent;
             public IntPtr name; // const char*
             public Il2CppMethodInfo* get; // const
             public Il2CppMethodInfo* set; // const
             public uint attrs;
+            public IntPtr customAttributeIndex;
             public uint token;
         }
 
@@ -42,7 +43,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.PropertyInfo
 
             public Il2CppPropertyInfo* PropertyInfoPointer => (Il2CppPropertyInfo*)Pointer;
 
-            private Il2CppPropertyInfo_24_1* NativeProperty => (Il2CppPropertyInfo_24_1*)Pointer;
+            private Il2CppPropertyInfo_19_0* NativeProperty => (Il2CppPropertyInfo_19_0*)Pointer;
 
             public ref IntPtr Name => ref NativeProperty->name;
 

@@ -3,14 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.FieldInfo
 {
-    [ApplicableToUnityVersionsSince("2018.3.0")]
-    public unsafe class NativeFieldInfoStructHandler_24_1 : INativeFieldInfoStructHandler
+    [ApplicableToUnityVersionsSince("5.3.2")]
+    public unsafe class NativeFieldInfoStructHandler_19_0 : INativeFieldInfoStructHandler
     {
         public INativeFieldInfoStruct CreateNewFieldInfoStruct()
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppFieldInfo_24_1>());
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppFieldInfo_19_0>());
 
-            *(Il2CppFieldInfo_24_1*)pointer = default;
+            *(Il2CppFieldInfo_19_0*)pointer = default;
 
             return new NativeFieldInfoStruct(pointer);
         }
@@ -21,12 +21,13 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.FieldInfo
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct Il2CppFieldInfo_24_1
+        internal struct Il2CppFieldInfo_19_0
         {
             public IntPtr name; // const char*
             public Il2CppTypeStruct* type; // const
             public Il2CppClass* parent; // non-const?
             public int offset; // If offset is -1, then it's thread static
+            public IntPtr customAttributeIndex;
             public uint token;
         }
 
@@ -41,7 +42,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.FieldInfo
 
             public Il2CppFieldInfo* FieldInfoPointer => (Il2CppFieldInfo*)Pointer;
 
-            private Il2CppFieldInfo_24_1* NativeField => (Il2CppFieldInfo_24_1*)Pointer;
+            private Il2CppFieldInfo_19_0* NativeField => (Il2CppFieldInfo_19_0*)Pointer;
 
             public ref IntPtr Name => ref NativeField->name;
 

@@ -3,14 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
 {
-    [ApplicableToUnityVersionsSince("2017.1.0")]
-    public unsafe class NativeEventInfoStructHandler_24_0 : INativeEventInfoStructHandler
+    [ApplicableToUnityVersionsSince("5.3.2")]
+    public unsafe class NativeEventInfoStructHandler_19_0 : INativeEventInfoStructHandler
     {
         public INativeEventInfoStruct CreateNewEventInfoStruct()
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppEventInfo_24_0>());
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppEventInfo_19_0>());
 
-            *(Il2CppEventInfo_24_0*)pointer = default;
+            *(Il2CppEventInfo_19_0*)pointer = default;
 
             return new NativeEventInfoStruct(pointer);
         }
@@ -21,7 +21,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct Il2CppEventInfo_24_0
+       internal struct Il2CppEventInfo_19_0
         {
             public IntPtr name; // const char*
             public Il2CppTypeStruct* eventType; // const
@@ -33,7 +33,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
             public uint token;
         }
 
-        private class NativeEventInfoStruct : INativeEventInfoStruct
+        internal class NativeEventInfoStruct : INativeEventInfoStruct
         {
             public NativeEventInfoStruct(IntPtr pointer)
             {
@@ -44,7 +44,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
 
             public Il2CppEventInfo* EventInfoPointer => (Il2CppEventInfo*)Pointer;
 
-            private Il2CppEventInfo_24_0* NativeEvent => (Il2CppEventInfo_24_0*)Pointer;
+            private Il2CppEventInfo_19_0* NativeEvent => (Il2CppEventInfo_19_0*)Pointer;
 
             public ref IntPtr Name => ref NativeEvent->name;
 
@@ -57,8 +57,6 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
             public ref Il2CppMethodInfo* Remove => ref NativeEvent->remove;
 
             public ref Il2CppMethodInfo* Raise => ref NativeEvent->raise;
-
-            public ref uint Token => ref NativeEvent->token;
         }
     }
 }

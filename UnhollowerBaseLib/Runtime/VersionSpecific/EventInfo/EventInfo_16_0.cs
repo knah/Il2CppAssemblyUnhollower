@@ -3,14 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
 {
-    [ApplicableToUnityVersionsSince("2018.3.0")]
-    public unsafe class NativeEventInfoStructHandler_24_1 : INativeEventInfoStructHandler
+    [ApplicableToUnityVersionsSince("5.3.0")]
+    public unsafe class NativeEventInfoStructHandler_16_0 : INativeEventInfoStructHandler
     {
         public INativeEventInfoStruct CreateNewEventInfoStruct()
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppEventInfo_24_1>());
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppEventInfo_16_0>());
 
-            *(Il2CppEventInfo_24_1*)pointer = default;
+            *(Il2CppEventInfo_16_0*)pointer = default;
 
             return new NativeEventInfoStruct(pointer);
         }
@@ -21,7 +21,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct Il2CppEventInfo_24_1
+        internal struct Il2CppEventInfo_16_0
         {
             public IntPtr name; // const char*
             public Il2CppTypeStruct* eventType; // const
@@ -29,7 +29,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
             public Il2CppMethodInfo* add; // const
             public Il2CppMethodInfo* remove; // const
             public Il2CppMethodInfo* raise; // const
-            public uint token;
+            public IntPtr customAttributeIndex;
         }
 
         internal class NativeEventInfoStruct : INativeEventInfoStruct
@@ -43,7 +43,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
 
             public Il2CppEventInfo* EventInfoPointer => (Il2CppEventInfo*)Pointer;
 
-            private Il2CppEventInfo_24_1* NativeEvent => (Il2CppEventInfo_24_1*)Pointer;
+            private Il2CppEventInfo_16_0* NativeEvent => (Il2CppEventInfo_16_0*)Pointer;
 
             public ref IntPtr Name => ref NativeEvent->name;
 

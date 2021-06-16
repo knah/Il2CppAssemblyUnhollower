@@ -19,7 +19,5 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.FieldInfo
         unsafe ref Il2CppClass* Parent { get; }
 
         ref int Offset { get; }
-
-        ref uint Token { get; }
     }
 }
