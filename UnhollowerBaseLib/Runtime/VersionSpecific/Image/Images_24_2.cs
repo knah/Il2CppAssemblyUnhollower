@@ -21,7 +21,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct Il2CppImage_24_2
+        internal struct Il2CppImage_24_2
         {
             public IntPtr name; // const char*
             public IntPtr nameNoExt; // const char*
@@ -46,7 +46,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
             public byte dynamic;
         }
 
-        private class NativeImageStruct : INativeImageStruct
+        internal class NativeImageStruct : INativeImageStruct
         {
             public NativeImageStruct(IntPtr pointer)
             {

@@ -21,7 +21,5 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.PropertyInfo
         unsafe ref Il2CppMethodInfo* Set { get; }
 
         ref uint Attrs { get; }
-
-        ref uint Token { get; }
     }
 }

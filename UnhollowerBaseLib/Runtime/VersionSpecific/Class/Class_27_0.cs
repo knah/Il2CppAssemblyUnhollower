@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Type;
-using Il2CppType_27_0 = UnhollowerBaseLib.Runtime.VersionSpecific.Type.NativeTypeStructHandler_27_0.Il2CppType_27_0;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
 {
@@ -24,15 +23,15 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private unsafe struct Il2CppClass_27_0
+        internal unsafe struct Il2CppClass_27_0
         {
             // The following fields are always valid for a Il2CppClass structure
             public Il2CppImage* image; // const
             public IntPtr gc_desc;
             public IntPtr name; // const char*
             public IntPtr namespaze; // const char*
-            public Il2CppType_27_0 byval_arg; // not const, no ptr
-            public Il2CppType_27_0 this_arg; // not const, no ptr
+            public NativeTypeStructHandler_27_0.Il2CppType_27_0 byval_arg; // not const, no ptr
+            public NativeTypeStructHandler_27_0.Il2CppType_27_0 this_arg; // not const, no ptr
             public Il2CppClass* element_class; // not const
             public Il2CppClass* castClass; // not const
             public Il2CppClass* declaringType; // not const
@@ -133,7 +132,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             //VirtualInvokeData vtable[IL2CPP_ZERO_LEN_ARRAY];
         }
 
-        private unsafe class NativeClassStruct : INativeClassStruct
+        internal unsafe class NativeClassStruct : INativeClassStruct
         {
             public NativeClassStruct(IntPtr pointer)
             {

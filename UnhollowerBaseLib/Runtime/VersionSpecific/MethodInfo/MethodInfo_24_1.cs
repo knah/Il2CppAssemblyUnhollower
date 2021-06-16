@@ -20,17 +20,26 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
         }
 
         [DllImport("GameAssembly", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern IntPtr il2cpp_method_get_from_reflection(IntPtr method);
+        private static extern IntPtr il2cpp_method_get_from_reflection(IntPtr method);
 
         public IntPtr GetMethodFromReflection(IntPtr method)
         {
             return il2cpp_method_get_from_reflection(method);
         }
 
-        public System.Type StructType => typeof(Il2CppMethodInfo_24_1);
+        public IntPtr CopyMethodInfoStruct(IntPtr origMethodInfo)
+        {
+            int sizeOfMethodInfo = Marshal.SizeOf<Il2CppMethodInfo_24_1>();
+            IntPtr copiedMethodInfo = Marshal.AllocHGlobal(sizeOfMethodInfo);
+
+            object temp = Marshal.PtrToStructure<Il2CppMethodInfo_24_1>(origMethodInfo);
+            Marshal.StructureToPtr(temp, copiedMethodInfo, false);
+
+            return copiedMethodInfo;
+        }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct Il2CppMethodInfo_24_1
+        internal struct Il2CppMethodInfo_24_1
         {
             public IntPtr methodPointer;
             public IntPtr invoker_method;
@@ -68,7 +77,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
         }
 
 
-        private class NativeMethodInfoStructWrapper : INativeMethodInfoStruct
+        internal class NativeMethodInfoStructWrapper : INativeMethodInfoStruct
         {
             public NativeMethodInfoStructWrapper(IntPtr pointer)
             {

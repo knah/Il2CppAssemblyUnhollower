@@ -3,14 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
 {
-    [ApplicableToUnityVersionsSince("2018.3.0")]
-    public unsafe class NativeAssemblyStructHandler_24_1 : INativeAssemblyStructHandler
+    [ApplicableToUnityVersionsSince("5.3.3")]
+    public unsafe class NativeAssemblyStructHandler_20_0 : INativeAssemblyStructHandler
     {
         public INativeAssemblyStruct CreateNewAssemblyStruct()
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppAssembly_24_1>());
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppAssembly_20_0>());
 
-            *(Il2CppAssembly_24_1*)pointer = default;
+            *(Il2CppAssembly_20_0*)pointer = default;
 
             return new NativeAssemblyStruct(pointer);
         }
@@ -21,17 +21,17 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct Il2CppAssembly_24_1
+        internal struct Il2CppAssembly_20_0
         {
             public Il2CppImage* image;
-            public uint token;
+            public IntPtr customAttribute;
             public int referencedAssemblyStart;
             public int referencedAssemblyCount;
-            public Il2CppAssemblyName_24_1 aname;
+            public Il2CppAssemblyName_20_0 aname;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct Il2CppAssemblyName_24_1
+        internal struct Il2CppAssemblyName_20_0
         {
             public IntPtr name; // const char* 
             public IntPtr culture; // const char*
@@ -58,7 +58,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
 
             public Il2CppAssembly* AssemblyPointer => (Il2CppAssembly*)Pointer;
 
-            private Il2CppAssembly_24_1* NativeAssembly => (Il2CppAssembly_24_1*)Pointer;
+            private Il2CppAssembly_20_0* NativeAssembly => (Il2CppAssembly_20_0*)Pointer;
 
             public ref Il2CppImage* Image => ref NativeAssembly->image;
 

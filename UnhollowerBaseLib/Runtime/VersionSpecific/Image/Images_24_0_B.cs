@@ -22,21 +22,18 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct Il2CppImage_24_0_B
+        internal struct Il2CppImage_24_0_B
         {
             public IntPtr name; // const char*
             public IntPtr nameNoExt; // const char*
-            public int assemblyIndex;
+            public /*AssemblyIndex*/ int assemblyIndex;
 
             public /*TypeDefinitionIndex*/ int typeStart;
             public uint typeCount;
 
             public /*TypeDefinitionIndex*/ int exportedTypeStart;
             public uint exportedTypeCount;
-
-            public /*CustomAttributeIndex*/ int customAttributeStart;
-            public uint customAttributeCount;
-
+            
             public /*MethodIndex*/ int entryPointIndex;
 
             public /*Il2CppNameToTypeDefinitionIndexHashTable **/ IntPtr nameToClassHashTable;
@@ -44,7 +41,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
             public uint token;
         }
 
-        private class NativeImageStruct : INativeImageStruct
+        internal class NativeImageStruct : INativeImageStruct
         {
             private static byte dynamicDummy;
 

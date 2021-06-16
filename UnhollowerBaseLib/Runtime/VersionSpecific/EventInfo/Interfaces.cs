@@ -23,7 +23,5 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
         unsafe ref Il2CppMethodInfo* Remove { get; }
 
         unsafe ref Il2CppMethodInfo* Raise { get; }
-
-        ref uint Token { get; }
     }
 }

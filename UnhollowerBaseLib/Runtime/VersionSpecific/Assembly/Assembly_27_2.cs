@@ -21,7 +21,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct Il2CppAssembly_27_2
+        internal struct Il2CppAssembly_27_2
         {
             public Il2CppImage* image;
             public uint token;
@@ -31,7 +31,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct Il2CppAssemblyName_27_2
+        internal struct Il2CppAssemblyName_27_2
         {
             public IntPtr name; // const char* 
             public IntPtr culture; // const char*
@@ -46,7 +46,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
             public fixed byte public_key_token[16]; // PUBLIC_KEY_BYTE_LENGTH
         }
 
-        private class NativeAssemblyStruct : INativeAssemblyStruct
+        internal class NativeAssemblyStruct : INativeAssemblyStruct
         {
             public NativeAssemblyStruct(IntPtr pointer)
             {
