@@ -20,7 +20,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
         }
 
         [DllImport("GameAssembly", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern IntPtr il2cpp_method_get_from_reflection(IntPtr method);
+        private static extern IntPtr il2cpp_method_get_from_reflection(IntPtr method);
 
         public IntPtr GetMethodFromReflection(IntPtr method)
         {
@@ -37,6 +37,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
 
             return copiedMethodInfo;
         }
+
+        public string GetName() => "NativeMethodInfoStructHandler_16_0";
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct Il2CppMethodInfo_16_0

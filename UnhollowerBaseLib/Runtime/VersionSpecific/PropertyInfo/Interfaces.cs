@@ -6,6 +6,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.PropertyInfo
     {
         INativePropertyInfoStruct CreateNewPropertyInfoStruct();
         unsafe INativePropertyInfoStruct Wrap(Il2CppPropertyInfo* propertyInfoPointer);
+        string GetName();
     }
 
     public interface INativePropertyInfoStruct : INativeStruct

@@ -6,6 +6,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
     {
         INativeEventInfoStruct CreateNewEventInfoStruct();
         unsafe INativeEventInfoStruct Wrap(Il2CppEventInfo* eventInfoPointer);
+        string GetName();
     }
 
     public interface INativeEventInfoStruct : INativeStruct

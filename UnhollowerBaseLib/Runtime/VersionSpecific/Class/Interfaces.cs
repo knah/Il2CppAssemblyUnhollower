@@ -7,6 +7,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
     {
         INativeClassStruct CreateNewClassStruct(int vTableSlots);
         unsafe INativeClassStruct Wrap(Il2CppClass* classPointer);
+        string GetName();
     }
 
     public interface INativeClassStruct : INativeStruct
