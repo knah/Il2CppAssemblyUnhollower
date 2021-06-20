@@ -20,7 +20,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.FieldInfo
             return new NativeFieldInfoStruct((IntPtr)fieldInfoPointer);
         }
 
+#if DEBUG
         public string GetName() => "NativeFieldInfoStructHandler_19_0";
+#endif
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct Il2CppFieldInfo_19_0

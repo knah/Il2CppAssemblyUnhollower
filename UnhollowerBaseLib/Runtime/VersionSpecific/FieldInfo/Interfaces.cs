@@ -6,7 +6,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.FieldInfo
     {
         INativeFieldInfoStruct CreateNewFieldInfoStruct();
         unsafe INativeFieldInfoStruct Wrap(Il2CppFieldInfo* fieldInfoPointer);
+#if DEBUG
         string GetName();
+#endif
     }
 
     public interface INativeFieldInfoStruct : INativeStruct

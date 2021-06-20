@@ -20,7 +20,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Type
             return new NativeTypeStruct((IntPtr)TypePointer);
         }
 
+#if DEBUG
         public string GetName() => "NativeTypeStructHandler_27_2";
+#endif
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct Il2CppType_27_2
