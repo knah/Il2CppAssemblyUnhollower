@@ -6,7 +6,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
     {
         INativeImageStruct CreateNewImageStruct();
         unsafe INativeImageStruct Wrap(Il2CppImage* imagePointer);
+#if DEBUG
         string GetName();
+#endif
     }
 
     public interface INativeImageStruct : INativeStruct

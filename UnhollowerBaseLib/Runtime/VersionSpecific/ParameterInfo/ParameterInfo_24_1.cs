@@ -23,7 +23,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.ParameterInfo
             return new NativeParameterInfoStructWrapper((IntPtr) paramInfoPointer);
         }
 
+#if DEBUG
         public string GetName() => "NativeParameterInfoStructHandler_24_1";
+#endif
 
         [StructLayout(LayoutKind.Sequential)]
         internal unsafe struct Il2CppParameterInfo_24_1
