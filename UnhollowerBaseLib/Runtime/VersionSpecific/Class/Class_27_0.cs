@@ -42,8 +42,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public Il2CppClass* parent; // not const
             public /*Il2CppGenericClass**/ IntPtr generic_class;
 
-            public IntPtr
-                typeMetadataHandle; //  // const; non-NULL for Il2CppClass's constructed from type defintions
+            public IntPtr typeMetadataHandle; // not const; non-NULL for Il2CppClass's constructed from type defintions
 
             public /*Il2CppInteropData**/ IntPtr interopData; // const
 

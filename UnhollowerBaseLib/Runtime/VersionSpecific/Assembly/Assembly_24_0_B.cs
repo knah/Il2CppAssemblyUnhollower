@@ -3,14 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
 {
-    [ApplicableToUnityVersionsSince("5.3.0")]
-    public unsafe class NativeAssemblyStructHandler_16_0 : INativeAssemblyStructHandler
+    [ApplicableToUnityVersionsSince("2018.1.0")]
+    public unsafe class NativeAssemblyStructHandler_24_0_B : INativeAssemblyStructHandler
     {
         public INativeAssemblyStruct CreateNewAssemblyStruct()
         {
-            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppAssembly_16_0>());
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf<Il2CppAssembly_24_0_B>());
 
-            *(Il2CppAssembly_16_0*)pointer = default;
+            *(Il2CppAssembly_24_0_B*)pointer = default;
 
             return new NativeAssemblyStruct(pointer);
         }
@@ -21,19 +21,21 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
         }
 
 #if DEBUG
-        public string GetName() => "NativeAssemblyStructHandler_16_0";
+        public string GetName() => "NativeAssemblyStructHandler_24_0_B";
 #endif
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct Il2CppAssembly_16_0
+        internal struct Il2CppAssembly_24_0_B
         {
-            public int imageIndex;
+            public Il2CppImage* image;
             public int customAttributeIndex;
-            public Il2CppAssemblyName_16_0 aname;
+            public int referencedAssemblyStart;
+            public int referencedAssemblyCount;
+            public Il2CppAssemblyName_24_0_B aname;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        internal struct Il2CppAssemblyName_16_0
+        internal struct Il2CppAssemblyName_24_0_B
         {
             public IntPtr name; // const char* 
             public IntPtr culture; // const char*
@@ -60,11 +62,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
 
             public Il2CppAssembly* AssemblyPointer => (Il2CppAssembly*)Pointer;
 
-            private Il2CppAssembly_16_0* NativeAssembly => (Il2CppAssembly_16_0*)Pointer;
+            private Il2CppAssembly_24_0_B* NativeAssembly => (Il2CppAssembly_24_0_B*)Pointer;
 
-            private Il2CppImage* dummyImagePointer;
-
-            public ref Il2CppImage* Image => ref dummyImagePointer;
+            public ref Il2CppImage* Image => ref NativeAssembly->image;
 
             public ref IntPtr Name => ref NativeAssembly->aname.name;
 
