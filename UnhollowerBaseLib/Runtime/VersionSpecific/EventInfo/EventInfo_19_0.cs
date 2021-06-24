@@ -33,7 +33,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
             public Il2CppMethodInfo* add; // const
             public Il2CppMethodInfo* remove; // const
             public Il2CppMethodInfo* raise; // const
-            public IntPtr customAttributeIndex;
+            public int customAttributeIndex;
             public uint token;
         }
 

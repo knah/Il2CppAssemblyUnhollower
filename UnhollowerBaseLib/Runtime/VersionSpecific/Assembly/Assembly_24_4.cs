@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
 {
+    [ApplicableToUnityVersionsSince("2018.4.34")]
     [ApplicableToUnityVersionsSince("2019.4.15")]
     [ApplicableToUnityVersionsSince("2020.1.11")]
     public unsafe class NativeAssemblyStructHandler_24_4 : INativeAssemblyStructHandler

@@ -31,7 +31,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.FieldInfo
             public Il2CppTypeStruct* type; // const
             public Il2CppClass* parent; // non-const?
             public int offset; // If offset is -1, then it's thread static
-            public IntPtr customAttributeIndex;
+            public int customAttributeIndex;
             public uint token;
         }
 

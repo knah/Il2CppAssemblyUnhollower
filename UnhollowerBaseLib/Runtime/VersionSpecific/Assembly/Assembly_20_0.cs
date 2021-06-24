@@ -27,8 +27,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
         [StructLayout(LayoutKind.Sequential)]
         internal struct Il2CppAssembly_20_0
         {
-            public Il2CppImage* image;
-            public IntPtr customAttribute;
+            public int imageIndex;
+            public int customAttributeIndex;
             public int referencedAssemblyStart;
             public int referencedAssemblyCount;
             public Il2CppAssemblyName_20_0 aname;
@@ -64,7 +64,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
 
             private Il2CppAssembly_20_0* NativeAssembly => (Il2CppAssembly_20_0*)Pointer;
 
-            public ref Il2CppImage* Image => ref NativeAssembly->image;
+            private Il2CppImage* dummyImagePointer;
+
+            public ref Il2CppImage* Image => ref dummyImagePointer;
 
             public ref IntPtr Name => ref NativeAssembly->aname.name;
 

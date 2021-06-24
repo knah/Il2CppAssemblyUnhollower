@@ -32,7 +32,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.PropertyInfo
             public Il2CppMethodInfo* get; // const
             public Il2CppMethodInfo* set; // const
             public uint attrs;
-            public IntPtr customAttributeIndex;
+            public int customAttributeIndex;
         }
 
         internal class NativePropertyInfoStruct : INativePropertyInfoStruct
