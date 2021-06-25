@@ -79,28 +79,57 @@ namespace UnhollowerRuntimeLib
 
             var currentPointer = ReadClassPointerForType(type);
             if (currentPointer != IntPtr.Zero)
-                throw new ArgumentException($"Type {type} is already registered in il2cpp");
-
+                return;//already registered in il2cpp
+            
             var baseType = type.BaseType;
+            if (baseType == null)
+            {
+                LogSupport.Error($"Class {type} does not inherit from a class registered in il2cpp");
+                return;
+            }
+
             var baseClassPointer = UnityVersionHandler.Wrap((Il2CppClass*)ReadClassPointerForType(baseType));
             if (baseClassPointer == null)
-                throw new ArgumentException($"Base class {baseType} of class {type} is not registered in il2cpp");
+            {
+                RegisterTypeInIl2Cpp(baseType, logSuccess);
+                baseClassPointer = UnityVersionHandler.Wrap((Il2CppClass*)ReadClassPointerForType(baseType));
+                if (baseClassPointer == null)
+                {
+                    LogSupport.Error($"Base class {baseType} of class {type} could not be registered in il2cpp");
+                    return;
+                }
+            }
 
             if (baseClassPointer.ValueType || baseClassPointer.EnumType)
-                throw new ArgumentException($"Base class {baseType} is value type and can't be inherited from");
+            {
+                LogSupport.Error($"Base class {baseType} is value type and can't be inherited from");
+                return;
+            }
 
             if (baseClassPointer.IsGeneric)
-                throw new ArgumentException($"Base class {baseType} is generic and can't be inherited from");
+            {
+                LogSupport.Error($"Base class {baseType} is generic and can't be inherited from");
+                return;
+            }
 
             if ((baseClassPointer.Flags & Il2CppClassAttributes.TYPE_ATTRIBUTE_SEALED) != 0)
-                throw new ArgumentException($"Base class {baseType} is sealed and can't be inherited from");
+            {
+                LogSupport.Error($"Base class {baseType} is sealed and can't be inherited from");
+                return;
+            }
 
             if ((baseClassPointer.Flags & Il2CppClassAttributes.TYPE_ATTRIBUTE_INTERFACE) != 0)
-                throw new ArgumentException($"Base class {baseType} is an interface and can't be inherited from");
+            {
+                LogSupport.Error($"Base class {baseType} is an interface and can't be inherited from");
+                return;
+            }
 
             lock (InjectedTypes)
                 if (!InjectedTypes.Add(type.FullName))
-                    throw new ArgumentException($"Type with FullName {type.FullName} is already injected. Don't inject the same type twice, or use a different namespace");
+                {
+                    LogSupport.Error($"Type with FullName {type.FullName} is already injected. Don't inject the same type twice, or use a different namespace");
+                    return;
+                }
 
             if (ourOriginalTypeToClassMethod == null) HookClassFromType();
             if (originalClassFromNameMethod == null) HookClassFromName();

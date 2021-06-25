@@ -17,7 +17,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.PropertyInfo
 
         public INativePropertyInfoStruct Wrap(Il2CppPropertyInfo* propertyInfoPointer)
         {
-            return new NativePropertyInfoStruct((IntPtr)propertyInfoPointer);
+            if ((IntPtr)propertyInfoPointer == IntPtr.Zero) return null;
+            else return new NativePropertyInfoStruct((IntPtr)propertyInfoPointer);
         }
 
 #if DEBUG

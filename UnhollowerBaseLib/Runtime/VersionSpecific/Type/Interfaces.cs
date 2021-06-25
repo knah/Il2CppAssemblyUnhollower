@@ -5,7 +5,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Type
     public interface INativeTypeStructHandler : INativeStructHandler
     {
         INativeTypeStruct CreateNewTypeStruct();
-        unsafe INativeTypeStruct Wrap(Il2CppTypeStruct* imagePointer);
+        unsafe INativeTypeStruct Wrap(Il2CppTypeStruct* typePointer);
 #if DEBUG
         string GetName();
 #endif

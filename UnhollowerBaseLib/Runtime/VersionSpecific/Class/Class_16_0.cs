@@ -28,7 +28,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
 
         public unsafe INativeClassStruct Wrap(Il2CppClass* classPointer)
         {
-            return new NativeClassStructWrapper((IntPtr)classPointer);
+            if ((IntPtr)classPointer == IntPtr.Zero) return null;
+            else return new NativeClassStructWrapper((IntPtr)classPointer);
         }
 
 #if DEBUG

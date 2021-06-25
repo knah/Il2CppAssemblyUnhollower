@@ -17,7 +17,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
 
         public INativeEventInfoStruct Wrap(Il2CppEventInfo* eventInfoPointer)
         {
-            return new NativeEventInfoStruct((IntPtr)eventInfoPointer);
+            if ((IntPtr)eventInfoPointer == IntPtr.Zero) return null;
+            else return new NativeEventInfoStruct((IntPtr)eventInfoPointer);
         }
 
 #if DEBUG
