@@ -20,7 +20,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.ParameterInfo
 
         public unsafe INativeParameterInfoStruct Wrap(Il2CppParameterInfo* paramInfoPointer)
         {
-            return new NativeParameterInfoStructWrapper((IntPtr) paramInfoPointer);
+            if ((IntPtr)paramInfoPointer == IntPtr.Zero) return null;
+            else return new NativeParameterInfoStructWrapper((IntPtr) paramInfoPointer);
         }
 
 #if DEBUG
