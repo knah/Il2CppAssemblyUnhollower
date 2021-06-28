@@ -17,7 +17,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.FieldInfo
 
         public INativeFieldInfoStruct Wrap(Il2CppFieldInfo* fieldInfoPointer)
         {
-            return new NativeFieldInfoStruct((IntPtr)fieldInfoPointer);
+            if ((IntPtr)fieldInfoPointer == IntPtr.Zero) return null;
+            else return new NativeFieldInfoStruct((IntPtr)fieldInfoPointer);
         }
 
 #if DEBUG

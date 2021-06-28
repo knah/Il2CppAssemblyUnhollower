@@ -21,7 +21,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
 
         public INativeImageStruct Wrap(Il2CppImage* imagePointer)
         {
-            return new NativeImageStruct((IntPtr)imagePointer);
+            if ((IntPtr)imagePointer == IntPtr.Zero) return null;
+            else return new NativeImageStruct((IntPtr)imagePointer);
         }
 
 #if DEBUG

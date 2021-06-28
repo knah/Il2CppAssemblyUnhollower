@@ -19,7 +19,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
 
         public INativeAssemblyStruct Wrap(Il2CppAssembly* assemblyPointer)
         {
-            return new NativeAssemblyStruct((IntPtr)assemblyPointer);
+            if ((IntPtr)assemblyPointer == IntPtr.Zero) return null;
+            else return new NativeAssemblyStruct((IntPtr)assemblyPointer);
         }
 
 #if DEBUG

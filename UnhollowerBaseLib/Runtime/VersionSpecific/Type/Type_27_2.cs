@@ -15,9 +15,10 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Type
             return new NativeTypeStruct(pointer);
         }
 
-        public INativeTypeStruct Wrap(Il2CppTypeStruct* TypePointer)
+        public INativeTypeStruct Wrap(Il2CppTypeStruct* typePointer)
         {
-            return new NativeTypeStruct((IntPtr)TypePointer);
+            if ((IntPtr)typePointer == IntPtr.Zero) return null;
+            else return new NativeTypeStruct((IntPtr)typePointer);
         }
 
 #if DEBUG

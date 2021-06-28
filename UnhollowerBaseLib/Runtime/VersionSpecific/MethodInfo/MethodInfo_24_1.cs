@@ -16,7 +16,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
 
         public INativeMethodInfoStruct Wrap(Il2CppMethodInfo* methodPointer)
         {
-            return new NativeMethodInfoStructWrapper((IntPtr)methodPointer);
+            if ((IntPtr)methodPointer == IntPtr.Zero) return null;
+            else return new NativeMethodInfoStructWrapper((IntPtr)methodPointer);
         }
 
         [DllImport("GameAssembly", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
