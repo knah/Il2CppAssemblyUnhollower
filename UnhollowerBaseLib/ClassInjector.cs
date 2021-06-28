@@ -74,17 +74,26 @@ namespace UnhollowerRuntimeLib
         public static void RegisterTypeInIl2Cpp(Type type) => RegisterTypeInIl2Cpp(type, true);
         public static void RegisterTypeInIl2Cpp(Type type, bool logSuccess)
         {
+            if(type == null)
+                throw new ArgumentException($"Type argument cannot be null");
+
             if (type.IsGenericType || type.IsGenericTypeDefinition)
                 throw new ArgumentException($"Type {type} is generic and can't be used in il2cpp");
 
             var currentPointer = ReadClassPointerForType(type);
             if (currentPointer != IntPtr.Zero)
-                throw new ArgumentException($"Type {type} is already registered in il2cpp");
+                return;//already registered in il2cpp
 
             var baseType = type.BaseType;
+            if (baseType == null)
+                throw new ArgumentException($"Class {type} does not inherit from a class registered in il2cpp");
+
             var baseClassPointer = UnityVersionHandler.Wrap((Il2CppClass*)ReadClassPointerForType(baseType));
             if (baseClassPointer == null)
-                throw new ArgumentException($"Base class {baseType} of class {type} is not registered in il2cpp");
+            {
+                RegisterTypeInIl2Cpp(baseType, logSuccess);
+                baseClassPointer = UnityVersionHandler.Wrap((Il2CppClass*)ReadClassPointerForType(baseType));
+            }
 
             if (baseClassPointer.ValueType || baseClassPointer.EnumType)
                 throw new ArgumentException($"Base class {baseType} is value type and can't be inherited from");
