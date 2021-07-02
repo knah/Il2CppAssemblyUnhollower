@@ -283,9 +283,12 @@ namespace UnhollowerRuntimeLib
                 {
                     var parameterInfo = parameters[i];
                     var param = UnityVersionHandler.Wrap(paramsArray[i]);
-                    param.Name = Marshal.StringToHGlobalAnsi(parameterInfo.Name);
-                    param.Position = i;
-                    param.Token = 0;
+                    if (UnityVersionHandler.ParameterInfoHasNamePosToken())
+                    {
+                        param.Name = Marshal.StringToHGlobalAnsi(parameterInfo.Name);
+                        param.Position = i;
+                        param.Token = 0;
+                    }
                     param.ParameterType = (Il2CppTypeStruct*)IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(parameterInfo.ParameterType));
                 }
             }

@@ -24,6 +24,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.ParameterInfo
             else return new NativeParameterInfoStructWrapper((IntPtr) paramInfoPointer);
         }
 
+        public bool HasNamePosToken => true;
+
 #if DEBUG
         public string GetName() => "NativeParameterInfoStructHandler_16_0";
 #endif
@@ -49,7 +51,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.ParameterInfo
 
             public Il2CppParameterInfo* ParameterInfoPointer => (Il2CppParameterInfo*)Pointer;
 
-            public Il2CppParameterInfo_16_0* NativeParameter => (Il2CppParameterInfo_16_0*)Pointer;
+            public bool HasNamePosToken => true;
+
+            private Il2CppParameterInfo_16_0* NativeParameter => (Il2CppParameterInfo_16_0*)Pointer;
 
             public ref IntPtr Name => ref NativeParameter->name;
 
