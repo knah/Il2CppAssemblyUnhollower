@@ -168,6 +168,9 @@ namespace UnhollowerBaseLib.Runtime
 
         public static unsafe INativeParameterInfoStruct Wrap(Il2CppParameterInfo* parameterInfo) =>
             GetHandler<INativeParameterInfoStructHandler>().Wrap(parameterInfo);
+        
+        public static bool ParameterInfoHasNamePosToken() =>
+            GetHandler<INativeParameterInfoStructHandler>().HasNamePosToken;
 
 
         //Properties
