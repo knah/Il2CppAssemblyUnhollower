@@ -9,6 +9,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using UnhollowerBaseLib.Runtime;
 
+#nullable enable
+
 namespace UnhollowerBaseLib.Maps
 {
     public class TypeTokensMap : IDisposable
@@ -115,7 +117,7 @@ namespace UnhollowerBaseLib.Maps
             myClassPointerToTypeMap[nativeType] = managedType;
         }
 
-        public unsafe Type LookupByClass(IntPtr clazz)
+        public unsafe Type? LookupByClass(IntPtr clazz)
         {
             if (myClassPointerToTypeMap.TryGetValue(clazz, out var type))
                 return type;
@@ -125,7 +127,10 @@ namespace UnhollowerBaseLib.Maps
                 var il2CppType = Il2CppSystem.Type.internal_from_handle(IL2CPP.il2cpp_class_get_type(clazz));
                 var genericDef = il2CppType.GetGenericTypeDefinition();
                 var genericDefMonoSide = LookupByClass(IL2CPP.il2cpp_class_from_type(genericDef.TypeHandle.value));
+                if (genericDefMonoSide == null) return null;
                 var genericParamsMonoSide = genericDef.GenericTypeArguments.Select(it => LookupByClass(IL2CPP.il2cpp_class_from_type(it.TypeHandle.value))).ToArray();
+                if (genericParamsMonoSide.Any(it => it == null))
+                    return null;
                 
                 var result = genericDefMonoSide.MakeGenericType(genericParamsMonoSide);
                 return myClassPointerToTypeMap[clazz] = result;
@@ -143,6 +148,7 @@ namespace UnhollowerBaseLib.Maps
 
                 var elementClazz = (IntPtr) nativeClassStruct.ElementClass;
                 var elementType = LookupByClass(elementClazz);
+                if (elementType == null) return null;
                 
                 Type appropriateArrayType;
                 if (elementType.IsValueType)
@@ -190,7 +196,7 @@ namespace UnhollowerBaseLib.Maps
             return myClassPointerToTypeMap[clazz] = tuple.Item1.ManifestModule.ResolveType(myValues[tokenOffset]);
         }
 
-        public Type LookupByObject(IntPtr nativeObject)
+        public Type? LookupByObject(IntPtr nativeObject)
         {
             if (nativeObject == IntPtr.Zero)
                 return null;
