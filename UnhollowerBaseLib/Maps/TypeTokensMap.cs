@@ -23,9 +23,9 @@ namespace UnhollowerBaseLib.Maps
         private unsafe int* myValues;
         
         private readonly FileHeader myHeader;
-        private readonly Dictionary<IntPtr, (Assembly, int rangeStart, int rangeEnd, int tokensOffset)> myAssemblyMap = new Dictionary<IntPtr, (Assembly, int, int, int)>();
+        private readonly Dictionary<IntPtr, (Assembly?, int rangeStart, int rangeEnd, int tokensOffset)> myAssemblyMap = new();
 
-        private readonly ConcurrentDictionary<IntPtr, Type> myClassPointerToTypeMap = new ConcurrentDictionary<IntPtr, Type>();
+        private readonly ConcurrentDictionary<IntPtr, Type> myClassPointerToTypeMap = new();
 
         public TypeTokensMap(string filePath)
         {
@@ -58,7 +58,16 @@ namespace UnhollowerBaseLib.Maps
                 var rangeStart = reader.ReadInt32();
                 var rangeEnd = reader.ReadInt32();
                 var tokenOffset = reader.ReadInt32();
-                myAssemblyMap[nativeAssemblyPointer] = (Assembly.Load(managedAssemblyName), rangeStart, rangeEnd, tokenOffset);
+                Assembly? assembly = null;
+                try
+                {
+                    assembly = Assembly.Load(managedAssemblyName);
+                }
+                catch (FileNotFoundException ex)
+                {
+                    LogSupport.Trace($"Assembly {managedAssemblyName} not found for type-to-token map; it probably was ignored; {ex}");
+                }
+                myAssemblyMap[nativeAssemblyPointer] = (assembly, rangeStart, rangeEnd, tokenOffset);
             }
 
             unsafe
@@ -152,6 +161,8 @@ namespace UnhollowerBaseLib.Maps
                 LogSupport.Error($"Got unknown type: image {Marshal.PtrToStringAnsi(IL2CPP.il2cpp_image_get_name(image))} class {Marshal.PtrToStringAnsi(IL2CPP.il2cpp_class_get_name(clazz))}");
                 return null;
             }
+
+            if (tuple.Item1 == null) return null;
             
             var left = tuple.rangeStart;
             var right = tuple.rangeEnd;
