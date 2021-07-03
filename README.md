@@ -5,7 +5,7 @@ A tool to generate Managed->IL2CPP proxy assemblies from
 This allows the use of IL2CPP domain and objects in it from a managed domain. 
 This includes generic types and methods, arrays, and new object creation. Some things may be horribly broken. 
  
- ## Usage
+## Usage
   0. Build or get a release
   1. Obtain dummy assemblies using [Il2CppDumper](https://github.com/Perfare/Il2CppDumper)
   2. Run `AssemblyUnhollower --input=<path to Il2CppDumper's dummy dll dir> --output=<output directory> --mscorlib=<path to target mscorlib>`    
@@ -74,7 +74,7 @@ How-to:
  * Call `ClassInjector.RegisterTypeInIl2Cpp<T>()` before first use of class to be injected
  * The injected class can be used normally afterwards, for example a custom MonoBehavior implementation would work with `AddComponent<T>`
  
- Fine-tuning:
+Fine-tuning:
   * `[HideFromIl2Cpp]` can be used to prevent a method from being exposed to il2cpp
  
 Caveats:
@@ -95,7 +95,7 @@ Limitations:
  * Only instance methods are exposed to IL2CPP side - no fields, properties, events or static methods will be visible to IL2CPP reflection
  * Only a limited set of types is supported for method signatures
  
- ## Injected components in asset bundles
+## Injected components in asset bundles
  Starting with version 0.4.15.0, injected components can be used in asset bundles. Currently, deserialization for component fields is not supported. Any fields on the component will initially have their default value as defined in the mono assembly.
 
  How-to:
