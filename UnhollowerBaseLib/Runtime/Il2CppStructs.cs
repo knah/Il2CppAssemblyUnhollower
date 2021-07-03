@@ -14,6 +14,7 @@ namespace UnhollowerBaseLib.Runtime
     public struct Il2CppAssembly { }
     public struct Il2CppClass { }
     public struct Il2CppEventInfo { }
+    public struct Il2CppException { }
     public struct Il2CppFieldInfo { }
     public struct Il2CppImage { }
     public struct Il2CppMethodInfo { }
@@ -185,6 +186,13 @@ namespace UnhollowerBaseLib.Runtime
     {
         public Il2CppClass* interfaceType;
         public int offset;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct Il2CppObject
+    {
+        IntPtr data;
+        IntPtr monitor;
     }
 
 
