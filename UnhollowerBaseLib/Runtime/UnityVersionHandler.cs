@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Assembly;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Class;
 using UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo;
+using UnhollowerBaseLib.Runtime.VersionSpecific.Exception;
 using UnhollowerBaseLib.Runtime.VersionSpecific.FieldInfo;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Image;
 using UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo;
@@ -133,6 +133,14 @@ namespace UnhollowerBaseLib.Runtime
 
         public static unsafe INativeEventInfoStruct Wrap(Il2CppEventInfo* eventInfoPointer) =>
             GetHandler<INativeEventInfoStructHandler>().Wrap(eventInfoPointer);
+
+
+        //Exceptions
+        public static INativeExceptionStruct NewException() =>
+            GetHandler<INativeExceptionStructHandler>().CreateNewExceptionStruct();
+
+        public static unsafe INativeExceptionStruct Wrap(Il2CppException* exceptionPointer) =>
+            GetHandler<INativeExceptionStructHandler>().Wrap(exceptionPointer);
 
 
         //Fields
