@@ -121,9 +121,9 @@ namespace UnhollowerBaseLib
             return GenericMarshalDelegates<T>.MethodParameterByRef(ref value, ref scratchArea);
         }
         
-        public static IntPtr MarshalMethodParameterByRefRestore<T>(ref T value, ref IntPtr scratchArea)
+        public static void MarshalMethodParameterByRefRestore<T>(ref T value, ref IntPtr scratchArea)
         {
-            return GenericMarshalDelegates<T>.MethodParameterByRefRestore(ref value, ref scratchArea);
+            GenericMarshalDelegates<T>.MethodParameterByRefRestore(ref value, ref scratchArea);
         }
 
         /// <summary>
