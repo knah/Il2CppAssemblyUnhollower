@@ -37,7 +37,12 @@ namespace AssemblyUnhollower.Passes
                     typeContext.ComputedTypeSpecifics != TypeRewriteContext.TypeSpecifics.NonBlittableStruct && 
                     typeContext.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.Default)
                 {
-                    typeContext.NewType.BaseType = assemblyContext.RewriteTypeRef(typeContext.OriginalType.BaseType);
+                    if (typeContext.OriginalType.BaseType == null)
+                        typeContext.NewType.BaseType = assemblyContext.Imports.Il2CppObjectBase;
+                    else if (typeContext.OriginalType.BaseType.FullName == "System.Object") // normal typeref rewrite will produce real System.Object
+                        typeContext.NewType.BaseType = assemblyContext.NewAssembly.MainModule.ImportReference(context.GetNewTypeForOriginal(typeContext.OriginalType.BaseType.Resolve()).NewType);
+                    else
+                        typeContext.NewType.BaseType = assemblyContext.RewriteTypeRef(typeContext.OriginalType.BaseType);
                 }
 
                 if (typeContext.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.UseSystemInterface ||
