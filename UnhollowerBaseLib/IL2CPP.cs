@@ -33,6 +33,10 @@ namespace UnhollowerBaseLib
                 var image = il2cpp_assembly_get_image(assemblies[i]);
                 var name = Marshal.PtrToStringAnsi(il2cpp_image_get_name(image));
                 ourImagesMap[name] = image;
+                if (name.EndsWith(".dll"))
+                    ourImagesMap[name.Substring(0, name.Length - 4)] = image;
+                else
+                    ourImagesMap[name + ".dll"] = image;
 
                 var typeTokens = new Dictionary<uint, IntPtr>();
                 ourTypeTokensMap[image] = typeTokens;
@@ -58,9 +62,18 @@ namespace UnhollowerBaseLib
             return image;
         }
 
-        public static IntPtr GetClassPointerByToken(string assemblyName, uint token)
+        public static IntPtr GetClassPointerByToken(string assemblyName, uint token, Type requestedType)
         {
-            return ourTypeTokensMap[ourImagesMap[assemblyName]][token];
+            if (!ourImagesMap.TryGetValue(assemblyName, out var image))
+                throw new ArgumentException($"Image for {assemblyName} ({requestedType}) not found!");
+
+            if (!ourTypeTokensMap.TryGetValue(image, out var map))
+                throw new ArgumentException($"Token map for {assemblyName}/{image} ({requestedType}) not found!");
+
+            if (!map.TryGetValue(token, out var result))
+                throw new AggregateException($"Token for {assemblyName}/{image}/{token} ({requestedType}) not found!");
+            
+            return result;
         }
 
         internal static IntPtr GetIl2CppImage(string name)

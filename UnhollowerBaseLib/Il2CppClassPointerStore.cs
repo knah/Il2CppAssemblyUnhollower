@@ -39,7 +39,7 @@ namespace UnhollowerBaseLib
 
         public static void RegisterTypeWithExplicitTokenInfo(Type type, string assemblyName, uint token)
         {
-            ourClassPointers[type] = IL2CPP.GetClassPointerByToken(assemblyName, token);
+            ourClassPointers[type] = IL2CPP.GetClassPointerByToken(assemblyName, token, type);
         }
 
         public static IntPtr GetClassPointerForType(Type type)
@@ -66,7 +66,7 @@ namespace UnhollowerBaseLib
                     return IntPtr.Zero;
                 }
 
-                return IL2CPP.GetClassPointerByToken(tokenAttribute.AssemblyName, tokenAttribute.Token);
+                return IL2CPP.GetClassPointerByToken(tokenAttribute.AssemblyName, tokenAttribute.Token, type);
             });
         }
     }
