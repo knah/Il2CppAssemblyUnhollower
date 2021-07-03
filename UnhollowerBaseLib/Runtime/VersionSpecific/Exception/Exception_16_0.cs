@@ -12,13 +12,13 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Exception
 
             *(Il2CppException_16_0*)pointer = default;
 
-            return new NativeEventInfoStruct(pointer);
+            return new NativeExceptionStruct(pointer);
         }
 
         public INativeExceptionStruct Wrap(Il2CppException* exceptionPointer)
         {
             if ((IntPtr)exceptionPointer == IntPtr.Zero) return null;
-            else return new NativeEventInfoStruct((IntPtr)exceptionPointer);
+            else return new NativeExceptionStruct((IntPtr)exceptionPointer);
         }
 
 #if DEBUG
@@ -42,9 +42,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Exception
             public IntPtr /* Il2CppObject* */ _data;
         }
 
-        internal class NativeEventInfoStruct : INativeExceptionStruct
+        internal class NativeExceptionStruct : INativeExceptionStruct
         {
-            public NativeEventInfoStruct(IntPtr pointer)
+            public NativeExceptionStruct(IntPtr pointer)
             {
                 Pointer = pointer;
             }
@@ -58,6 +58,16 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Exception
             private Il2CppException* dummyInnerException = (Il2CppException*)IntPtr.Zero;
 
             public ref Il2CppException* InnerException => ref dummyInnerException;
+
+            public INativeExceptionStruct InnerExceptionWrapped
+            {
+                get
+                {
+                    IntPtr ptr = (IntPtr)InnerException;
+                    if (ptr == IntPtr.Zero) return null;
+                    else return new NativeExceptionStruct(ptr);
+                }
+            }
 
             public ref IntPtr Message => ref NativeException->message;
 

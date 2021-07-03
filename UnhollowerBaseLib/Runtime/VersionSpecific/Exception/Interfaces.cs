@@ -17,6 +17,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Exception
 
         unsafe ref Il2CppException* InnerException { get; }
 
+        INativeExceptionStruct InnerExceptionWrapped { get; }
+
         ref IntPtr Message { get; }
 
         ref IntPtr HelpLink { get; }
