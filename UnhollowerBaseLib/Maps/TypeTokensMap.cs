@@ -128,7 +128,7 @@ namespace UnhollowerBaseLib.Maps
                 var genericDef = il2CppType.GetGenericTypeDefinition();
                 var genericDefMonoSide = LookupByClass(IL2CPP.il2cpp_class_from_type(genericDef.TypeHandle.value));
                 if (genericDefMonoSide == null) return null;
-                var genericParamsMonoSide = genericDef.GenericTypeArguments.Select(it => LookupByClass(IL2CPP.il2cpp_class_from_type(it.TypeHandle.value))).ToArray();
+                var genericParamsMonoSide = genericDef.GetGenericArguments().Select(it => LookupByClass(IL2CPP.il2cpp_class_from_type(it.TypeHandle.value))).ToArray();
                 if (genericParamsMonoSide.Any(it => it == null))
                     return null;
                 
