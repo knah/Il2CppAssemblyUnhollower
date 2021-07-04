@@ -34,6 +34,17 @@ namespace UnhollowerBaseLib.Runtime
 
         private static Version UnityVersion = new(2018, 4, 20);
 
+        private static INativeAssemblyStructHandler assemblyStructHandler;
+        private static INativeClassStructHandler classStructHandler;
+        private static INativeEventInfoStructHandler eventInfoStructHandler;
+        private static INativeExceptionStructHandler exceptionStructHandler;
+        private static INativeFieldInfoStructHandler fieldInfoStructHandler;
+        private static INativeImageStructHandler imageStructHandler;
+        private static INativeMethodInfoStructHandler methodInfoStructHandler;
+        private static INativeParameterInfoStructHandler parameterInfoStructHandler;
+        private static INativePropertyInfoStructHandler propertyInfoStructHandler;
+        private static INativeTypeStructHandler typeStructHandler;
+
         static UnityVersionHandler()
         {
             var allTypes = GetAllTypesSafe();
@@ -70,6 +81,16 @@ namespace UnhollowerBaseLib.Runtime
                     break;
                 }
             }
+            assemblyStructHandler = GetHandler<INativeAssemblyStructHandler>();
+            classStructHandler = GetHandler<INativeClassStructHandler>();
+            eventInfoStructHandler = GetHandler<INativeEventInfoStructHandler>();
+            exceptionStructHandler = GetHandler<INativeExceptionStructHandler>();
+            fieldInfoStructHandler = GetHandler<INativeFieldInfoStructHandler>();
+            imageStructHandler = GetHandler<INativeImageStructHandler>();
+            methodInfoStructHandler = GetHandler<INativeMethodInfoStructHandler>();
+            parameterInfoStructHandler = GetHandler<INativeParameterInfoStructHandler>();
+            propertyInfoStructHandler = GetHandler<INativePropertyInfoStructHandler>();
+            typeStructHandler = GetHandler<INativeTypeStructHandler>();
         }
 
         private static T GetHandler<T>()
@@ -113,87 +134,87 @@ namespace UnhollowerBaseLib.Runtime
 
         //Assemblies
         public static INativeAssemblyStruct NewAssembly() =>
-            GetHandler<INativeAssemblyStructHandler>().CreateNewAssemblyStruct();
+            assemblyStructHandler.CreateNewAssemblyStruct();
 
         public static unsafe INativeAssemblyStruct Wrap(Il2CppAssembly* assemblyPointer) =>
-            GetHandler<INativeAssemblyStructHandler>().Wrap(assemblyPointer);
+            assemblyStructHandler.Wrap(assemblyPointer);
 
 
         //Classes
         public static INativeClassStruct NewClass(int vTableSlots) =>
-            GetHandler<INativeClassStructHandler>().CreateNewClassStruct(vTableSlots);
+            classStructHandler.CreateNewClassStruct(vTableSlots);
 
         public static unsafe INativeClassStruct Wrap(Il2CppClass* classPointer) =>
-            GetHandler<INativeClassStructHandler>().Wrap(classPointer);
+            classStructHandler.Wrap(classPointer);
 
 
         //Events
         public static INativeEventInfoStruct NewEvent() =>
-            GetHandler<INativeEventInfoStructHandler>().CreateNewEventInfoStruct();
+            eventInfoStructHandler.CreateNewEventInfoStruct();
 
         public static unsafe INativeEventInfoStruct Wrap(Il2CppEventInfo* eventInfoPointer) =>
-            GetHandler<INativeEventInfoStructHandler>().Wrap(eventInfoPointer);
+            eventInfoStructHandler.Wrap(eventInfoPointer);
 
 
         //Exceptions
         public static INativeExceptionStruct NewException() =>
-            GetHandler<INativeExceptionStructHandler>().CreateNewExceptionStruct();
+            exceptionStructHandler.CreateNewExceptionStruct();
 
         public static unsafe INativeExceptionStruct Wrap(Il2CppException* exceptionPointer) =>
-            GetHandler<INativeExceptionStructHandler>().Wrap(exceptionPointer);
+            exceptionStructHandler.Wrap(exceptionPointer);
 
 
         //Fields
         public static INativeFieldInfoStruct NewField() =>
-            GetHandler<INativeFieldInfoStructHandler>().CreateNewFieldInfoStruct();
+            fieldInfoStructHandler.CreateNewFieldInfoStruct();
 
         public static unsafe INativeFieldInfoStruct Wrap(Il2CppFieldInfo* fieldInfoPointer) =>
-            GetHandler<INativeFieldInfoStructHandler>().Wrap(fieldInfoPointer);
+            fieldInfoStructHandler.Wrap(fieldInfoPointer);
 
 
         //Images
         public static INativeImageStruct NewImage() =>
-            GetHandler<INativeImageStructHandler>().CreateNewImageStruct();
+            imageStructHandler.CreateNewImageStruct();
         
         public static unsafe INativeImageStruct Wrap(Il2CppImage* imagePointer) =>
-            GetHandler<INativeImageStructHandler>().Wrap(imagePointer);
+            imageStructHandler.Wrap(imagePointer);
         
 
         //Methods
         public static INativeMethodInfoStruct NewMethod() =>
-            GetHandler<INativeMethodInfoStructHandler>().CreateNewMethodStruct();
+            methodInfoStructHandler.CreateNewMethodStruct();
 
         public static unsafe INativeMethodInfoStruct Wrap(Il2CppMethodInfo* methodPointer) =>
-            GetHandler<INativeMethodInfoStructHandler>().Wrap(methodPointer);
+            methodInfoStructHandler.Wrap(methodPointer);
 
         public static IntPtr GetMethodFromReflection(IntPtr method) =>
-            GetHandler<INativeMethodInfoStructHandler>().GetMethodFromReflection(method);
+            methodInfoStructHandler.GetMethodFromReflection(method);
 
 
         //Parameters
         public static unsafe Il2CppParameterInfo*[] NewMethodParameterArray(int count) =>
-            GetHandler<INativeParameterInfoStructHandler>().CreateNewParameterInfoArray(count);
+            parameterInfoStructHandler.CreateNewParameterInfoArray(count);
 
         public static unsafe INativeParameterInfoStruct Wrap(Il2CppParameterInfo* parameterInfo) =>
-            GetHandler<INativeParameterInfoStructHandler>().Wrap(parameterInfo);
+            parameterInfoStructHandler.Wrap(parameterInfo);
         
         public static bool ParameterInfoHasNamePosToken() =>
-            GetHandler<INativeParameterInfoStructHandler>().HasNamePosToken;
+            parameterInfoStructHandler.HasNamePosToken;
 
 
         //Properties
         public static INativePropertyInfoStruct NewProperty() =>
-            GetHandler<INativePropertyInfoStructHandler>().CreateNewPropertyInfoStruct();
+            propertyInfoStructHandler.CreateNewPropertyInfoStruct();
 
         public static unsafe INativePropertyInfoStruct Wrap(Il2CppPropertyInfo* propertyInfoPointer) =>
-            GetHandler<INativePropertyInfoStructHandler>().Wrap(propertyInfoPointer);
+            propertyInfoStructHandler.Wrap(propertyInfoPointer);
 
 
         //Types
         public static INativeTypeStruct NewType() =>
-            GetHandler<INativeTypeStructHandler>().CreateNewTypeStruct();
+            typeStructHandler.CreateNewTypeStruct();
 
         public static unsafe INativeTypeStruct Wrap(Il2CppTypeStruct* typePointer) =>
-            GetHandler<INativeTypeStructHandler>().Wrap(typePointer);
+            typeStructHandler.Wrap(typePointer);
     }
 }
