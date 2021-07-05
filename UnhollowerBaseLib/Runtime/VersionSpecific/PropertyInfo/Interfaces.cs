@@ -6,6 +6,10 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.PropertyInfo
     {
         INativePropertyInfoStruct CreateNewPropertyInfoStruct();
         unsafe INativePropertyInfoStruct Wrap(Il2CppPropertyInfo* propertyInfoPointer);
+        IntPtr il2cpp_property_get_name(IntPtr prop);
+        IntPtr il2cpp_property_get_parent(IntPtr prop);
+        IntPtr il2cpp_property_get_get_method(IntPtr prop);
+        IntPtr il2cpp_property_get_set_method(IntPtr prop);
 #if DEBUG
         string GetName();
 #endif

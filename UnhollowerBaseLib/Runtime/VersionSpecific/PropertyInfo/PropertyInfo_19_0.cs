@@ -21,6 +21,11 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.PropertyInfo
             else return new NativePropertyInfoStruct((IntPtr)propertyInfoPointer);
         }
 
+        public IntPtr il2cpp_property_get_name(IntPtr prop) => ((Il2CppPropertyInfo_19_0*)prop)->name;
+        public IntPtr il2cpp_property_get_parent(IntPtr prop) => (IntPtr)((Il2CppPropertyInfo_19_0*)prop)->parent;
+        public IntPtr il2cpp_property_get_get_method(IntPtr prop) => (IntPtr)((Il2CppPropertyInfo_19_0*)prop)->get;
+        public IntPtr il2cpp_property_get_set_method(IntPtr prop) => (IntPtr)((Il2CppPropertyInfo_19_0*)prop)->set;
+
 #if DEBUG
         public string GetName() => "NativePropertyInfoStructHandler_19_0";
 #endif
