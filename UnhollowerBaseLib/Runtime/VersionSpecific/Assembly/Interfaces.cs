@@ -6,6 +6,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
     {
         INativeAssemblyStruct CreateNewAssemblyStruct();
         unsafe INativeAssemblyStruct Wrap(Il2CppAssembly* assemblyPointer);
+        IntPtr il2cpp_assembly_get_name(IntPtr assembly);
 #if DEBUG
         string GetName();
 #endif

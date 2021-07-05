@@ -39,6 +39,12 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
             return copiedMethodInfo;
         }
 
+        public IntPtr il2cpp_method_get_class(IntPtr method) => (IntPtr)((Il2CppMethodInfo_27_3*)method)->klass;
+        public IntPtr il2cpp_method_get_name(IntPtr method) => ((Il2CppMethodInfo_27_3*)method)->name;
+        public uint il2cpp_method_get_param_count(IntPtr method) => ((Il2CppMethodInfo_27_3*)method)->parameters_count;
+        public IntPtr il2cpp_method_get_return_type(IntPtr method) => (IntPtr)((Il2CppMethodInfo_27_3*)method)->return_type;
+        public uint il2cpp_method_get_token(IntPtr method) => ((Il2CppMethodInfo_27_3*)method)->token;
+
 #if DEBUG
         public string GetName() => "NativeMethodInfoStructHandler_27_3";
 #endif
