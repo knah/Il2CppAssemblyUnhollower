@@ -34,16 +34,16 @@ namespace UnhollowerBaseLib.Runtime
 
         private static Version UnityVersion = new(2018, 4, 20);
 
-        private static INativeAssemblyStructHandler assemblyStructHandler;
-        private static INativeClassStructHandler classStructHandler;
-        private static INativeEventInfoStructHandler eventInfoStructHandler;
-        private static INativeExceptionStructHandler exceptionStructHandler;
-        private static INativeFieldInfoStructHandler fieldInfoStructHandler;
-        private static INativeImageStructHandler imageStructHandler;
-        private static INativeMethodInfoStructHandler methodInfoStructHandler;
-        private static INativeParameterInfoStructHandler parameterInfoStructHandler;
-        private static INativePropertyInfoStructHandler propertyInfoStructHandler;
-        private static INativeTypeStructHandler typeStructHandler;
+        internal static INativeAssemblyStructHandler assemblyStructHandler;
+        internal static INativeClassStructHandler classStructHandler;
+        internal static INativeEventInfoStructHandler eventInfoStructHandler;
+        internal static INativeExceptionStructHandler exceptionStructHandler;
+        internal static INativeFieldInfoStructHandler fieldInfoStructHandler;
+        internal static INativeImageStructHandler imageStructHandler;
+        internal static INativeMethodInfoStructHandler methodInfoStructHandler;
+        internal static INativeParameterInfoStructHandler parameterInfoStructHandler;
+        internal static INativePropertyInfoStructHandler propertyInfoStructHandler;
+        internal static INativeTypeStructHandler typeStructHandler;
 
         static UnityVersionHandler()
         {
