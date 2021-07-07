@@ -10,6 +10,13 @@ namespace AssemblyUnhollower.Passes
 {
     public static class Pass10CreateTypedefs
     {
+        // These interfaces seem to be runtime-specific and are incompatible as a result
+        // TODO: check that methods match between managed/il2cpp versions in general?
+        private static readonly HashSet<string> UnsuitableSystemInterfaces = new()
+        {
+            "System.Runtime.InteropServices._Attribute"
+        };
+
         public static void DoPass(RewriteGlobalContext context)
         {
             foreach (var assemblyContext in context.Assemblies)
@@ -142,6 +149,9 @@ namespace AssemblyUnhollower.Passes
 
             if (InterfacesUnderConsideration.Contains(type))
                 return true;
+
+            if (UnsuitableSystemInterfaces.Contains(type.FullName))
+                return false;
 
             try
             {
