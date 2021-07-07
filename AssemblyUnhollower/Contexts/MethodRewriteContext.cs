@@ -169,11 +169,6 @@ namespace AssemblyUnhollower.Contexts
         {
             original &= ~(MethodAttributes.MemberAccessMask); // todo: handle Object overload correctly
             original &= ~(MethodAttributes.PInvokeImpl);
-            original &= ~(MethodAttributes.Abstract);
-            original &= ~(MethodAttributes.Virtual);
-            original &= ~(MethodAttributes.Final);
-            original &= ~(MethodAttributes.NewSlot);
-            original &= ~(MethodAttributes.ReuseSlot);
             original &= ~(MethodAttributes.CheckAccessOnOverride);
             original |= MethodAttributes.Public;
             return original;
