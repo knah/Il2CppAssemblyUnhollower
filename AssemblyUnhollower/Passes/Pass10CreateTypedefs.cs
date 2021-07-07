@@ -57,7 +57,7 @@ namespace AssemblyUnhollower.Passes
                     if (systemType == null && !type.IsEnum)
                         throw new ApplicationException($"System type for primitive type {type} was not found");
 
-                    if (systemType != null && (!type.IsEnum || type.Fields.Count == systemType.Fields.Count))
+                    if (systemType != null && (!type.IsEnum || type.Fields.Count == systemType.Fields.Count) && (systemType.IsPublic || systemType.IsNestedPublic))
                     {
                         var context = new TypeRewriteContext(assemblyContext, type, systemType, TypeRewriteContext.TypeRewriteSemantic.UseSystemValueType);
                         assemblyContext.RegisterTypeRewrite(context);
@@ -151,6 +151,9 @@ namespace AssemblyUnhollower.Passes
                 return true;
 
             if (UnsuitableSystemInterfaces.Contains(type.FullName))
+                return false;
+
+            if (!type.IsPublic && !type.IsNestedPublic)
                 return false;
 
             try
