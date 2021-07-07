@@ -72,6 +72,7 @@ namespace AssemblyUnhollower.Utils
                     {
                         var scratchLocal = new VariableDefinition(imports.IntPtr);
                         newMethod.Body.Variables.Add(scratchLocal);
+                        newMethod.Body.InitLocals = true;
                                 
                         byRefParams.Add((i, scratchLocal, newParam.ParameterType.GetElementType()));
                                 

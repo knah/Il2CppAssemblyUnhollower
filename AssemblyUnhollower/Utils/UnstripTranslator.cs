@@ -19,7 +19,10 @@ namespace AssemblyUnhollower.Utils
                 if (variableType == null) return false;
                 target.Body.Variables.Add(new VariableDefinition(variableType));
             }
-            
+
+            if (original.Body.Variables.Count > 0) 
+                target.Body.InitLocals = true;
+
             var targetBuilder = target.Body.GetILProcessor();
             foreach (var bodyInstruction in original.Body.Instructions)
             {
@@ -138,6 +141,7 @@ namespace AssemblyUnhollower.Utils
         public static void ReplaceBodyWithException(MethodDefinition newMethod, AssemblyKnownImports imports)
         {
             newMethod.Body.Variables.Clear();
+            newMethod.Body.InitLocals = false;
             newMethod.Body.Instructions.Clear();
             var processor = newMethod.Body.GetILProcessor();
             

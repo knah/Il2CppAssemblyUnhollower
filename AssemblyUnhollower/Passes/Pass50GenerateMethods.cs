@@ -30,6 +30,7 @@ namespace AssemblyUnhollower.Passes
                         var argArray = new VariableDefinition(new PointerType(imports.IntPtr));
                         var resultVar = new VariableDefinition(imports.IntPtr);
                         var valueTypeLocal = new VariableDefinition(newMethod.ReturnType);
+                        newMethod.Body.InitLocals = true;
                         newMethod.Body.Variables.Add(exceptionLocal);
                         newMethod.Body.Variables.Add(argArray);
                         newMethod.Body.Variables.Add(resultVar);
