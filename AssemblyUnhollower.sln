@@ -23,6 +23,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 		Documentation\Command-Line-Usage.md = Documentation\Command-Line-Usage.md
 		Documentation\Common-Problems.md = Documentation\Common-Problems.md
 		Documentation\Injected-Components-In-Asset-Bundles.md = Documentation\Injected-Components-In-Asset-Bundles.md
+		Documentation\Changes in v0.5.md = Documentation\Changes in v0.5.md
 	EndProjectSection
 EndProject
 Global
