@@ -22,6 +22,7 @@ namespace AssemblyUnhollower.Passes
                     typeContext.NewType.Methods.Add(emptyCtor);
 
                     var local0 = new VariableDefinition(assemblyContext.Imports.IntPtr);
+                    emptyCtor.Body.InitLocals = true;
                     emptyCtor.Body.Variables.Add(local0);
                     
                     var bodyBuilder = emptyCtor.Body.GetILProcessor();
