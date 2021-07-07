@@ -44,8 +44,12 @@ namespace AssemblyUnhollower.Contexts
                                      (OriginalMethod?.Name?.IsObfuscated(declaringType.AssemblyContext.GlobalContext
                                          .Options) ?? false);
 
-            var newMethod = new MethodDefinition("", AdjustAttributes(originalMethod.Attributes), declaringType.AssemblyContext.Imports.Void);
+            var reusingSystemInterface = declaringType.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.UseSystemInterface;
+            
+            var newMethod = reusingSystemInterface ? declaringType.NewType.Methods.Single(it => it.Name == originalMethod.Name) : new MethodDefinition("", AdjustAttributes(originalMethod.Attributes), declaringType.AssemblyContext.Imports.Void);
             NewMethod = newMethod;
+
+            if (reusingSystemInterface) return;
 
             if (originalMethod.CustomAttributes.Any(x => x.AttributeType.FullName == typeof(ExtensionAttribute).FullName))
             {
@@ -78,13 +82,7 @@ namespace AssemblyUnhollower.Contexts
             UnmangledName = UnmangleMethodName();
             UnmangledNameWithSignature = UnmangleMethodNameWithSignature();
             
-            // todo: translate explicit overrides based on names perhaps?; dumper doesn't generate those though, so interface implementations can end up scuffed
-            foreach (var originalMethodOverride in OriginalMethod.Overrides)
-            {
-                var specificOverride = DeclaringType.AssemblyContext.NewAssembly.MainModule.ImportReference(DeclaringType.AssemblyContext.RewriteMethodRef(originalMethodOverride));
-                
-                NewMethod.Overrides.Add(specificOverride);
-            }
+            if (DeclaringType.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.UseSystemInterface) return;
 
             NewMethod.Name = UnmangledName;
             NewMethod.ReturnType = DeclaringType.AssemblyContext.RewriteTypeRef(OriginalMethod.ReturnType);
@@ -163,6 +161,36 @@ namespace AssemblyUnhollower.Contexts
             }
 
             DeclaringType.NewType.Methods.Add(NewMethod);
+        }
+
+        public void AssignExplicitOverrides()
+        {
+            // todo: translate explicit overrides based on names perhaps?; dumper doesn't generate those though, so interface implementations can end up scuffed
+            foreach (var originalMethodOverride in OriginalMethod.Overrides)
+            {
+                var specificOverride =
+                    DeclaringType.AssemblyContext.NewAssembly.MainModule.ImportReference(
+                        DeclaringType.AssemblyContext.RewriteMethodRef(originalMethodOverride));
+                
+                NewMethod.Overrides.Add(specificOverride);
+            }
+
+            if (OriginalMethod.Overrides.Count == 0 && OriginalMethod.Name.Contains("."))
+            {
+                var originalImplementingInterface = OriginalMethod.DeclaringType.Interfaces.FirstOrDefault(it => OriginalMethod.Name.StartsWith(it.InterfaceType.FullName + "."));
+                if (originalImplementingInterface != null)
+                {
+                    var originalImplementedMethod = originalImplementingInterface.InterfaceType.Resolve().Methods
+                        .Single(it =>
+                            OriginalMethod.Name.EndsWith("." + it.Name) && // todo: also match parameter types?
+                            OriginalMethod.Parameters.Count == it.Parameters.Count);
+                    
+                    NewMethod.Overrides.Add(
+                        DeclaringType.AssemblyContext.NewAssembly.MainModule.ImportReference(
+                            DeclaringType.AssemblyContext.RewriteMethodRef(originalImplementedMethod)));
+                    
+                }
+            }
         }
 
         private MethodAttributes AdjustAttributes(MethodAttributes original)
