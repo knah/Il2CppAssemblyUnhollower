@@ -4,7 +4,7 @@
         <TargetFrameworks>net4.7.2;netstandard2.1</TargetFrameworks>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
-        <Version>0.4.15.2</Version>
+        <Version>0.4.15.3</Version>
     </PropertyGroup>
 
     <ItemGroup>
