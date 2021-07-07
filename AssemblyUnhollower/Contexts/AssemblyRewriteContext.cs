@@ -43,6 +43,7 @@ namespace AssemblyUnhollower.Contexts
 
         public MethodReference RewriteMethodRef(MethodReference methodRef)
         {
+            // todo: method on instantiated generic types?
             var newType = GlobalContext.GetNewTypeForOriginal(methodRef.DeclaringType.Resolve());
             if (newType.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.UseSystemInterface)
                 return newType.NewType.Methods.Single(it => it.Name == methodRef.Name);

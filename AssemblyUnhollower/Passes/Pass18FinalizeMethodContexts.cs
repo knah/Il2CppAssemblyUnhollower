@@ -52,11 +52,6 @@ namespace AssemblyUnhollower.Passes
                         pdmTopNZCaller++;
                 }
             }
-            
-            foreach (var assemblyContext in context.Assemblies)
-            foreach (var typeContext in assemblyContext.Types)
-            foreach (var methodContext in typeContext.Methods)
-                methodContext.AssignExplicitOverrides();
 
             LogSupport.Trace("");
             LogSupport.Trace($"Dead method statistics: 0t={pdmTop0Caller} mt={pdmTopNZCaller} 0n={pdmNested0Caller} mn={pdmNestedNZCaller}");

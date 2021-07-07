@@ -166,6 +166,7 @@ namespace AssemblyUnhollower.Contexts
         public void AssignExplicitOverrides()
         {
             // todo: translate explicit overrides based on names perhaps?; dumper doesn't generate those though, so interface implementations can end up scuffed
+            // todo: properly rewrite the entire method signature including parameters and generic types in them
             foreach (var originalMethodOverride in OriginalMethod.Overrides)
             {
                 var specificOverride =
@@ -177,20 +178,63 @@ namespace AssemblyUnhollower.Contexts
 
             if (OriginalMethod.Overrides.Count == 0 && OriginalMethod.Name.Contains("."))
             {
-                var originalImplementingInterface = OriginalMethod.DeclaringType.Interfaces.FirstOrDefault(it => OriginalMethod.Name.StartsWith(it.InterfaceType.FullName + "."));
+                var originalImplementingInterface = OriginalMethod.DeclaringType.Interfaces.FirstOrDefault(it => CanMethodBeImplementingInterface(OriginalMethod.Name, it.InterfaceType));
                 if (originalImplementingInterface != null)
                 {
-                    var originalImplementedMethod = originalImplementingInterface.InterfaceType.Resolve().Methods
-                        .Single(it =>
-                            OriginalMethod.Name.EndsWith("." + it.Name) && // todo: also match parameter types?
-                            OriginalMethod.Parameters.Count == it.Parameters.Count);
+                    var interfaceRewrite = DeclaringType.AssemblyContext.RewriteTypeRef(originalImplementingInterface.InterfaceType);
+                    var newImplementingInterface = DeclaringType.NewType.Interfaces.Single(it => it.InterfaceType.FullName == interfaceRewrite.FullName);
                     
-                    NewMethod.Overrides.Add(
-                        DeclaringType.AssemblyContext.NewAssembly.MainModule.ImportReference(
-                            DeclaringType.AssemblyContext.RewriteMethodRef(originalImplementedMethod)));
-                    
+                    var originalImplementedMethod = FindMatchingMethod(originalImplementingInterface.InterfaceType, OriginalMethod);
+
+                    if (originalImplementedMethod != null)
+                    {
+                        var newMethod = FindMatchingMethod(newImplementingInterface.InterfaceType, originalImplementedMethod, false);
+                        NewMethod.Overrides.Add(DeclaringType.AssemblyContext.NewAssembly.MainModule.ImportReference(newMethod));
+                    }
                 }
             }
+        }
+
+        private static MethodReference? FindMatchingMethod(TypeReference type, MethodReference originalMethod, bool typePrefixedName = true)
+        {
+            if (type is GenericInstanceType generic)
+            {
+                var baseReference = FindMatchingMethod(generic.ElementType, originalMethod,typePrefixedName);
+                if (baseReference == null) return null;
+
+                var newReference = new MethodReference(baseReference.Name, baseReference.ReturnType, type)
+                {
+                    HasThis = baseReference.HasThis,
+                };
+                
+                foreach (var baseReferenceParameter in baseReference.Parameters)
+                    newReference.Parameters.Add(baseReferenceParameter);
+                return newReference;
+            }
+
+            return type.Resolve().Methods
+                .Single(it =>
+                    (typePrefixedName ? originalMethod.Name.EndsWith("." + it.Name) : originalMethod.Name == it.Name) && // todo: also match parameter types?
+                    originalMethod.Parameters.Count == it.Parameters.Count);
+        }
+
+        private static bool CanMethodBeImplementingInterface(string methodName, TypeReference interfaceType)
+        {
+            if (interfaceType is GenericInstanceType generic)
+            {
+                var includedType = generic.ElementType.FullName;
+                var backtickIndex = includedType.IndexOf('`');
+                if (backtickIndex != -1)
+                    includedType = includedType.Substring(0, backtickIndex);
+
+                if (methodName.Length <= includedType.Length || !methodName.StartsWith(includedType))
+                    return false;
+
+                var nextChar = methodName[includedType.Length];
+                return nextChar is '`' or '<' or '[' or '.';
+            }
+
+            return methodName.StartsWith(interfaceType.FullName + ".");
         }
 
         private MethodAttributes AdjustAttributes(MethodAttributes original)
