@@ -22,6 +22,8 @@ namespace AssemblyUnhollower.Passes
                         var originalMethod = methodRewriteContext.OriginalMethod;
                         var newMethod = methodRewriteContext.NewMethod;
                         var imports = assemblyContext.Imports;
+                        
+                        if (newMethod.IsAbstract) continue;
 
                         var bodyBuilder = newMethod.Body.GetILProcessor();
                         var exceptionLocal = new VariableDefinition(imports.IntPtr);
