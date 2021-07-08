@@ -21,6 +21,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Image
             else return new NativeImageStruct((IntPtr)imagePointer);
         }
 
+        public unsafe IntPtr il2cpp_image_get_assembly(IntPtr image) => (IntPtr)((Il2CppImage_24_0_C*)image)->assembly;
+
 #if DEBUG
         public string GetName() => "NativeImageStructHandler_24_0_C";
 #endif

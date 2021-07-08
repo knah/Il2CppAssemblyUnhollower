@@ -26,6 +26,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.ParameterInfo
 
         public bool HasNamePosToken => true;
 
+        public unsafe IntPtr il2cpp_parameter_get_type(IntPtr param) => (IntPtr)((Il2CppParameterInfo_24_1*)param)->parameter_type;
+
 #if DEBUG
         public string GetName() => "NativeParameterInfoStructHandler_24_1";
 #endif

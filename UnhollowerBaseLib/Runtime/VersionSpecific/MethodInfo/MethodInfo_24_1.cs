@@ -42,6 +42,13 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
         public IntPtr il2cpp_method_get_class(IntPtr method) => (IntPtr)((Il2CppMethodInfo_24_1*)method)->klass;
         public IntPtr il2cpp_method_get_name(IntPtr method) => ((Il2CppMethodInfo_24_1*)method)->name;
         public uint il2cpp_method_get_param_count(IntPtr method) => ((Il2CppMethodInfo_24_1*)method)->parameters_count;
+        public IntPtr il2cpp_method_get_param(IntPtr method, uint index)
+        {
+            if (index < ((Il2CppMethodInfo_24_1*)method)->parameters_count)
+                return UnityVersionHandler.parameterInfoStructHandler.il2cpp_parameter_get_type((IntPtr)(&(((Il2CppMethodInfo_24_1*)method)->parameters[index])));
+            else
+                return IntPtr.Zero;
+        }
         public IntPtr il2cpp_method_get_return_type(IntPtr method) => (IntPtr)((Il2CppMethodInfo_24_1*)method)->return_type;
         public uint il2cpp_method_get_token(IntPtr method) => ((Il2CppMethodInfo_24_1*)method)->token;
 

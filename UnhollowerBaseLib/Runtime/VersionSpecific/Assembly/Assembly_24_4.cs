@@ -23,6 +23,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Assembly
             else return new NativeAssemblyStruct((IntPtr)assemblyPointer);
         }
 
+        public IntPtr il2cpp_assembly_get_image(IntPtr assembly) => (IntPtr)((Il2CppAssembly_24_4*)assembly)->image;
         public IntPtr il2cpp_assembly_get_name(IntPtr assembly) => ((Il2CppAssembly_24_4*)assembly)->aname.name;
 
 #if DEBUG

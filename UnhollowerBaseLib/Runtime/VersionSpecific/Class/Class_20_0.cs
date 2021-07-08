@@ -32,6 +32,19 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             else return new NativeClassStructWrapper((IntPtr)classPointer);
         }
 
+        public unsafe IntPtr il2cpp_class_get_element_class(IntPtr klass) => (IntPtr)((Il2CppClass_20_0*)klass)->element_class;
+        public unsafe IntPtr il2cpp_class_get_name(IntPtr klass) => ((Il2CppClass_20_0*)klass)->name;
+        public unsafe IntPtr il2cpp_class_get_namespace(IntPtr klass) => ((Il2CppClass_20_0*)klass)->namespaze;
+        public unsafe IntPtr il2cpp_class_get_parent(IntPtr klass) => (IntPtr)((Il2CppClass_20_0*)klass)->parent;
+        public unsafe IntPtr il2cpp_class_get_declaring_type(IntPtr klass) => (IntPtr)((Il2CppClass_20_0*)klass)->declaringType;
+        public unsafe uint il2cpp_class_instance_size(IntPtr klass) => ((Il2CppClass_20_0*)klass)->instance_size;
+        public unsafe uint il2cpp_class_num_fields(IntPtr klass) => ((Il2CppClass_20_0*)klass)->field_count;
+        public unsafe bool il2cpp_class_is_valuetype(IntPtr klass) => NativeStructUtils.CheckBit(klass, bitfield1offset, 0);
+        public unsafe IntPtr il2cpp_class_get_type(IntPtr klass) => (IntPtr)(&((Il2CppClass_20_0*)klass)->byval_arg);
+        public unsafe uint il2cpp_class_get_type_token(IntPtr klass) => ((Il2CppClass_20_0*)klass)->token;
+        public unsafe IntPtr il2cpp_class_get_image(IntPtr klass) => (IntPtr)((Il2CppClass_20_0*)klass)->image;
+        public unsafe int il2cpp_class_get_rank(IntPtr klass) => ((Il2CppClass_20_0*)klass)->rank;
+
 #if DEBUG
         public string GetName() => "NativeClassStructHandler_20_0";
 #endif
@@ -128,6 +141,12 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             uint8_t is_import : 1;*/
         }
 
+        private static int bitfield1offset =
+            Marshal.OffsetOf<Il2CppClass_20_0>(nameof(Il2CppClass_20_0.bitfield_1)).ToInt32();
+
+        private static int bitfield2offset =
+            Marshal.OffsetOf<Il2CppClass_20_0>(nameof(Il2CppClass_20_0.bitfield_2)).ToInt32();
+
         internal unsafe class NativeClassStructWrapper : INativeClassStruct
         {
             public NativeClassStructWrapper(IntPtr pointer)
@@ -151,12 +170,6 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public ref uint ActualSize => ref NativeClass->actualSize;
 
             public ref ushort MethodCount => ref NativeClass->method_count;
-
-            private static int bitfield1offset =
-                Marshal.OffsetOf<Il2CppClass_20_0>(nameof(Il2CppClass_20_0.bitfield_1)).ToInt32();
-
-            private static int bitfield2offset =
-                Marshal.OffsetOf<Il2CppClass_20_0>(nameof(Il2CppClass_20_0.bitfield_2)).ToInt32();
 
             public bool ValueType
             {

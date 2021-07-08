@@ -103,11 +103,6 @@ namespace UnhollowerBaseLib.Runtime
             throw new ApplicationException("No handler");
         }
 
-        public static IntPtr CopyMethodInfoStruct(IntPtr origMethodInfo)
-        {
-            return GetHandler<INativeMethodInfoStructHandler>().CopyMethodInfoStruct(origMethodInfo);
-        }
-
         private static Type[] GetAllTypesSafe()
         {
             try
@@ -189,6 +184,9 @@ namespace UnhollowerBaseLib.Runtime
 
         public static IntPtr GetMethodFromReflection(IntPtr method) =>
             methodInfoStructHandler.GetMethodFromReflection(method);
+
+        public static IntPtr CopyMethodInfoStruct(IntPtr origMethodInfo) =>
+            methodInfoStructHandler.CopyMethodInfoStruct(origMethodInfo);
 
 
         //Parameters

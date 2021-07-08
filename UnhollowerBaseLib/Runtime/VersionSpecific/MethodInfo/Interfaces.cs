@@ -11,6 +11,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
         IntPtr il2cpp_method_get_class(IntPtr method);
         IntPtr il2cpp_method_get_name(IntPtr method);
         uint il2cpp_method_get_param_count(IntPtr method);
+        IntPtr il2cpp_method_get_param(IntPtr method, uint index);
         IntPtr il2cpp_method_get_return_type(IntPtr method);
         uint il2cpp_method_get_token(IntPtr method);
 #if DEBUG
