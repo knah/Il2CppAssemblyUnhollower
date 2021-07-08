@@ -19,11 +19,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnhollowerRuntimeLib", "Unh
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{99E71726-78FB-4376-89DA-90E5C08F5CD4}"
 	ProjectSection(SolutionItems) = preProject
+		Documentation\Changes-In-v0.5.md = Documentation\Changes-In-v0.5.md
 		Documentation\Class-Injection.md = Documentation\Class-Injection.md
 		Documentation\Command-Line-Usage.md = Documentation\Command-Line-Usage.md
 		Documentation\Common-Problems.md = Documentation\Common-Problems.md
 		Documentation\Injected-Components-In-Asset-Bundles.md = Documentation\Injected-Components-In-Asset-Bundles.md
-		Documentation\Changes in v0.5.md = Documentation\Changes in v0.5.md
 	EndProjectSection
 EndProject
 Global
