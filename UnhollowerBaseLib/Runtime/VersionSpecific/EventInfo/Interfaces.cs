@@ -6,6 +6,12 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
     {
         INativeEventInfoStruct CreateNewEventInfoStruct();
         unsafe INativeEventInfoStruct Wrap(Il2CppEventInfo* eventInfoPointer);
+        IntPtr il2cpp_event_get_name(IntPtr eventPointer);
+        IntPtr il2cpp_event_get_type(IntPtr eventPointer);
+        IntPtr il2cpp_event_get_parent_class(IntPtr eventPointer);
+        IntPtr il2cpp_event_get_add_method(IntPtr eventPointer);
+        IntPtr il2cpp_event_get_remove_method(IntPtr eventPointer);
+        IntPtr il2cpp_event_get_raise_method(IntPtr eventPointer);
 #if DEBUG
         string GetName();
 #endif

@@ -7,6 +7,19 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
     {
         INativeClassStruct CreateNewClassStruct(int vTableSlots);
         unsafe INativeClassStruct Wrap(Il2CppClass* classPointer);
+
+        IntPtr il2cpp_class_get_element_class(IntPtr klass);
+        IntPtr il2cpp_class_get_name(IntPtr klass);
+        IntPtr il2cpp_class_get_namespace(IntPtr klass);
+        IntPtr il2cpp_class_get_parent(IntPtr klass);
+        IntPtr il2cpp_class_get_declaring_type(IntPtr klass);
+        uint il2cpp_class_instance_size(IntPtr klass);
+        uint il2cpp_class_num_fields(IntPtr enumKlass);
+        IntPtr il2cpp_class_get_type(IntPtr klass);
+        uint il2cpp_class_get_type_token(IntPtr klass);
+        IntPtr il2cpp_class_get_image(IntPtr klass);
+        int il2cpp_class_get_rank(IntPtr klass);
+
 #if DEBUG
         string GetName();
 #endif

@@ -63,7 +63,7 @@ namespace UnhollowerBaseLib.Runtime
 
         #region Assemblies
 
-        public static IntPtr il2cpp_assembly_get_image(IntPtr assembly) => IL2CPP.il2cpp_assembly_get_image(assembly);
+        public static IntPtr il2cpp_assembly_get_image(IntPtr assembly) => UnityVersionHandler.assemblyStructHandler.il2cpp_assembly_get_image(assembly);
 
         public static IntPtr il2cpp_assembly_get_name(IntPtr assembly) => UnityVersionHandler.assemblyStructHandler.il2cpp_assembly_get_name(assembly);
 
@@ -89,7 +89,7 @@ namespace UnhollowerBaseLib.Runtime
 
         public static IntPtr il2cpp_class_from_system_type(IntPtr type) => IL2CPP.il2cpp_class_from_system_type(type);
 
-        public static IntPtr il2cpp_class_get_element_class(IntPtr klass) => IL2CPP.il2cpp_class_get_element_class(klass);
+        public static IntPtr il2cpp_class_get_element_class(IntPtr klass) => UnityVersionHandler.classStructHandler.il2cpp_class_get_element_class(klass);
 
         public static IntPtr il2cpp_class_get_events(IntPtr klass, ref IntPtr iter) => IL2CPP.il2cpp_class_get_events(klass, ref iter);
 
@@ -109,17 +109,17 @@ namespace UnhollowerBaseLib.Runtime
 
         public static IntPtr il2cpp_class_get_method_from_name(IntPtr klass, [MarshalAs(UnmanagedType.LPStr)] string name, int argsCount) => IL2CPP.il2cpp_class_get_method_from_name(klass, name, argsCount);
 
-        public static IntPtr il2cpp_class_get_name(IntPtr klass) => IL2CPP.il2cpp_class_get_name(klass);
+        public static IntPtr il2cpp_class_get_name(IntPtr klass) => UnityVersionHandler.classStructHandler.il2cpp_class_get_name(klass);
 
-        public static IntPtr il2cpp_class_get_namespace(IntPtr klass) => IL2CPP.il2cpp_class_get_namespace(klass);
+        public static IntPtr il2cpp_class_get_namespace(IntPtr klass) => UnityVersionHandler.classStructHandler.il2cpp_class_get_namespace(klass);
 
-        public static IntPtr il2cpp_class_get_parent(IntPtr klass) => IL2CPP.il2cpp_class_get_parent(klass);
+        public static IntPtr il2cpp_class_get_parent(IntPtr klass) => UnityVersionHandler.classStructHandler.il2cpp_class_get_parent(klass);
 
-        public static IntPtr il2cpp_class_get_declaring_type(IntPtr klass) => IL2CPP.il2cpp_class_get_declaring_type(klass);
+        public static IntPtr il2cpp_class_get_declaring_type(IntPtr klass) => UnityVersionHandler.classStructHandler.il2cpp_class_get_declaring_type(klass);
 
-        public static int il2cpp_class_instance_size(IntPtr klass) => IL2CPP.il2cpp_class_instance_size(klass);
+        public static uint il2cpp_class_instance_size(IntPtr klass) => UnityVersionHandler.classStructHandler.il2cpp_class_instance_size(klass);
 
-        public static uint il2cpp_class_num_fields(IntPtr enumKlass) => IL2CPP.il2cpp_class_num_fields(enumKlass);
+        public static uint il2cpp_class_num_fields(IntPtr enumKlass) => UnityVersionHandler.classStructHandler.il2cpp_class_num_fields(enumKlass);
 
         public static bool il2cpp_class_is_valuetype(IntPtr klass) => IL2CPP.il2cpp_class_is_valuetype(klass);
 
@@ -137,9 +137,9 @@ namespace UnhollowerBaseLib.Runtime
 
         public static IntPtr il2cpp_class_from_type(IntPtr type) => IL2CPP.il2cpp_class_from_type(type);
 
-        public static IntPtr il2cpp_class_get_type(IntPtr klass) => IL2CPP.il2cpp_class_get_type(klass);
+        public static IntPtr il2cpp_class_get_type(IntPtr klass) => UnityVersionHandler.classStructHandler.il2cpp_class_get_type(klass);
 
-        public static uint il2cpp_class_get_type_token(IntPtr klass) => IL2CPP.il2cpp_class_get_type_token(klass);
+        public static uint il2cpp_class_get_type_token(IntPtr klass) => UnityVersionHandler.classStructHandler.il2cpp_class_get_type_token(klass);
 
         public static bool il2cpp_class_has_attribute(IntPtr klass, IntPtr attr_class) => IL2CPP.il2cpp_class_has_attribute(klass, attr_class);
 
@@ -147,11 +147,11 @@ namespace UnhollowerBaseLib.Runtime
 
         public static bool il2cpp_class_is_enum(IntPtr klass) => IL2CPP.il2cpp_class_is_enum(klass);
 
-        public static IntPtr il2cpp_class_get_image(IntPtr klass) => IL2CPP.il2cpp_class_get_image(klass);
+        public static IntPtr il2cpp_class_get_image(IntPtr klass) => UnityVersionHandler.classStructHandler.il2cpp_class_get_image(klass);
 
         public static IntPtr il2cpp_class_get_assemblyname(IntPtr klass) => IL2CPP.il2cpp_class_get_assemblyname(klass);
 
-        public static int il2cpp_class_get_rank(IntPtr klass) => IL2CPP.il2cpp_class_get_rank(klass);
+        public static int il2cpp_class_get_rank(IntPtr klass) => UnityVersionHandler.classStructHandler.il2cpp_class_get_rank(klass);
 
         public static uint il2cpp_class_get_bitmap_size(IntPtr klass) => IL2CPP.il2cpp_class_get_bitmap_size(klass);
 
@@ -199,6 +199,22 @@ namespace UnhollowerBaseLib.Runtime
 
         #endregion
 
+        #region Events
+
+        public static IntPtr il2cpp_event_get_name(IntPtr eventPointer) => UnityVersionHandler.eventInfoStructHandler.il2cpp_event_get_name(eventPointer);
+
+        public static IntPtr il2cpp_event_get_type(IntPtr eventPointer) => UnityVersionHandler.eventInfoStructHandler.il2cpp_event_get_type(eventPointer);
+
+        public static IntPtr il2cpp_event_get_parent_class(IntPtr eventPointer) => UnityVersionHandler.eventInfoStructHandler.il2cpp_event_get_parent_class(eventPointer);
+
+        public static IntPtr il2cpp_event_get_add_method(IntPtr eventPointer) => UnityVersionHandler.eventInfoStructHandler.il2cpp_event_get_add_method(eventPointer);
+
+        public static IntPtr il2cpp_event_get_remove_method(IntPtr eventPointer) => UnityVersionHandler.eventInfoStructHandler.il2cpp_event_get_remove_method(eventPointer);
+
+        public static IntPtr il2cpp_event_get_raise_method(IntPtr eventPointer) => UnityVersionHandler.eventInfoStructHandler.il2cpp_event_get_raise_method(eventPointer);
+
+        #endregion
+
         #region Exceptions
 
         public static IntPtr il2cpp_exception_from_name_msg(IntPtr image, IntPtr name_space, IntPtr name, IntPtr msg) => IL2CPP.il2cpp_exception_from_name_msg(image, name_space, name, msg);
@@ -221,7 +237,7 @@ namespace UnhollowerBaseLib.Runtime
 
         public static IntPtr il2cpp_field_get_parent(IntPtr field) => UnityVersionHandler.fieldInfoStructHandler.il2cpp_field_get_parent(field);
 
-        public static uint il2cpp_field_get_offset(IntPtr field) => UnityVersionHandler.fieldInfoStructHandler.il2cpp_field_get_offset(field);
+        public static int il2cpp_field_get_offset(IntPtr field) => UnityVersionHandler.fieldInfoStructHandler.il2cpp_field_get_offset(field);
 
         public static IntPtr il2cpp_field_get_type(IntPtr field) => UnityVersionHandler.fieldInfoStructHandler.il2cpp_field_get_type(field);
 
@@ -275,7 +291,7 @@ namespace UnhollowerBaseLib.Runtime
 
         #region Images
 
-        public static IntPtr il2cpp_image_get_assembly(IntPtr image) => IL2CPP.il2cpp_image_get_assembly(image);
+        public static IntPtr il2cpp_image_get_assembly(IntPtr image) => UnityVersionHandler.imageStructHandler.il2cpp_image_get_assembly(image);
 
         public static IntPtr il2cpp_image_get_name(IntPtr image) => IL2CPP.il2cpp_image_get_name(image);
 
@@ -317,7 +333,7 @@ namespace UnhollowerBaseLib.Runtime
 
         public static uint il2cpp_method_get_param_count(IntPtr method) => UnityVersionHandler.methodInfoStructHandler.il2cpp_method_get_param_count(method);
 
-        public static IntPtr il2cpp_method_get_param(IntPtr method, uint index) => IL2CPP.il2cpp_method_get_param(method, index);
+        public static IntPtr il2cpp_method_get_param(IntPtr method, uint index) => UnityVersionHandler.methodInfoStructHandler.il2cpp_method_get_param(method, index);
 
         public static IntPtr il2cpp_method_get_class(IntPtr method) => UnityVersionHandler.methodInfoStructHandler.il2cpp_method_get_class(method);
 
@@ -365,6 +381,12 @@ namespace UnhollowerBaseLib.Runtime
 
         #endregion
 
+        #region Parameters
+
+        public static IntPtr il2cpp_parameter_get_type(IntPtr param) => UnityVersionHandler.parameterInfoStructHandler.il2cpp_parameter_get_type(param);
+
+        #endregion
+
         #region Profilers
 
         public static void il2cpp_profiler_install(IntPtr prof, IntPtr shutdown_callback) => IL2CPP.il2cpp_profiler_install(prof, shutdown_callback);
@@ -385,7 +407,7 @@ namespace UnhollowerBaseLib.Runtime
 
         #region Properties
 
-        public static uint il2cpp_property_get_flags(IntPtr prop) => IL2CPP.il2cpp_property_get_flags(prop);
+        public static uint il2cpp_property_get_flags(IntPtr prop) => UnityVersionHandler.propertyInfoStructHandler.il2cpp_property_get_flags(prop);
 
         public static IntPtr il2cpp_property_get_get_method(IntPtr prop) => UnityVersionHandler.propertyInfoStructHandler.il2cpp_property_get_get_method(prop);
 
@@ -394,6 +416,8 @@ namespace UnhollowerBaseLib.Runtime
         public static IntPtr il2cpp_property_get_name(IntPtr prop) => UnityVersionHandler.propertyInfoStructHandler.il2cpp_property_get_name(prop);
 
         public static IntPtr il2cpp_property_get_parent(IntPtr prop) => UnityVersionHandler.propertyInfoStructHandler.il2cpp_property_get_parent(prop);
+
+        public static IntPtr il2cpp_property_get_type(IntPtr prop) => UnityVersionHandler.propertyInfoStructHandler.il2cpp_property_get_type(prop);
 
         #endregion
 

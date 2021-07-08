@@ -13,11 +13,12 @@ namespace UnhollowerBaseLib.Runtime
             return methodInfo.Pointer;
         }
 
-        public static unsafe bool CheckBit(this INativeStruct self, int startOffset, int bit)
+        public static unsafe bool CheckBit(this INativeStruct self, int startOffset, int bit) => CheckBit(self.Pointer, startOffset, bit);
+        public static unsafe bool CheckBit(IntPtr structPointer, int startOffset, int bit)
         {
             var byteOffset = bit / 8;
             var bitOffset = bit % 8;
-            var p = self.Pointer + startOffset + byteOffset;
+            var p = structPointer + startOffset + byteOffset;
             
             var mask = 1 << bitOffset;
             var val = *(byte*) p.ToPointer();
@@ -25,11 +26,12 @@ namespace UnhollowerBaseLib.Runtime
             return masked == mask;
         }
 
-        public static unsafe void SetBit(this INativeStruct self, int startOffset, int bit, bool value)
+        public static unsafe void SetBit(this INativeStruct self, int startOffset, int bit, bool value) => SetBit(self.Pointer, startOffset, bit, value);
+        public static unsafe void SetBit(IntPtr structPointer, int startOffset, int bit, bool value)
         {
             var byteOffset = bit / 8;
             var bitOffset = bit % 8;
-            var p = self.Pointer + startOffset + byteOffset;
+            var p = structPointer + startOffset + byteOffset;
 
             var mask = ~(1 << bitOffset);
             var ptr = (byte*) p.ToPointer();

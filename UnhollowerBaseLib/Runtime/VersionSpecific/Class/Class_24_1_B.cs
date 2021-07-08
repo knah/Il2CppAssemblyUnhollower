@@ -23,6 +23,18 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             else return new NativeClassStructWrapper((IntPtr)classPointer);
         }
 
+        public unsafe IntPtr il2cpp_class_get_element_class(IntPtr klass) => (IntPtr)((Il2CppClass_24_1_B*)klass)->element_class;
+        public unsafe IntPtr il2cpp_class_get_name(IntPtr klass) => ((Il2CppClass_24_1_B*)klass)->name;
+        public unsafe IntPtr il2cpp_class_get_namespace(IntPtr klass) => ((Il2CppClass_24_1_B*)klass)->namespaze;
+        public unsafe IntPtr il2cpp_class_get_parent(IntPtr klass) => (IntPtr)((Il2CppClass_24_1_B*)klass)->parent;
+        public unsafe IntPtr il2cpp_class_get_declaring_type(IntPtr klass) => (IntPtr)((Il2CppClass_24_1_B*)klass)->declaringType;
+        public unsafe uint il2cpp_class_instance_size(IntPtr klass) => ((Il2CppClass_24_1_B*)klass)->instance_size;
+        public unsafe uint il2cpp_class_num_fields(IntPtr enumKlass) => ((Il2CppClass_24_1_B*)enumKlass)->field_count;
+        public unsafe IntPtr il2cpp_class_get_type(IntPtr klass) => (IntPtr)(&((Il2CppClass_24_1_B*)klass)->byval_arg);
+        public unsafe uint il2cpp_class_get_type_token(IntPtr klass) => ((Il2CppClass_24_1_B*)klass)->token;
+        public unsafe IntPtr il2cpp_class_get_image(IntPtr klass) => (IntPtr)((Il2CppClass_24_1_B*)klass)->image;
+        public unsafe int il2cpp_class_get_rank(IntPtr klass) => ((Il2CppClass_24_1_B*)klass)->rank;
+
 #if DEBUG
         public string GetName() => "NativeClassStructHandler_24_1_B";
 #endif

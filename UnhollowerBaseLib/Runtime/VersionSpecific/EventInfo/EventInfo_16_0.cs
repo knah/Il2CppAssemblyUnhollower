@@ -21,6 +21,13 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.EventInfo
             else return new NativeEventInfoStruct((IntPtr)eventInfoPointer);
         }
 
+        public IntPtr il2cpp_event_get_name(IntPtr eventPointer) => ((Il2CppEventInfo_16_0*)eventPointer)->name;
+        public IntPtr il2cpp_event_get_type(IntPtr eventPointer) => (IntPtr)((Il2CppEventInfo_16_0*)eventPointer)->eventType;
+        public IntPtr il2cpp_event_get_parent_class(IntPtr eventPointer) => (IntPtr)((Il2CppEventInfo_16_0*)eventPointer)->parent;
+        public IntPtr il2cpp_event_get_add_method(IntPtr eventPointer) => (IntPtr)((Il2CppEventInfo_16_0*)eventPointer)->add;
+        public IntPtr il2cpp_event_get_remove_method(IntPtr eventPointer) => (IntPtr)((Il2CppEventInfo_16_0*)eventPointer)->remove;
+        public IntPtr il2cpp_event_get_raise_method(IntPtr eventPointer) => (IntPtr)((Il2CppEventInfo_16_0*)eventPointer)->raise;
+
 #if DEBUG
         public string GetName() => "NativeEventInfoStructHandler_16_0";
 #endif
