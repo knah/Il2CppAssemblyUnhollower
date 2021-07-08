@@ -121,7 +121,7 @@ namespace UnhollowerBaseLib.Runtime
 
         public static uint il2cpp_class_num_fields(IntPtr enumKlass) => UnityVersionHandler.classStructHandler.il2cpp_class_num_fields(enumKlass);
 
-        public static bool il2cpp_class_is_valuetype(IntPtr klass) => IL2CPP.il2cpp_class_is_valuetype(klass);
+        public static bool il2cpp_class_is_valuetype(IntPtr klass) => UnityVersionHandler.classStructHandler.il2cpp_class_is_valuetype(klass);
 
         public static int il2cpp_class_value_size(IntPtr klass, ref uint align) => IL2CPP.il2cpp_class_value_size(klass, ref align);
 

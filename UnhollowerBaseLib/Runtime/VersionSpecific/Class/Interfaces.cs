@@ -14,7 +14,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
         IntPtr il2cpp_class_get_parent(IntPtr klass);
         IntPtr il2cpp_class_get_declaring_type(IntPtr klass);
         uint il2cpp_class_instance_size(IntPtr klass);
-        uint il2cpp_class_num_fields(IntPtr enumKlass);
+        uint il2cpp_class_num_fields(IntPtr klass);
+        bool il2cpp_class_is_valuetype(IntPtr klass);
         IntPtr il2cpp_class_get_type(IntPtr klass);
         uint il2cpp_class_get_type_token(IntPtr klass);
         IntPtr il2cpp_class_get_image(IntPtr klass);

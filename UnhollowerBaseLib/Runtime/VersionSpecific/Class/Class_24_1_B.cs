@@ -29,7 +29,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
         public unsafe IntPtr il2cpp_class_get_parent(IntPtr klass) => (IntPtr)((Il2CppClass_24_1_B*)klass)->parent;
         public unsafe IntPtr il2cpp_class_get_declaring_type(IntPtr klass) => (IntPtr)((Il2CppClass_24_1_B*)klass)->declaringType;
         public unsafe uint il2cpp_class_instance_size(IntPtr klass) => ((Il2CppClass_24_1_B*)klass)->instance_size;
-        public unsafe uint il2cpp_class_num_fields(IntPtr enumKlass) => ((Il2CppClass_24_1_B*)enumKlass)->field_count;
+        public unsafe uint il2cpp_class_num_fields(IntPtr klass) => ((Il2CppClass_24_1_B*)klass)->field_count;
+        public unsafe bool il2cpp_class_is_valuetype(IntPtr klass) => NativeStructUtils.CheckBit(klass, bitfield1offset, 1);
         public unsafe IntPtr il2cpp_class_get_type(IntPtr klass) => (IntPtr)(&((Il2CppClass_24_1_B*)klass)->byval_arg);
         public unsafe uint il2cpp_class_get_type_token(IntPtr klass) => ((Il2CppClass_24_1_B*)klass)->token;
         public unsafe IntPtr il2cpp_class_get_image(IntPtr klass) => (IntPtr)((Il2CppClass_24_1_B*)klass)->image;
@@ -140,6 +141,12 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             //VirtualInvokeData vtable[IL2CPP_ZERO_LEN_ARRAY];
         }
 
+        private static int bitfield1offset =
+            Marshal.OffsetOf<Il2CppClass_24_1_B>(nameof(Il2CppClass_24_1_B.bitfield_1)).ToInt32();
+
+        private static int bitfield2offset =
+            Marshal.OffsetOf<Il2CppClass_24_1_B>(nameof(Il2CppClass_24_1_B.bitfield_2)).ToInt32();
+
         internal unsafe class NativeClassStructWrapper : INativeClassStruct
         {
             public NativeClassStructWrapper(IntPtr pointer)
@@ -163,12 +170,6 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public ref uint ActualSize => ref NativeClass->actualSize;
 
             public ref ushort MethodCount => ref NativeClass->method_count;
-
-            private static int bitfield1offset =
-                Marshal.OffsetOf<Il2CppClass_24_1_B>(nameof(Il2CppClass_24_1_B.bitfield_1)).ToInt32();
-
-            private static int bitfield2offset =
-                Marshal.OffsetOf<Il2CppClass_24_1_B>(nameof(Il2CppClass_24_1_B.bitfield_2)).ToInt32();
 
             public bool ValueType
             {
