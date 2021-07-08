@@ -1,4 +1,4 @@
-#Changes in v0.5
+# Changes in v0.5
 In version 0.5, a major redesign of type system was made, with the goal of making generated types align better with the actual C# type system. The initial implementation was a kind of MVP, and, as such, had a bunch of unpleasant limitations.  
 The changes include the following:
  * `Il2CppSystem.String` is used in generated methods instead of `string`
