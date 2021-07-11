@@ -4,7 +4,7 @@
         <OutputType>Exe</OutputType>
         <TargetFrameworks>net4.7.2;net5.0;netstandard2.1</TargetFrameworks>
         <Nullable>enable</Nullable>
-        <Version>0.4.15.3</Version>
+        <Version>0.4.15.4</Version>
         <LangVersion>latest</LangVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>

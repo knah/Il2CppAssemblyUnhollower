@@ -37,9 +37,20 @@ namespace AssemblyUnhollower.Passes
                             property.SetMethod = typeContext.GetMethodByOldMethod(oldProperty.SetMethod).NewMethod;
                     }
 
-                    var defaultMemberAttribute = type.CustomAttributes.FirstOrDefault(it =>
-                        it.AttributeType.Name == "AttributeAttribute" && it.Fields.Any(it => it.Name == "Name" && (string) it.Argument.Value == nameof(DefaultMemberAttribute)));
-                    if (defaultMemberAttribute != null)
+                    string? defaultMemberName = null;
+                    var defaultMemberAttributeAttribute = type.CustomAttributes.FirstOrDefault(it =>
+                        it.AttributeType.Name == "AttributeAttribute" && it.Fields.Any(it =>
+                            it.Name == "Name" && (string)it.Argument.Value == nameof(DefaultMemberAttribute)));
+                    if (defaultMemberAttributeAttribute != null)
+                        defaultMemberName = "Item";
+                    else
+                    {
+                        var realDefaultMemberAttribute = type.CustomAttributes.FirstOrDefault(it => it.AttributeType.Name == nameof(DefaultMemberAttribute));
+                        if (realDefaultMemberAttribute != null)
+                            defaultMemberName = realDefaultMemberAttribute.ConstructorArguments[0].Value.ToString();
+                    }
+
+                    if (defaultMemberName != null)
                     {
                         typeContext.NewType.CustomAttributes.Add(new CustomAttribute(
                             new MethodReference(".ctor", assemblyContext.Imports.Void,
@@ -49,7 +60,7 @@ namespace AssemblyUnhollower.Passes
                                 Parameters = {new ParameterDefinition(assemblyContext.Imports.String)}
                             })
                         {
-                            ConstructorArguments = { new CustomAttributeArgument(assemblyContext.Imports.String, "Item") }
+                            ConstructorArguments = { new CustomAttributeArgument(assemblyContext.Imports.String, defaultMemberName) }
                         });
                     }
                 }
