@@ -9,6 +9,7 @@ namespace AssemblyUnhollower.Contexts
         public readonly AssemblyRewriteContext AssemblyContext;
         public readonly TypeDefinition OriginalType;
         public readonly TypeDefinition NewType;
+        public readonly string MapName;
 
         public readonly bool OriginalNameWasObfuscated;
 
@@ -24,11 +25,12 @@ namespace AssemblyUnhollower.Contexts
         public IEnumerable<FieldRewriteContext> Fields => myFieldContexts.Values;
         public IEnumerable<MethodRewriteContext> Methods => myMethodContexts.Values;
 
-        public TypeRewriteContext(AssemblyRewriteContext assemblyContext, TypeDefinition originalType, TypeDefinition newType)
+        public TypeRewriteContext(AssemblyRewriteContext assemblyContext, TypeDefinition originalType, TypeDefinition newType, string mapName)
         {
             AssemblyContext = assemblyContext ?? throw new ArgumentNullException(nameof(assemblyContext));
             OriginalType = originalType;
             NewType = newType ?? throw new ArgumentNullException(nameof(newType));
+            MapName = mapName;
 
             if (OriginalType == null) return;
             

@@ -20,7 +20,7 @@ namespace AssemblyUnhollower.Passes
                     
                     foreach (var oldProperty in type.Properties)
                     {
-                        var unmangledPropertyName = UnmanglePropertyName(assemblyContext, oldProperty, typeContext.NewType, propertyCountsByName);
+                        var unmangledPropertyName = UnmanglePropertyName(assemblyContext, oldProperty, typeContext, propertyCountsByName);
 
                         var property = new PropertyDefinition(unmangledPropertyName, oldProperty.Attributes,
                             assemblyContext.RewriteTypeRef(oldProperty.PropertyType));
@@ -67,7 +67,7 @@ namespace AssemblyUnhollower.Passes
             }
         }
         
-        private static string UnmanglePropertyName(AssemblyRewriteContext assemblyContext, PropertyDefinition prop, TypeReference declaringType, Dictionary<string, int> countsByBaseName)
+        private static string UnmanglePropertyName(AssemblyRewriteContext assemblyContext, PropertyDefinition prop, TypeRewriteContext declaringTypeContext, Dictionary<string, int> countsByBaseName)
         {
             if (assemblyContext.GlobalContext.Options.PassthroughNames || !prop.Name.IsObfuscated(assemblyContext.GlobalContext.Options)) return prop.Name;
 
@@ -78,7 +78,7 @@ namespace AssemblyUnhollower.Passes
             
             var unmanglePropertyName = baseName + "_" + index;
                         
-            if (assemblyContext.GlobalContext.Options.RenameMap.TryGetValue(declaringType.GetNamespacePrefix() + "::" + unmanglePropertyName, out var newName))
+            if (assemblyContext.GlobalContext.Options.RenameMap.TryGetValue(declaringTypeContext.MapName + "::" + unmanglePropertyName, out var newName))
                 unmanglePropertyName = newName;
             
             return unmanglePropertyName;

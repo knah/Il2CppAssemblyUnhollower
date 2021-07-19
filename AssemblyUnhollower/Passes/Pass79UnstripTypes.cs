@@ -51,7 +51,7 @@ namespace AssemblyUnhollower.Passes
                     clonedType.DeclaringType = enclosingNewType;
                 }
 
-                processedAssembly.RegisterTypeRewrite(new TypeRewriteContext(processedAssembly, null, clonedType));
+                processedAssembly.RegisterTypeRewrite(new TypeRewriteContext(processedAssembly, null, clonedType, null));
                 
                 return;
             }
@@ -68,7 +68,7 @@ namespace AssemblyUnhollower.Passes
                     clonedType.DeclaringType = enclosingNewType;
                 }
 
-                processedAssembly.RegisterTypeRewrite(new TypeRewriteContext(processedAssembly, null, clonedType));
+                processedAssembly.RegisterTypeRewrite(new TypeRewriteContext(processedAssembly, null, clonedType, null));
             }
 
             foreach (var nestedUnityType in unityType.NestedTypes)
