@@ -27,6 +27,8 @@ namespace UnhollowerRuntimeLib
         private static readonly HashSet<string> InjectedTypes = new HashSet<string>();
         /// <summary> (namespace, class, image) : pointer </summary>
         private static readonly Dictionary<(string, string, IntPtr), IntPtr> ClassFromNameDictionary = new Dictionary<(string, string, IntPtr), IntPtr>();
+        /// <summary> (method) : (method_inst, method) </summary>
+        private static readonly Dictionary<IntPtr, (MethodInfo, Dictionary<IntPtr, IntPtr>)> InflatedMethodFromContextDictionary = new Dictionary<IntPtr, (MethodInfo, Dictionary<IntPtr, IntPtr>)>();
 
         static void CreateFakeAssembly()
         {
@@ -69,10 +71,10 @@ namespace UnhollowerRuntimeLib
             *(IntPtr*)targetGcHandlePointer = handleAsPointer;
         }
 
-        public static void RegisterTypeInIl2Cpp<T>() where T : class => RegisterTypeInIl2Cpp(typeof(T), true);
-        public static void RegisterTypeInIl2Cpp<T>(bool logSuccess) where T : class => RegisterTypeInIl2Cpp(typeof(T), logSuccess);
-        public static void RegisterTypeInIl2Cpp(Type type) => RegisterTypeInIl2Cpp(type, true);
-        public static void RegisterTypeInIl2Cpp(Type type, bool logSuccess)
+        public static void RegisterTypeInIl2Cpp<T>(params INativeClassStruct[] interfaces) where T : class => RegisterTypeInIl2Cpp(typeof(T), true, interfaces);
+        public static void RegisterTypeInIl2Cpp<T>(bool logSuccess, params INativeClassStruct[] interfaces) where T : class => RegisterTypeInIl2Cpp(typeof(T), logSuccess, interfaces);
+        public static void RegisterTypeInIl2Cpp(Type type, params INativeClassStruct[] interfaces) => RegisterTypeInIl2Cpp(type, true, interfaces);
+        public static void RegisterTypeInIl2Cpp(Type type, bool logSuccess, params INativeClassStruct[] interfaces)
         {
             if(type == null)
                 throw new ArgumentException($"Type argument cannot be null");
@@ -106,16 +108,21 @@ namespace UnhollowerRuntimeLib
 
             if ((baseClassPointer.Flags & Il2CppClassAttributes.TYPE_ATTRIBUTE_INTERFACE) != 0)
                 throw new ArgumentException($"Base class {baseType} is an interface and can't be inherited from");
+            
+            if (interfaces.Any(i => (i.Flags & Il2CppClassAttributes.TYPE_ATTRIBUTE_INTERFACE) == 0))
+                throw new ArgumentException($"Interfaces {interfaces} are not interfaces");
 
             lock (InjectedTypes)
                 if (!InjectedTypes.Add(type.FullName))
                     throw new ArgumentException($"Type with FullName {type.FullName} is already injected. Don't inject the same type twice, or use a different namespace");
 
+            if (ourOriginalGenericGetMethod == null) HookGenericMethodGetMethod();
             if (ourOriginalTypeToClassMethod == null) HookClassFromType();
             if (originalClassFromNameMethod == null) HookClassFromName();
             if (FakeAssembly == null) CreateFakeAssembly();
 
-            var classPointer = UnityVersionHandler.NewClass(baseClassPointer.VtableCount);
+            var interfaceFunctionCount = interfaces.Sum(i => i.MethodCount);
+            var classPointer = UnityVersionHandler.NewClass(baseClassPointer.VtableCount + interfaceFunctionCount);
 
             classPointer.Image = FakeImage.ImagePointer;
             classPointer.Parent = baseClassPointer.ClassPointer;
@@ -147,16 +154,21 @@ namespace UnhollowerRuntimeLib
             methodPointerArray[0] = ConvertStaticMethod(FinalizeDelegate, "Finalize", classPointer);
             var finalizeMethod = UnityVersionHandler.Wrap(methodPointerArray[0]);
             methodPointerArray[1] = ConvertStaticMethod(CreateEmptyCtor(type), ".ctor", classPointer);
+            Dictionary<(string, bool), int> infos = new Dictionary<(string, bool), int>(eligibleMethods.Length);
             for (var i = 0; i < eligibleMethods.Length; i++)
             {
                 var methodInfo = eligibleMethods[i];
-                methodPointerArray[i + 2] = ConvertMethodInfo(methodInfo, classPointer);
+                var methodInfoPointer = methodPointerArray[i + 2] = ConvertMethodInfo(methodInfo, classPointer);
+                if (methodInfo.IsGenericMethod)
+                    InflatedMethodFromContextDictionary.Add((IntPtr)methodInfoPointer, (methodInfo, new Dictionary<IntPtr, IntPtr>()));
+                var methodName = methodInfo.Name;
+                infos[(methodInfo.Name, methodInfo.IsGenericMethod)] = i + 2;
             }
 
             var vTablePointer = (VirtualInvokeData*)classPointer.VTable;
             var baseVTablePointer = (VirtualInvokeData*)baseClassPointer.VTable;
-            classPointer.VtableCount = baseClassPointer.VtableCount;
-            for (var i = 0; i < classPointer.VtableCount; i++)
+            classPointer.VtableCount = (ushort)(baseClassPointer.VtableCount + interfaceFunctionCount);
+            for (var i = 0; i < baseClassPointer.VtableCount; i++)
             {
                 vTablePointer[i] = baseVTablePointer[i];
                 var vTableMethod = UnityVersionHandler.Wrap(vTablePointer[i].method);
@@ -166,6 +178,51 @@ namespace UnhollowerRuntimeLib
                     vTablePointer[i].methodPtr = finalizeMethod.MethodPointer;
                 }
             }
+
+            var offsets = new int[interfaces.Length];
+
+            var index = baseClassPointer.VtableCount;
+            for (var i = 0; i < interfaces.Length; i++) {
+                offsets[i] = index;
+                for (var j = 0; j < interfaces[i].MethodCount; j++) {
+                    var vTableMethod = UnityVersionHandler.Wrap(interfaces[i].Methods[j]);
+                    var methodName = Marshal.PtrToStringAnsi(vTableMethod.Name);
+                    if (!infos.TryGetValue((methodName, (vTableMethod.ExtraFlags & MethodInfoExtraFlags.is_generic) != 0), out var methodIndex)) {
+                        ++index;
+                        continue;
+                    }
+                    var method = methodPointerArray[methodIndex];
+                    vTablePointer[index].method = method;
+                    vTablePointer[index].methodPtr = UnityVersionHandler.Wrap(method).MethodPointer;
+                    ++index;
+                }
+            }
+
+            var interfaceCount = baseClassPointer.InterfaceCount + interfaces.Length;
+            classPointer.InterfaceCount = (ushort)interfaceCount;
+            classPointer.ImplementedInterfaces = (Il2CppClass**)Marshal.AllocHGlobal(interfaceCount * IntPtr.Size);
+            for (int i = 0; i < baseClassPointer.InterfaceCount; i++)
+                classPointer.ImplementedInterfaces[i] = baseClassPointer.ImplementedInterfaces[i];
+            for (int i = baseClassPointer.InterfaceCount; i < interfaceCount; i++)
+                classPointer.ImplementedInterfaces[i] = interfaces[i - baseClassPointer.InterfaceCount].ClassPointer;
+
+            var interfaceOffsetsCount = baseClassPointer.InterfaceOffsetsCount + interfaces.Length;
+            classPointer.InterfaceOffsetsCount = (ushort)interfaceOffsetsCount;
+            classPointer.InterfaceOffsets = (Il2CppRuntimeInterfaceOffsetPair*)Marshal.AllocHGlobal(interfaceOffsetsCount * Marshal.SizeOf<Il2CppRuntimeInterfaceOffsetPair>());
+            for (int i = 0; i < baseClassPointer.InterfaceOffsetsCount; i++)
+                classPointer.InterfaceOffsets[i] = baseClassPointer.InterfaceOffsets[i];
+            for (int i = baseClassPointer.InterfaceOffsetsCount; i < interfaceOffsetsCount; i++)
+                classPointer.InterfaceOffsets[i] = new Il2CppRuntimeInterfaceOffsetPair {
+                    interfaceType = interfaces[i - baseClassPointer.InterfaceOffsetsCount].ClassPointer,
+                    offset = offsets[i - baseClassPointer.InterfaceOffsetsCount]
+                };
+
+            var TypeHierarchyDepth = 1 + baseClassPointer.TypeHierarchyDepth;
+            classPointer.TypeHierarchyDepth = (byte)TypeHierarchyDepth;
+            classPointer.TypeHierarchy = (Il2CppClass**)Marshal.AllocHGlobal(TypeHierarchyDepth * IntPtr.Size);
+            for (var i = 0; i < TypeHierarchyDepth; i++)
+                classPointer.TypeHierarchy[i] = baseClassPointer.TypeHierarchy[i];
+            classPointer.TypeHierarchy[TypeHierarchyDepth - 1] = classPointer.ClassPointer;
 
             var newCounter = Interlocked.Decrement(ref ourClassOverrideCounter);
             FakeTokenClasses[newCounter] = classPointer.Pointer;
@@ -208,7 +265,9 @@ namespace UnhollowerRuntimeLib
 
         private static bool IsTypeSupported(Type type)
         {
-            if (type.IsValueType || type == typeof(string)) return true;
+            if (type.IsValueType ||
+                type == typeof(string) ||
+                type.IsGenericParameter) return true;
             if (typeof(Il2CppSystem.ValueType).IsAssignableFrom(type)) return false;
 
             return typeof(Il2CppObjectBase).IsAssignableFrom(type);
@@ -216,7 +275,6 @@ namespace UnhollowerRuntimeLib
 
         private static bool IsMethodEligible(MethodInfo method)
         {
-            if (method.IsGenericMethod || method.IsGenericMethodDefinition) return false;
             if (method.Name == "Finalize") return false;
             if (method.IsStatic || method.IsAbstract) return false;
             if (method.CustomAttributes.Any(it => it.AttributeType == typeof(HideFromIl2CppAttribute))) return false;
@@ -289,14 +347,40 @@ namespace UnhollowerRuntimeLib
                         param.Position = i;
                         param.Token = 0;
                     }
-                    param.ParameterType = (Il2CppTypeStruct*)IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(parameterInfo.ParameterType));
+                    var parameterType = parameterInfo.ParameterType;
+                    if (!parameterType.IsGenericParameter)
+                        param.ParameterType = (Il2CppTypeStruct*)IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(parameterType));
+                    else
+                    {
+                        var type = UnityVersionHandler.NewType();
+                        type.Type = Il2CppTypeEnum.IL2CPP_TYPE_MVAR;
+                        param.ParameterType = type.TypePointer;
+                    }
                 }
             }
 
-            converted.InvokerMethod = Marshal.GetFunctionPointerForDelegate(GetOrCreateInvoker(monoMethod));
-            converted.MethodPointer = Marshal.GetFunctionPointerForDelegate(GetOrCreateTrampoline(monoMethod));
+            if (monoMethod.IsGenericMethod)
+            {
+                if (monoMethod.ContainsGenericParameters)
+                    converted.ExtraFlags |= MethodInfoExtraFlags.is_generic;
+                else
+                    converted.ExtraFlags |= MethodInfoExtraFlags.is_inflated;
+            }
+
+            if (!monoMethod.ContainsGenericParameters) {
+                converted.InvokerMethod = Marshal.GetFunctionPointerForDelegate(GetOrCreateInvoker(monoMethod));
+                converted.MethodPointer = Marshal.GetFunctionPointerForDelegate(GetOrCreateTrampoline(monoMethod));
+            }
             converted.Slot = ushort.MaxValue;
-            converted.ReturnType = (Il2CppTypeStruct*)IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(monoMethod.ReturnType));
+            
+            if (!monoMethod.ReturnType.IsGenericParameter)
+                converted.ReturnType = (Il2CppTypeStruct*)IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(monoMethod.ReturnType));
+            else
+            {
+                var type = UnityVersionHandler.NewType();
+                type.Type = Il2CppTypeEnum.IL2CPP_TYPE_MVAR;
+                converted.ReturnType = type.TypePointer;
+            }
 
             converted.Flags = Il2CppMethodFlags.METHOD_ATTRIBUTE_PUBLIC |
                                Il2CppMethodFlags.METHOD_ATTRIBUTE_HIDE_BY_SIG;
@@ -507,6 +591,60 @@ namespace UnhollowerRuntimeLib
         private static Type NativeType(this Type type)
         {
             return type.IsValueType ? type : typeof(IntPtr);
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate Il2CppMethodInfo* GenericGetMethodDelegate(Il2CppGenericMethod* gmethod, bool copyMethodPtr);
+        private static volatile GenericGetMethodDelegate ourOriginalGenericGetMethod;
+
+        private static void HookGenericMethodGetMethod()
+        {
+            var lib = LoadLibrary("GameAssembly.dll");
+            var getVirtualMethodEntryPoint = GetProcAddress(lib, nameof(IL2CPP.il2cpp_object_get_virtual_method));
+            LogSupport.Trace($"il2cpp_object_get_virtual_method entry address: {getVirtualMethodEntryPoint}");
+
+            var getVirtualMethodMethod = XrefScannerLowLevel.JumpTargets(getVirtualMethodEntryPoint).Single();
+            LogSupport.Trace($"Xref scan target 1: {getVirtualMethodMethod}");
+
+            var targetMethod = XrefScannerLowLevel.JumpTargets(getVirtualMethodMethod).Last();
+            LogSupport.Trace($"Xref scan target 2: {targetMethod}");
+            
+            if (targetMethod == IntPtr.Zero)
+                return;
+
+            ourOriginalGenericGetMethod = Detour.Detour(targetMethod, new GenericGetMethodDelegate(GenericGetMethodPatch));
+            LogSupport.Trace("il2cpp_class_from_il2cpp_type patched");
+        }
+
+        private static System.Type SystemTypeFromIl2CppType(Il2CppTypeStruct *typePointer) {
+            var klass = UnityVersionHandler.Wrap(ClassFromTypePatch(typePointer));
+            var klassNamespace = Marshal.PtrToStringAnsi(klass.Namespace);
+            if (klassNamespace.StartsWith("Il2CppSystem"))
+                klassNamespace = klassNamespace.Substring(6);
+            var klassName = Marshal.PtrToStringAnsi(klass.Name);
+            var systemType = Type.GetType(klassNamespace + "." + klassName);
+            LogSupport.Trace($"Il2CppType: {klassName} -> {systemType.FullName}");
+            return systemType;
+        }
+
+        private static Il2CppMethodInfo* GenericGetMethodPatch(Il2CppGenericMethod* gmethod, bool copyMethodPtr)
+        {
+            if (InflatedMethodFromContextDictionary.TryGetValue((IntPtr)gmethod->methodDefinition, out var methods)) {
+                var instancePointer = gmethod->context.method_inst;
+                if (methods.Item2.TryGetValue((IntPtr)instancePointer, out var inflatedMethodPointer)) {
+                    return (Il2CppMethodInfo*)inflatedMethodPointer;
+                }
+                var typeArguments = new Type[instancePointer->type_argc];
+                for (var i = 0; i < instancePointer->type_argc; i++)
+                    typeArguments[i] = SystemTypeFromIl2CppType(instancePointer->type_argv[i]);
+                var inflatedMethod = methods.Item1.MakeGenericMethod(typeArguments);
+                LogSupport.Trace("Inflated method: " + inflatedMethod.Name);
+                inflatedMethodPointer = (IntPtr)ConvertMethodInfo(inflatedMethod, UnityVersionHandler.Wrap(UnityVersionHandler.Wrap(gmethod->methodDefinition).Class));
+                methods.Item2.Add((IntPtr)instancePointer, inflatedMethodPointer);
+
+                return (Il2CppMethodInfo*)inflatedMethodPointer;
+            }
+            return ourOriginalGenericGetMethod(gmethod, copyMethodPtr);
         }
 
         private static void HookClassFromType()
