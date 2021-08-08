@@ -208,7 +208,7 @@ namespace UnhollowerRuntimeLib
 
         private static bool IsTypeSupported(Type type)
         {
-            if (type.IsValueType) return type == typeof(void);
+            if (type.IsValueType || type == typeof(string)) return true;
             if (typeof(Il2CppSystem.ValueType).IsAssignableFrom(type)) return false;
 
             return typeof(Il2CppObjectBase).IsAssignableFrom(type);
@@ -377,6 +377,16 @@ namespace UnhollowerRuntimeLib
                 body.Emit(OpCodes.Ldc_I4_0);
                 body.Emit(OpCodes.Conv_I);
             }
+            else if (monoMethod.ReturnType.IsValueType)
+            {
+                var returnValue = body.DeclareLocal(monoMethod.ReturnType);
+                body.Emit(OpCodes.Stloc, returnValue);
+                var classField = typeof(Il2CppClassPointerStore<>).MakeGenericType(monoMethod.ReturnType)
+                                                                  .GetField(nameof(Il2CppClassPointerStore<int>.NativeClassPtr));
+                body.Emit(OpCodes.Ldsfld, classField);
+                body.Emit(OpCodes.Ldloca, returnValue);
+                body.Emit(OpCodes.Call, typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_value_box))!);
+            }
 
             body.Emit(OpCodes.Ret);
 
@@ -445,11 +455,7 @@ namespace UnhollowerRuntimeLib
             {
                 body.Emit(OpCodes.Call, typeof(IL2CPP).GetMethod(nameof(IL2CPP.ManagedStringToIl2Cpp))!);
             }
-            else if (monoMethod.ReturnType.IsValueType)
-            {
-                throw new NotImplementedException("Value types are not supported for returns");
-            }
-            else
+            else if (!monoMethod.ReturnType.IsValueType)
             {
                 body.Emit(OpCodes.Call, typeof(IL2CPP).GetMethod(nameof(IL2CPP.Il2CppObjectBaseToPtr))!);
             }
@@ -469,7 +475,17 @@ namespace UnhollowerRuntimeLib
             if (monoMethod.ReturnType != typeof(void))
             {
                 body.Emit(OpCodes.Ldc_I4_0);
-                body.Emit(OpCodes.Conv_I);
+                if (monoMethod.ReturnType.IsValueType) {
+                    if (monoMethod.ReturnType == typeof(long) || monoMethod.ReturnType == typeof(ulong))
+                        body.Emit(OpCodes.Conv_I8, 0);
+                    else if (monoMethod.ReturnType == typeof(float))
+                        body.Emit(OpCodes.Conv_R4, 0);
+                    else if (monoMethod.ReturnType == typeof(double))
+                        body.Emit(OpCodes.Conv_R8, 0);
+                    else
+                        body.Emit(OpCodes.Conv_I);
+                } else
+                    body.Emit(OpCodes.Conv_I);
             }
             body.Emit(OpCodes.Ret);
 
