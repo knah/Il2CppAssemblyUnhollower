@@ -24,6 +24,12 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.ParameterInfo
             else return new NativeParameterInfoStructWrapper((IntPtr)paramInfoPointer);
         }
 
+        public unsafe INativeParameterInfoStruct Wrap(Il2CppParameterInfo* paramInfoListBegin, int index)
+        {
+            if ((IntPtr)paramInfoListBegin == IntPtr.Zero) return null;
+            else return new NativeParameterInfoStructWrapper((IntPtr) paramInfoListBegin + (Marshal.SizeOf<Il2CppParameterInfo_27_3>() * index));
+        }
+
         public bool HasNamePosToken => false;
 
 #if DEBUG

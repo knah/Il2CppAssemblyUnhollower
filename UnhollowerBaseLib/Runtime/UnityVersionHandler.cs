@@ -197,7 +197,10 @@ namespace UnhollowerBaseLib.Runtime
 
         public static unsafe INativeParameterInfoStruct Wrap(Il2CppParameterInfo* parameterInfo) =>
             parameterInfoStructHandler.Wrap(parameterInfo);
-        
+
+        public static unsafe INativeParameterInfoStruct Wrap(Il2CppParameterInfo* parameterInfo, int index) =>
+            parameterInfoStructHandler.Wrap(parameterInfo, index);
+
         public static bool ParameterInfoHasNamePosToken() =>
             parameterInfoStructHandler.HasNamePosToken;
 
