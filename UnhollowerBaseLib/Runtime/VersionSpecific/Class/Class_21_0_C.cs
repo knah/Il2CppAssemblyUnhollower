@@ -146,6 +146,12 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
 
             public ref ushort VtableCount => ref NativeClass->vtable_count;
 
+            public ref ushort InterfaceCount => ref NativeClass->interfaces_count;
+
+            public ref ushort InterfaceOffsetsCount => ref NativeClass->interface_offsets_count;
+
+            public ref byte TypeHierarchyDepth => ref NativeClass->typeHierarchyDepth;
+
             public ref int NativeSize => ref NativeClass->native_size;
 
             public ref uint ActualSize => ref NativeClass->actualSize;
@@ -228,6 +234,12 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
             public ref Il2CppClass* Class => ref NativeClass->klass;
 
             public ref Il2CppMethodInfo** Methods => ref NativeClass->methods;
+
+            public ref Il2CppClass** ImplementedInterfaces => ref NativeClass->implementedInterfaces;
+
+            public ref Il2CppRuntimeInterfaceOffsetPair* InterfaceOffsets => ref NativeClass->interfaceOffsets;
+
+            public ref Il2CppClass** TypeHierarchy => ref NativeClass->typeHierarchy;
         }
     }
 }
