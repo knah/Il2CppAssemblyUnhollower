@@ -72,11 +72,13 @@ namespace AssemblyUnhollower.Passes
                         for (var i = 0; i < newMethod.Parameters.Count; i++)
                         {
                             bodyBuilder.Emit(OpCodes.Ldloc, argArray);
-                            bodyBuilder.EmitLdcI4(i);
-                            bodyBuilder.Emit(OpCodes.Conv_U);
-                            bodyBuilder.Emit(OpCodes.Sizeof, imports.IntPtr);
-                            bodyBuilder.Emit(OpCodes.Mul_Ovf_Un);
-                            bodyBuilder.Emit(OpCodes.Add);
+                            if (i > 0) {
+                                bodyBuilder.EmitLdcI4(i);
+                                bodyBuilder.Emit(OpCodes.Conv_U);
+                                bodyBuilder.Emit(OpCodes.Sizeof, imports.IntPtr);
+                                bodyBuilder.Emit(OpCodes.Mul_Ovf_Un);
+                                bodyBuilder.Emit(OpCodes.Add);
+                            }
 
                             var newParam = newMethod.Parameters[i];
                             bodyBuilder.EmitObjectToPointer(originalMethod.Parameters[i].ParameterType, newParam.ParameterType, methodRewriteContext.DeclaringType, argOffset + i, false, true, true, out var refVar);
