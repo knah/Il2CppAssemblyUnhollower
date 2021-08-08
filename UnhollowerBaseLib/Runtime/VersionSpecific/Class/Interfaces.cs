@@ -19,6 +19,9 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
 
         ref uint InstanceSize { get; }
         ref ushort VtableCount { get; }
+        ref ushort InterfaceCount { get; }
+        ref ushort InterfaceOffsetsCount { get; }
+        ref byte TypeHierarchyDepth { get; }
         ref int NativeSize { get; }
         ref uint ActualSize { get; }
         ref ushort MethodCount { get; }
@@ -46,5 +49,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
         unsafe ref Il2CppClass* Class { get; }
 
         unsafe ref Il2CppMethodInfo** Methods { get; }
+        unsafe ref Il2CppClass** ImplementedInterfaces { get; }
+        unsafe ref Il2CppRuntimeInterfaceOffsetPair* InterfaceOffsets { get; }
+        unsafe ref Il2CppClass** TypeHierarchy { get; }
     }
 }
