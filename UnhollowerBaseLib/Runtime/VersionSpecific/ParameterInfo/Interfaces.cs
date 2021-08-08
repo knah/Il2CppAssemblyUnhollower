@@ -6,6 +6,7 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.ParameterInfo
     {
         unsafe Il2CppParameterInfo*[] CreateNewParameterInfoArray(int paramCount);
         unsafe INativeParameterInfoStruct Wrap(Il2CppParameterInfo* paramInfoPointer);
+        unsafe INativeParameterInfoStruct Wrap(Il2CppParameterInfo* paramInfoListBegin, int index);
         bool HasNamePosToken { get; }
 #if DEBUG
         string GetName();
