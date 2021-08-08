@@ -66,9 +66,6 @@ namespace UnhollowerBaseLib
             if (!IL2CPP.il2cpp_class_is_assignable_from(nestedTypeClassPointer, ownClass))
                 return null;
 
-            if (RuntimeSpecificsStore.IsInjected(ownClass))
-                return ClassInjectorBase.GetMonoObjectFromIl2CppPointer(Pointer) as T;
-
             return (T) Activator.CreateInstance(Il2CppClassPointerStore<T>.CreatedTypeRedirect ?? typeof(T), Pointer);
         }
 

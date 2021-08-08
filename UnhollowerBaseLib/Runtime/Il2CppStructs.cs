@@ -315,4 +315,29 @@ namespace UnhollowerBaseLib.Runtime
 
         //VirtualInvokeData vtable[IL2CPP_ZERO_LEN_ARRAY];
     }
+    
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct Il2CppGenericInst
+    {
+        public uint type_argc;
+        public Il2CppTypeStruct **type_argv;
+    };
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct Il2CppGenericContext
+    {
+        /* The instantiation corresponding to the class generic parameters */
+        public Il2CppGenericInst *class_inst;
+        /* The instantiation corresponding to the method generic parameters */
+        public Il2CppGenericInst *method_inst;
+    };
+
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct Il2CppGenericMethod
+    {
+        public Il2CppMethodInfo* methodDefinition;
+        public Il2CppGenericContext context;
+    };
+
 }
