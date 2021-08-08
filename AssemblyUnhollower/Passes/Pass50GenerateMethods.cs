@@ -92,7 +92,11 @@ namespace AssemblyUnhollower.Passes
                         {
                             bodyBuilder.Emit(OpCodes.Ldarg_0);
                             bodyBuilder.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointer);
-                            bodyBuilder.Emit(OpCodes.Ldsfld, methodRewriteContext.NonGenericMethodInfoPointerField);
+                            if (methodRewriteContext.GenericInstantiationsStoreSelfSubstRef != null)
+                            {
+                                bodyBuilder.Emit(OpCodes.Ldsfld, new FieldReference("Pointer", imports.IntPtr, methodRewriteContext.GenericInstantiationsStoreSelfSubstMethodRef));
+                            } else
+                                bodyBuilder.Emit(OpCodes.Ldsfld, methodRewriteContext.NonGenericMethodInfoPointerField);
                             bodyBuilder.Emit(OpCodes.Call, imports.GetVirtualMethod);
                         }
                         else if (methodRewriteContext.GenericInstantiationsStoreSelfSubstRef != null)
