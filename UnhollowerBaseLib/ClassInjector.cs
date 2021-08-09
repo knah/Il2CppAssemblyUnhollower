@@ -71,6 +71,7 @@ namespace UnhollowerRuntimeLib
             *(IntPtr*)targetGcHandlePointer = handleAsPointer;
         }
 
+        public static void RegisterTypeInIl2Cpp<T>() where T : class => RegisterTypeInIl2Cpp(typeof(T), true);
         public static void RegisterTypeInIl2Cpp<T>(params INativeClassStruct[] interfaces) where T : class => RegisterTypeInIl2Cpp(typeof(T), true, interfaces);
         public static void RegisterTypeInIl2Cpp<T>(bool logSuccess, params INativeClassStruct[] interfaces) where T : class => RegisterTypeInIl2Cpp(typeof(T), logSuccess, interfaces);
         public static void RegisterTypeInIl2Cpp(Type type, params INativeClassStruct[] interfaces) => RegisterTypeInIl2Cpp(type, true, interfaces);
