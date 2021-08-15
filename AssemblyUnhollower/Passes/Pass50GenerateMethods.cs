@@ -88,21 +88,19 @@ namespace AssemblyUnhollower.Passes
                                 byRefParams.Add((i, refVar));
                         }
 
-                        if (originalMethod.IsVirtual && !originalMethod.DeclaringType.IsValueType || originalMethod.IsAbstract)
+                        if (!originalMethod.DeclaringType.IsSealed && !originalMethod.IsFinal && (originalMethod.IsVirtual && !originalMethod.DeclaringType.IsValueType || originalMethod.IsAbstract))
                         {
                             bodyBuilder.Emit(OpCodes.Ldarg_0);
                             bodyBuilder.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointer);
                             if (methodRewriteContext.GenericInstantiationsStoreSelfSubstRef != null)
-                            {
                                 bodyBuilder.Emit(OpCodes.Ldsfld, new FieldReference("Pointer", imports.IntPtr, methodRewriteContext.GenericInstantiationsStoreSelfSubstMethodRef));
-                            } else
+                            else
                                 bodyBuilder.Emit(OpCodes.Ldsfld, methodRewriteContext.NonGenericMethodInfoPointerField);
                             bodyBuilder.Emit(OpCodes.Call, imports.GetVirtualMethod);
                         }
                         else if (methodRewriteContext.GenericInstantiationsStoreSelfSubstRef != null)
-                        {
                             bodyBuilder.Emit(OpCodes.Ldsfld, new FieldReference("Pointer", imports.IntPtr, methodRewriteContext.GenericInstantiationsStoreSelfSubstMethodRef));
-                        } else
+                        else
                             bodyBuilder.Emit(OpCodes.Ldsfld, methodRewriteContext.NonGenericMethodInfoPointerField);
 
                         if (originalMethod.IsStatic)
