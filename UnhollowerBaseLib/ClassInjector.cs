@@ -109,7 +109,7 @@ namespace UnhollowerRuntimeLib
 
             if ((baseClassPointer.Flags & Il2CppClassAttributes.TYPE_ATTRIBUTE_INTERFACE) != 0)
                 throw new ArgumentException($"Base class {baseType} is an interface and can't be inherited from");
-            
+
             if (interfaces.Any(i => (i.Flags & Il2CppClassAttributes.TYPE_ATTRIBUTE_INTERFACE) == 0))
                 throw new ArgumentException($"Interfaces {interfaces} are not interfaces");
 
@@ -373,7 +373,7 @@ namespace UnhollowerRuntimeLib
                 converted.MethodPointer = Marshal.GetFunctionPointerForDelegate(GetOrCreateTrampoline(monoMethod));
             }
             converted.Slot = ushort.MaxValue;
-            
+
             if (!monoMethod.ReturnType.IsGenericParameter)
                 converted.ReturnType = (Il2CppTypeStruct*)IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(monoMethod.ReturnType));
             else
@@ -609,7 +609,7 @@ namespace UnhollowerRuntimeLib
 
             var targetMethod = XrefScannerLowLevel.JumpTargets(getVirtualMethodMethod).Last();
             LogSupport.Trace($"Xref scan target 2: {targetMethod}");
-            
+
             if (targetMethod == IntPtr.Zero)
                 return;
 
@@ -619,12 +619,14 @@ namespace UnhollowerRuntimeLib
 
         private static System.Type SystemTypeFromIl2CppType(Il2CppTypeStruct *typePointer) {
             var klass = UnityVersionHandler.Wrap(ClassFromTypePatch(typePointer));
-            var klassNamespace = Marshal.PtrToStringAnsi(klass.Namespace);
-            if (klassNamespace.StartsWith("Il2CppSystem"))
-                klassNamespace = klassNamespace.Substring(6);
-            var klassName = Marshal.PtrToStringAnsi(klass.Name);
-            var systemType = Type.GetType(klassNamespace + "." + klassName);
-            LogSupport.Trace($"Il2CppType: {klassName} -> {systemType.FullName}");
+            var fullName = Marshal.PtrToStringAnsi(klass.Namespace) + "." + Marshal.PtrToStringAnsi(klass.Name);
+            if (fullName == "System.String")
+                return typeof(string);
+            else if (fullName.StartsWith("System"))
+                fullName = "Il2Cpp" + fullName;
+            var systemType = AppDomain.CurrentDomain.GetAssemblies()
+                                .SelectMany(a => a.GetTypes())
+                                .First(t => t.FullName == fullName);
             return systemType;
         }
 
