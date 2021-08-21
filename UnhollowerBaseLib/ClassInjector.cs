@@ -183,12 +183,15 @@ namespace UnhollowerRuntimeLib
             var offsets = new int[interfaces.Length];
 
             var index = baseClassPointer.VtableCount;
-            for (var i = 0; i < interfaces.Length; i++) {
+            for (var i = 0; i < interfaces.Length; i++)
+            {
                 offsets[i] = index;
-                for (var j = 0; j < interfaces[i].MethodCount; j++) {
+                for (var j = 0; j < interfaces[i].MethodCount; j++)
+                {
                     var vTableMethod = UnityVersionHandler.Wrap(interfaces[i].Methods[j]);
                     var methodName = Marshal.PtrToStringAnsi(vTableMethod.Name);
-                    if (!infos.TryGetValue((methodName, (vTableMethod.ExtraFlags & MethodInfoExtraFlags.is_generic) != 0), out var methodIndex)) {
+                    if (!infos.TryGetValue((methodName, (vTableMethod.ExtraFlags & MethodInfoExtraFlags.is_generic) != 0), out var methodIndex))
+                    {
                         ++index;
                         continue;
                     }
@@ -368,7 +371,8 @@ namespace UnhollowerRuntimeLib
                     converted.ExtraFlags |= MethodInfoExtraFlags.is_inflated;
             }
 
-            if (!monoMethod.ContainsGenericParameters) {
+            if (!monoMethod.ContainsGenericParameters)
+            {
                 converted.InvokerMethod = Marshal.GetFunctionPointerForDelegate(GetOrCreateInvoker(monoMethod));
                 converted.MethodPointer = Marshal.GetFunctionPointerForDelegate(GetOrCreateTrampoline(monoMethod));
             }
@@ -559,18 +563,23 @@ namespace UnhollowerRuntimeLib
 
             if (monoMethod.ReturnType != typeof(void))
             {
-                body.Emit(OpCodes.Ldc_I4_0);
-                if (monoMethod.ReturnType.IsValueType) {
+                if (monoMethod.ReturnType.IsValueType)
+                {
                     if (monoMethod.ReturnType == typeof(long) || monoMethod.ReturnType == typeof(ulong))
-                        body.Emit(OpCodes.Conv_I8, 0);
+                    {
+                        body.Emit(OpCodes.Ldc_I4_0);
+                        body.Emit(OpCodes.Conv_I8);
+                    }
                     else if (monoMethod.ReturnType == typeof(float))
-                        body.Emit(OpCodes.Conv_R4, 0);
+                        body.Emit(OpCodes.Ldc_R4, 0);
                     else if (monoMethod.ReturnType == typeof(double))
-                        body.Emit(OpCodes.Conv_R8, 0);
+                        body.Emit(OpCodes.Ldc_R8, 0);
                     else
-                        body.Emit(OpCodes.Conv_I);
-                } else
+                        body.Emit(OpCodes.Ldc_I4_0);
+                } else {
+                    body.Emit(OpCodes.Ldc_I4_0);
                     body.Emit(OpCodes.Conv_I);
+                }
             }
             body.Emit(OpCodes.Ret);
 
@@ -617,7 +626,8 @@ namespace UnhollowerRuntimeLib
             LogSupport.Trace("il2cpp_class_from_il2cpp_type patched");
         }
 
-        private static System.Type SystemTypeFromIl2CppType(Il2CppTypeStruct *typePointer) {
+        private static System.Type SystemTypeFromIl2CppType(Il2CppTypeStruct *typePointer)
+        {
             var klass = UnityVersionHandler.Wrap(ClassFromTypePatch(typePointer));
             var fullName = Marshal.PtrToStringAnsi(klass.Namespace) + "." + Marshal.PtrToStringAnsi(klass.Name);
             if (fullName == "System.String")
@@ -637,11 +647,12 @@ namespace UnhollowerRuntimeLib
 
         private static Il2CppMethodInfo* GenericGetMethodPatch(Il2CppGenericMethod* gmethod, bool copyMethodPtr)
         {
-            if (InflatedMethodFromContextDictionary.TryGetValue((IntPtr)gmethod->methodDefinition, out var methods)) {
+            if (InflatedMethodFromContextDictionary.TryGetValue((IntPtr)gmethod->methodDefinition, out var methods))
+            {
                 var instancePointer = gmethod->context.method_inst;
-                if (methods.Item2.TryGetValue((IntPtr)instancePointer, out var inflatedMethodPointer)) {
+                if (methods.Item2.TryGetValue((IntPtr)instancePointer, out var inflatedMethodPointer))
                     return (Il2CppMethodInfo*)inflatedMethodPointer;
-                }
+
                 var typeArguments = new Type[instancePointer->type_argc];
                 for (var i = 0; i < instancePointer->type_argc; i++)
                     typeArguments[i] = SystemTypeFromIl2CppType(instancePointer->type_argv[i]);
