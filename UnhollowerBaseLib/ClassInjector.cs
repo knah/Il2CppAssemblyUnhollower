@@ -622,7 +622,12 @@ namespace UnhollowerRuntimeLib
             var fullName = Marshal.PtrToStringAnsi(klass.Namespace) + "." + Marshal.PtrToStringAnsi(klass.Name);
             if (fullName == "System.String")
                 return typeof(string);
-            else if (fullName.StartsWith("System"))
+
+            var type = Type.GetType(fullName);
+            if (type.IsValueType)
+                return type;
+
+            if (fullName.StartsWith("System"))
                 fullName = "Il2Cpp" + fullName;
             var systemType = AppDomain.CurrentDomain.GetAssemblies()
                                 .SelectMany(a => a.GetTypes())
