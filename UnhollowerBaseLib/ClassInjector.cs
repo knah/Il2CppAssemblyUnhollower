@@ -155,7 +155,7 @@ namespace UnhollowerRuntimeLib
             methodPointerArray[0] = ConvertStaticMethod(FinalizeDelegate, "Finalize", classPointer);
             var finalizeMethod = UnityVersionHandler.Wrap(methodPointerArray[0]);
             methodPointerArray[1] = ConvertStaticMethod(CreateEmptyCtor(type), ".ctor", classPointer);
-            Dictionary<(string, bool), int> infos = new Dictionary<(string, bool), int>(eligibleMethods.Length);
+            Dictionary<(string name, int paramCount, bool isGeneric), int> infos = new Dictionary<(string, int, bool), int>(eligibleMethods.Length);
             for (var i = 0; i < eligibleMethods.Length; i++)
             {
                 var methodInfo = eligibleMethods[i];
@@ -163,7 +163,7 @@ namespace UnhollowerRuntimeLib
                 if (methodInfo.IsGenericMethod)
                     InflatedMethodFromContextDictionary.Add((IntPtr)methodInfoPointer, (methodInfo, new Dictionary<IntPtr, IntPtr>()));
                 var methodName = methodInfo.Name;
-                infos[(methodInfo.Name, methodInfo.IsGenericMethod)] = i + 2;
+                infos[(methodInfo.Name, methodInfo.GetParameters().Length, methodInfo.IsGenericMethod)] = i + 2;
             }
 
             var vTablePointer = (VirtualInvokeData*)classPointer.VTable;
@@ -190,7 +190,7 @@ namespace UnhollowerRuntimeLib
                 {
                     var vTableMethod = UnityVersionHandler.Wrap(interfaces[i].Methods[j]);
                     var methodName = Marshal.PtrToStringAnsi(vTableMethod.Name);
-                    if (!infos.TryGetValue((methodName, (vTableMethod.ExtraFlags & MethodInfoExtraFlags.is_generic) != 0), out var methodIndex))
+                    if (!infos.TryGetValue((methodName, vTableMethod.ParametersCount, (vTableMethod.ExtraFlags & MethodInfoExtraFlags.is_generic) != 0), out var methodIndex))
                     {
                         ++index;
                         continue;
