@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using AssemblyUnhollower.Contexts;
@@ -106,6 +107,9 @@ namespace AssemblyUnhollower
         private readonly Lazy<MethodReference> myIl2CppPointerToGeneric;
         private readonly Lazy<MethodReference> myIl2CppRenderTypeNameGeneric;
         
+        private readonly Lazy<MethodReference> myDelegateCombine;
+        private readonly Lazy<MethodReference> myDelegateRemove;
+
         private readonly Lazy<MethodReference> myLdTokUnstrippedImpl;
         
         private readonly Lazy<MethodReference> myFlagsAttributeCtor;
@@ -141,6 +145,9 @@ namespace AssemblyUnhollower
         public MethodReference Il2CppMethodInfoFromReflection => myIl2CppMethodInfoFromReflection.Value;
         public MethodReference Il2CppPointerToGeneric => myIl2CppPointerToGeneric.Value;
         public MethodReference Il2CppRenderTypeNameGeneric => myIl2CppRenderTypeNameGeneric.Value;
+
+        public MethodReference DelegateCombine => myDelegateCombine.Value;
+        public MethodReference DelegateRemove => myDelegateRemove.Value;
         
         public MethodReference LdTokUnstrippedImpl => myLdTokUnstrippedImpl.Value;
         
@@ -216,7 +223,12 @@ namespace AssemblyUnhollower
             myIl2CppMethodInfoToReflection = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_method_get_object))));
             myIl2CppPointerToGeneric = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.PointerToValueGeneric))));
             myIl2CppRenderTypeNameGeneric = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.RenderTypeName), new [] {typeof(bool)})));
-            
+
+            myDelegateCombine = new Lazy<MethodReference>(() =>
+                Module.ImportReference(myContext.GetAssemblyByName("mscorlib").NewAssembly.MainModule.GetType("Il2CppSystem.Delegate").Methods.Single(m => m.Name == "Combine" && m.Parameters.Count == 2)));
+            myDelegateRemove = new Lazy<MethodReference>(() =>
+                Module.ImportReference(myContext.GetAssemblyByName("mscorlib").NewAssembly.MainModule.GetType("Il2CppSystem.Delegate").Methods.Single(m => m.Name == "Remove")));
+
             myLdTokUnstrippedImpl = new Lazy<MethodReference>(() =>
             {
                 var declaringTypeRef = Module.ImportReference(typeof(RuntimeReflectionHelper));
