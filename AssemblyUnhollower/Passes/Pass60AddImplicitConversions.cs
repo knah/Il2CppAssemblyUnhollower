@@ -133,22 +133,22 @@ namespace AssemblyUnhollower.Passes
                     bodyBuilder.Emit(OpCodes.Ret);
 
                     // public static T operator+(T lhs, T rhs) => Il2CppSystem.Delegate.Combine(lhs, rhs).Cast<T>();
-                    var addMethod = new MethodDefinition("op_Addition", MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, typeContext.NewType);
+                    var addMethod = new MethodDefinition("op_Addition", MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, typeContext.SelfSubstitutedRef);
                     typeContext.NewType.Methods.Add(addMethod);
-                    addMethod.Parameters.Add(new ParameterDefinition(typeContext.NewType));
-                    addMethod.Parameters.Add(new ParameterDefinition(typeContext.NewType));
+                    addMethod.Parameters.Add(new ParameterDefinition(typeContext.SelfSubstitutedRef));
+                    addMethod.Parameters.Add(new ParameterDefinition(typeContext.SelfSubstitutedRef));
                     var addBody = addMethod.Body.GetILProcessor();
                     addBody.Emit(OpCodes.Ldarg_0);
                     addBody.Emit(OpCodes.Ldarg_1);
                     addBody.Emit(OpCodes.Call, assemblyContext.Imports.DelegateCombine);
-                    addBody.Emit(OpCodes.Call, assemblyContext.Imports.Module.ImportReference(new GenericInstanceMethod(assemblyContext.Imports.Il2CppObjectCast) { GenericArguments = { typeContext.NewType }}));
+                    addBody.Emit(OpCodes.Call, assemblyContext.Imports.Module.ImportReference(new GenericInstanceMethod(assemblyContext.Imports.Il2CppObjectCast) { GenericArguments = { typeContext.SelfSubstitutedRef }}));
                     addBody.Emit(OpCodes.Ret);
 
                     // public static T operator-(T lhs, T rhs) => Il2CppSystem.Delegate.Remove(lhs, rhs)?.Cast<T>();
-                    var subtractMethod = new MethodDefinition("op_Subtraction", MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, typeContext.NewType);
+                    var subtractMethod = new MethodDefinition("op_Subtraction", MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig, typeContext.SelfSubstitutedRef);
                     typeContext.NewType.Methods.Add(subtractMethod);
-                    subtractMethod.Parameters.Add(new ParameterDefinition(typeContext.NewType));
-                    subtractMethod.Parameters.Add(new ParameterDefinition(typeContext.NewType));
+                    subtractMethod.Parameters.Add(new ParameterDefinition(typeContext.SelfSubstitutedRef));
+                    subtractMethod.Parameters.Add(new ParameterDefinition(typeContext.SelfSubstitutedRef));
                     var subtractBody = subtractMethod.Body.GetILProcessor();
                     subtractBody.Emit(OpCodes.Ldarg_0);
                     subtractBody.Emit(OpCodes.Ldarg_1);
@@ -156,7 +156,7 @@ namespace AssemblyUnhollower.Passes
                     subtractBody.Emit(OpCodes.Dup);
                     var ret = subtractBody.Create(OpCodes.Ret);
                     subtractBody.Emit(OpCodes.Brfalse_S, ret);
-                    subtractBody.Emit(OpCodes.Call, assemblyContext.Imports.Module.ImportReference(new GenericInstanceMethod(assemblyContext.Imports.Il2CppObjectCast) { GenericArguments = { typeContext.NewType }}));
+                    subtractBody.Emit(OpCodes.Call, assemblyContext.Imports.Module.ImportReference(new GenericInstanceMethod(assemblyContext.Imports.Il2CppObjectCast) { GenericArguments = { typeContext.SelfSubstitutedRef }}));
                     subtractBody.Append(ret);
                 }
             }
