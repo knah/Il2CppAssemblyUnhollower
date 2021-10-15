@@ -245,8 +245,6 @@ namespace AssemblyUnhollower
                 Pass22GenerateEnums.DoPass(rewriteContext);
             using(new TimingCookie("Creating IntPtr constructors"))
                 Pass23GeneratePointerConstructors.DoPass(rewriteContext);
-            using(new TimingCookie("Creating type getters"))
-                Pass24GenerateTypeStaticGetters.DoPass(rewriteContext);
             using(new TimingCookie("Creating non-blittable struct constructors"))
                 Pass25GenerateNonBlittableValueTypeDefaultCtors.DoPass(rewriteContext);
             
