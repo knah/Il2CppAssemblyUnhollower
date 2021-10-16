@@ -5,7 +5,7 @@ using UnhollowerRuntimeLib;
 
 namespace UnhollowerBaseLib
 {
-    public abstract class Il2CppArrayBase<T> : Il2CppObjectBase, IList<T>
+    public class Il2CppArrayBase<T> : Il2CppObjectBase, IList<T>
     {
         protected static int ElementTypeSize;
         protected static bool ElementIsValueType;
@@ -99,10 +99,24 @@ namespace UnhollowerBaseLib
             return arr;
         }
 
-        public abstract T this[int index]
+        public virtual T this[int index]
         {
-            get;
-            set;
+            get
+            {
+                if (index < 0 || index >= Length)
+                    throw new ArgumentOutOfRangeException(nameof(index), "Array index may not be negative or above length of the array");
+                var arrayStartPointer = IntPtr.Add(Pointer, 4 * IntPtr.Size);
+                var elementPointer = IntPtr.Add(arrayStartPointer, index * ElementTypeSize);
+                return GenericMarshallingUtils.ReadFieldGeneric<T>(elementPointer);
+            }
+            set
+            {
+                if (index < 0 || index >= Length)
+                    throw new ArgumentOutOfRangeException(nameof(index), "Array index may not be negative or above length of the array");
+                var arrayStartPointer = IntPtr.Add(Pointer, 4 * IntPtr.Size);
+                var elementPointer = IntPtr.Add(arrayStartPointer, index * ElementTypeSize);
+                GenericMarshallingUtils.WriteFieldGeneric(elementPointer, value);
+            }
         }
 
         public static Il2CppArrayBase<T> WrapNativeGenericArrayPointer(IntPtr pointer)
