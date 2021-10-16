@@ -9,6 +9,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using UnhollowerBaseLib.Runtime;
 
+#nullable enable
+
 namespace UnhollowerBaseLib.Maps
 {
 	public class TypeTokensMap : IDisposable
