@@ -8,7 +8,7 @@ namespace AssemblyUnhollower.Extensions
     {
         public static long ExtractOffset(this ICustomAttributeProvider originalMethod) => Extract(originalMethod, "AddressAttribute", "Offset");
         public static long ExtractRva(this ICustomAttributeProvider originalMethod) => Extract(originalMethod, "AddressAttribute", "RVA");
-        public static long ExtractToken(this ICustomAttributeProvider originalMethod) => Extract(originalMethod, "TokenAttribute", "Token");
+        public static int ExtractToken(this ICustomAttributeProvider originalMethod) => (int)Extract(originalMethod, "TokenAttribute", "Token");
 
         private static long Extract(this ICustomAttributeProvider originalMethod, string attributeName, string parameterName)
         {
