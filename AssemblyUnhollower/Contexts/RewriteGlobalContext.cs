@@ -12,7 +12,10 @@ namespace AssemblyUnhollower.Contexts
         public IIl2CppMetadataAccess GameAssemblies { get; }
         public IMetadataAccess SystemAssemblies { get; }
         public IMetadataAccess UnityAssemblies { get; }
-        
+
+        private readonly CecilMetadataAccess.Resolver myNewAssembliesResolver = new();
+        internal readonly MetadataResolver NewMetadataResolver;
+
         private readonly Dictionary<string, AssemblyRewriteContext> myAssemblies = new Dictionary<string, AssemblyRewriteContext>();
         private readonly Dictionary<AssemblyDefinition, AssemblyRewriteContext> myAssembliesByOld = new Dictionary<AssemblyDefinition, AssemblyRewriteContext>();
         
@@ -32,7 +35,9 @@ namespace AssemblyUnhollower.Contexts
             GameAssemblies = gameAssemblies;
             SystemAssemblies = systemAssemblies;
             UnityAssemblies = unityAssemblies;
-            
+
+            NewMetadataResolver = new MetadataResolver(myNewAssembliesResolver);
+
             TargetTypeSystemHandler.Init(systemAssemblies);
             
             foreach (var sourceAssembly in gameAssemblies.Assemblies)
@@ -42,7 +47,7 @@ namespace AssemblyUnhollower.Contexts
                 
                 var newAssembly = AssemblyDefinition.CreateAssembly(
                     new AssemblyNameDefinition(sourceAssembly.Name.Name.UnSystemify(), sourceAssembly.Name.Version),
-                    sourceAssembly.MainModule.Name.UnSystemify(), sourceAssembly.MainModule.Kind);
+                    sourceAssembly.MainModule.Name.UnSystemify(), new ModuleParameters { Kind = sourceAssembly.MainModule.Kind, MetadataResolver = NewMetadataResolver });
 
                 var assemblyRewriteContext = new AssemblyRewriteContext(this, sourceAssembly, newAssembly);
                 AddAssemblyContext(assemblyName, assemblyRewriteContext);
@@ -52,13 +57,14 @@ namespace AssemblyUnhollower.Contexts
         internal void AddAssemblyContext(string assemblyName, AssemblyRewriteContext context)
         {
             myAssemblies[assemblyName] = context;
+            myNewAssembliesResolver.Register(context.NewAssembly);
             if (context.OriginalAssembly != null)
                 myAssembliesByOld[context.OriginalAssembly] = context;
         }
 
         public AssemblyRewriteContext GetNewAssemblyForOriginal(AssemblyDefinition oldAssembly)
         {
-            return myAssembliesByOld[oldAssembly];
+            return myAssemblies[oldAssembly.Name.Name];
         }
 
         public TypeRewriteContext GetNewTypeForOriginal(TypeDefinition originalType)
@@ -107,6 +113,15 @@ namespace AssemblyUnhollower.Contexts
                 assembly.NewAssembly.Dispose();
                 assembly.OriginalAssembly.Dispose();
             }
+        }
+
+        public readonly StatisticsStore Statistics = new();
+
+        public class StatisticsStore
+        {
+            public int SystemInterfaceCandidates;
+            public int EligibleSystemInterfaces;
+            public int TokenLessMethods;
         }
     }
 }
