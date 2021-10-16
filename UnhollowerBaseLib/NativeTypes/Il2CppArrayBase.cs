@@ -7,6 +7,22 @@ namespace UnhollowerBaseLib
 {
     public abstract class Il2CppArrayBase<T> : Il2CppObjectBase, IList<T>
     {
+        protected static int ElementTypeSize;
+        protected static bool ElementIsValueType;
+
+        static Il2CppArrayBase()
+		{
+            ElementTypeSize = IntPtr.Size;
+            var nativeClassPtr = Il2CppClassPointerStore<T>.NativeClassPtr;
+            if (nativeClassPtr == IntPtr.Zero) return;
+            uint align = 0;
+            if (IL2CPP.il2cpp_class_is_valuetype(nativeClassPtr))
+            {
+                ElementIsValueType = true;
+                ElementTypeSize = IL2CPP.il2cpp_class_value_size(nativeClassPtr, ref align);
+            }
+        }
+
         protected static void StaticCtorBody(Type ownType)
         {
             var nativeClassPtr = Il2CppClassPointerStore<T>.NativeClassPtr;

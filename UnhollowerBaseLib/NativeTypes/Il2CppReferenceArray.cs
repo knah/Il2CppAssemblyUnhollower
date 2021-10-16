@@ -7,8 +7,6 @@ namespace UnhollowerBaseLib
     public class Il2CppReferenceArray<T> : Il2CppArrayBase<T> where T: Il2CppObjectBase
     {
         private static ConstructorInfo ourCachedInstanceCtor;
-        private static int ourElementTypeSize;
-        private static bool ourElementIsValueType;
         
         public Il2CppReferenceArray(IntPtr nativeObject) : base(nativeObject)
         {
@@ -26,16 +24,6 @@ namespace UnhollowerBaseLib
 
         static Il2CppReferenceArray()
         {
-            ourElementTypeSize = IntPtr.Size;
-            var nativeClassPtr = Il2CppClassPointerStore<T>.NativeClassPtr;
-            if (nativeClassPtr == IntPtr.Zero) return;
-            uint align = 0;
-            if (IL2CPP.il2cpp_class_is_valuetype(nativeClassPtr))
-            {
-                ourElementIsValueType = true;
-                ourElementTypeSize = IL2CPP.il2cpp_class_value_size(nativeClassPtr, ref align);
-            }
-            
             StaticCtorBody(typeof(Il2CppReferenceArray<T>));
         }
         
@@ -53,7 +41,7 @@ namespace UnhollowerBaseLib
                 if(index < 0 || index >= Length)
                     throw new ArgumentOutOfRangeException(nameof(index), "Array index may not be negative or above length of the array");
                 var arrayStartPointer = IntPtr.Add(Pointer, 4 * IntPtr.Size);
-                var elementPointer = IntPtr.Add(arrayStartPointer, index * ourElementTypeSize);
+                var elementPointer = IntPtr.Add(arrayStartPointer, index * ElementTypeSize);
                 return WrapElement(elementPointer);
             }
             set
@@ -61,21 +49,21 @@ namespace UnhollowerBaseLib
                 if(index < 0 || index >= Length)
                     throw new ArgumentOutOfRangeException(nameof(index), "Array index may not be negative or above length of the array");
                 var arrayStartPointer = IntPtr.Add(Pointer, 4 * IntPtr.Size);
-                var elementPointer = IntPtr.Add(arrayStartPointer, index * ourElementTypeSize);
+                var elementPointer = IntPtr.Add(arrayStartPointer, index * ElementTypeSize);
                 StoreValue(elementPointer, value?.Pointer ?? IntPtr.Zero);
             }
         }
 
         private static unsafe void StoreValue(IntPtr targetPointer, IntPtr valuePointer)
         {
-            if (ourElementIsValueType)
+            if (ElementIsValueType)
             {
                 if(valuePointer == IntPtr.Zero)
                     throw new NullReferenceException();
                 
                 var valueRawPointer = (byte*) IL2CPP.il2cpp_object_unbox(valuePointer);
                 var targetRawPointer = (byte*) targetPointer;
-                for (var i = 0; i < ourElementTypeSize; i++) 
+                for (var i = 0; i < ElementTypeSize; i++) 
                     targetRawPointer[i] = valueRawPointer[i];
             }
             else
@@ -91,7 +79,7 @@ namespace UnhollowerBaseLib
                 ourCachedInstanceCtor = typeof(T).GetConstructor(new[] {typeof(IntPtr)});
             }
 
-            if (ourElementIsValueType)
+            if (ElementIsValueType)
                 return (T) ourCachedInstanceCtor.Invoke(new object[]
                     {IL2CPP.il2cpp_value_box(Il2CppClassPointerStore<T>.NativeClassPtr, memberPointer)});
 
