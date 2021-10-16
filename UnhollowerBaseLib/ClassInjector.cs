@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Attributes;
+using UnhollowerBaseLib.Maps;
 using UnhollowerBaseLib.Runtime;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Assembly;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Class;
@@ -176,6 +177,8 @@ namespace UnhollowerRuntimeLib
 
             AddToClassFromNameDictionary(type, classPointer.Pointer);
 
+            //MarshallingUtils.TokensMap.RegisterRuntimeInjectedType(classPointer.Pointer, type);
+
             if (logSuccess) LogSupport.Info($"Registered mono type {type} in il2cpp domain");
         }
 
@@ -193,15 +196,20 @@ namespace UnhollowerRuntimeLib
             }
         }
 
+        /// <summary>
+        /// todo: replace with Il2CppClassPointerStore.GetClassPointerForType and inline
+        /// </summary>
         internal static IntPtr ReadClassPointerForType(Type type)
         {
             if (type == typeof(void)) return Il2CppClassPointerStore<Void>.NativeClassPtr;
             return (IntPtr)typeof(Il2CppClassPointerStore<>).MakeGenericType(type)
                 .GetField(nameof(Il2CppClassPointerStore<int>.NativeClassPtr)).GetValue(null);
+            //return Il2CppClassPointerStore.GetClassPointerForType(type);
         }
 
         internal static void WriteClassPointerForType(Type type, IntPtr value)
         {
+            Il2CppClassPointerStore.RegisterClassPointerForType(type, value);
             typeof(Il2CppClassPointerStore<>).MakeGenericType(type)
                 .GetField(nameof(Il2CppClassPointerStore<int>.NativeClassPtr)).SetValue(null, value);
         }
