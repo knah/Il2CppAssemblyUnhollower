@@ -31,6 +31,12 @@ namespace UnhollowerRuntimeLib
             return TypeFromPointerInternal(pointer, type.Name, throwOnFailure);
         }
 
+        public static Type FromNative(Il2CppSystem.Type type)
+        {
+            var classPointer = IL2CPP.il2cpp_class_from_type(type.TypeHandle.value);
+            return MarshallingUtils.TokensMap.LookupByClass(classPointer);
+        }
+
         public static Il2CppSystem.Type Of<T>() => Of<T>(true);
 
         public static Il2CppSystem.Type Of<T>(bool throwOnFailure)
