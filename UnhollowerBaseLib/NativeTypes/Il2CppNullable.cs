@@ -2,9 +2,6 @@
 
 namespace UnhollowerBaseLib
 {
-    /// <summary>
-    /// todo: uncomment when GenericMarshallingUtils has been implemented
-    /// </summary>
     public struct Il2CppNullable<T> : IIl2CppNullable
     {
         public T Value { get; private set; }
@@ -18,9 +15,8 @@ namespace UnhollowerBaseLib
                 uint _ = 0;
                 var valueSize = IL2CPP.il2cpp_class_value_size(Il2CppClassPointerStore<T>.NativeClassPtr, ref _);
                 result.HasValue = ((byte*)pointer)[valueSize] != 0;
-                //if (result.HasValue)
-                    //result.Value = GenericMarshallingUtils.ReadFieldGeneric<T>(pointer); //todo: uncomment
-                throw new NotImplementedException();
+                if (result.HasValue)
+                    result.Value = GenericMarshallingUtils.ReadFieldGeneric<T>(pointer);
             }
 
             return result;
@@ -35,8 +31,7 @@ namespace UnhollowerBaseLib
             if (pointer != IntPtr.Zero)
             {
                 result.HasValue = true;
-                //result.Value = GenericMarshallingUtils.MarshalGenericMethodReturn<T>(pointer); //todo: uncomment
-                throw new NotImplementedException();
+                result.Value = GenericMarshallingUtils.MarshalGenericMethodReturn<T>(pointer);
             }
 
             return result;
@@ -71,8 +66,7 @@ namespace UnhollowerBaseLib
             if (HasValue)
             {
                 ((byte*)pointer)[valueSize] = 1;
-                //GenericMarshallingUtils.WriteFieldGeneric(pointer, Value); //todo: uncomment
-                throw new NotImplementedException();
+                GenericMarshallingUtils.WriteFieldGeneric(pointer, Value);
             }
             else
             {
