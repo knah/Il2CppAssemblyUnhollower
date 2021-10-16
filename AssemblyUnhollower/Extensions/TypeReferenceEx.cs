@@ -41,13 +41,37 @@ namespace AssemblyUnhollower.Extensions
                     return typeRefA.Name == typeRefB.Name;
             }
         }
-        
+
+        public static bool IsNullable(this TypeReference a)
+        {
+            return a.Name == "Nullable`1";
+        }
+
+        public static bool MayRequireScratchSpace(this TypeReference a)
+        {
+            return a is GenericParameter || a.IsNullable();
+        }
+
         public static string GetNamespacePrefix(this TypeReference type)
         {
-            if (type.IsNested)
-                return GetNamespacePrefix(type.DeclaringType) + "." + type.DeclaringType.Name;
+            if (!type.IsNested)
+                return type.Namespace;
 
-            return type.Namespace;
+            return GetFullNameWithNesting(type.DeclaringType);
+        }
+
+        public static string GetFullNameWithNesting(this TypeReference type)
+        {
+            if (type.IsNested)
+            {
+                var parentPrefix = GetFullNameWithNesting(type.DeclaringType);
+                return $"{parentPrefix}+{type.DeclaringType.Name}";
+            }
+
+            if (string.IsNullOrEmpty(type.Namespace))
+                return type.Name;
+
+            return $"{type.Namespace}.{type.Name}";
         }
     }
 }
