@@ -23,6 +23,9 @@ namespace UnhollowerBaseLib
             }
         }
 
+        /// <summary>
+        /// todo: remove
+        /// </summary>
         protected static void StaticCtorBody(Type ownType)
         {
             var nativeClassPtr = Il2CppClassPointerStore<T>.NativeClassPtr;
@@ -123,7 +126,7 @@ namespace UnhollowerBaseLib
         {
             if (pointer == IntPtr.Zero) return null;
 
-            if (typeof(T) == typeof(string)) 
+            if (typeof(T) == typeof(string)) //todo: delete string if block
                 return new Il2CppStringArray(pointer) as Il2CppArrayBase<T>;
             if (typeof(T).IsValueType) // can't construct required types here directly because of unfulfilled generic constraint
                 return Activator.CreateInstance(typeof(Il2CppStructArray<>).MakeGenericType(typeof(T)), pointer) as Il2CppArrayBase<T>;
