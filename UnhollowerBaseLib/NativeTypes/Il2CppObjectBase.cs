@@ -4,27 +4,23 @@ using UnhollowerBaseLib.Runtime;
 
 namespace UnhollowerBaseLib
 {
-    public class Il2CppObjectBase
+    public class Il2CppObjectBase : IIl2CppObjectBase
     {
         public IntPtr Pointer
         {
             get
             {
-                var handleTarget = IL2CPP.il2cpp_gchandle_get_target(myGcHandle);
+                var handleTarget = PointerNullable;
                 if (handleTarget == IntPtr.Zero) throw new ObjectCollectedException("Object was garbage collected in IL2CPP domain");
                 return handleTarget;
             }
         }
 
-        public bool WasCollected
-        {
-            get
-            {
-                var handleTarget = IL2CPP.il2cpp_gchandle_get_target(myGcHandle);
-                if (handleTarget == IntPtr.Zero) return true;
-                return false;
-            }
-        }
+        public IntPtr PointerNullable => IL2CPP.il2cpp_gchandle_get_target(myGcHandle);
+
+        public bool IsIl2CppObjectAlive() => PointerNullable != IntPtr.Zero;
+
+        public bool WasCollected => PointerNullable == IntPtr.Zero;
 
         private readonly uint myGcHandle;
 
