@@ -12,6 +12,9 @@ namespace UnhollowerBaseLib
         {
         }
 
+        /// <summary>
+        /// todo: remove this static constructor
+        /// </summary>
         static Il2CppStructArray()
         {
             StaticCtorBody(typeof(Il2CppStructArray<T>));
