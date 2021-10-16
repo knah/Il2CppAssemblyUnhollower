@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using AssemblyUnhollower.Contexts;
@@ -40,6 +41,7 @@ namespace AssemblyUnhollower
         public TypeReference Il2CppArrayBase { get; }
         public TypeReference Il2CppArrayBaseSelfSubst { get; }
         public TypeReference DefaultMemberAttribute { get; }
+        public TypeReference Il2CppNonBlittableValueType { get; }
 
         public MethodReference Il2CppObjectBaseToPointer { get; }
         public MethodReference Il2CppObjectBaseToPointerNotNull { get; }
@@ -56,6 +58,8 @@ namespace AssemblyUnhollower
         
         public MethodReference RuntimeInvoke { get; }
         public MethodReference RuntimeClassInit { get; }
+        public MethodReference TypeFromToken { get; }
+        public MethodReference RegisterTypeTokenExplicit { get; }
         public MethodReference ObjectUnbox { get; }
         public MethodReference ObjectBox { get; }
         public MethodReference ValueSizeGet { get; }
@@ -92,10 +96,21 @@ namespace AssemblyUnhollower
         public MethodReference ObsoleteAttributeCtor { get; }
         public MethodReference NotSupportedExceptionCtor { get; }
         public MethodReference ObfuscatedNameAttributeCtor { get; }
+        public MethodReference NativeTypeTokenAttributeCtor { get; }
         public MethodReference CallerCountAttributeCtor { get; }
         public MethodReference CachedScanResultsAttributeCtor { get; }
         public MethodReference ExtensionAttributeCtor { get; }
-        
+
+        public MethodReference ReadStaticFieldGeneric { get; }
+        public MethodReference WriteStaticFieldGeneric { get; }
+        public MethodReference ReadFieldGeneric { get; }
+        public MethodReference WriteFieldGeneric { get; }
+        public MethodReference MarshalMethodReturn { get; }
+        public MethodReference MarshalMethodParameter { get; }
+        public MethodReference MarshalMethodParameterByRef { get; }
+        public MethodReference MarshalMethodParameterByRefRestore { get; }
+        public MethodReference ScratchSpaceEnter { get; }
+        public MethodReference ScratchSpaceLeave { get; }
 
         public AssemblyKnownImports(ModuleDefinition module, RewriteGlobalContext context)
         {
@@ -121,6 +136,13 @@ namespace AssemblyUnhollower
             Il2CppArrayBaseSelfSubst = Module.ImportReference(new GenericInstanceType(Il2CppArrayBase) { GenericArguments = { Il2CppArrayBase.GenericParameters[0] }});
             Il2CppObjectBase = Module.ImportReference(typeof(Il2CppObjectBase));
             DefaultMemberAttribute = Module.ImportReference(TargetTypeSystemHandler.DefaultMemberAttribute);
+
+            // This can't be imported with typeof() because unholllower runs without Il2CppMscorlib
+            var name = typeof(Il2CppObjectBase).Assembly.GetName();
+            Il2CppNonBlittableValueType = Module.ImportReference(new TypeReference(nameof(UnhollowerBaseLib),
+                nameof(UnhollowerBaseLib.Il2CppNonBlittableValueType), Module,
+                new AssemblyNameReference(name.Name, name.Version)));
+
             // Il2CppObjectReference = Module.ImportReference(TargetTypeSystemHandler.Object);// todo!
 
             Il2CppObjectBaseToPointer = Module.ImportReference(typeof(IL2CPP).GetMethod("Il2CppObjectBaseToPtr"));
@@ -140,6 +162,8 @@ namespace AssemblyUnhollower
             
             RuntimeInvoke = Module.ImportReference(typeof(IL2CPP).GetMethod("il2cpp_runtime_invoke"));
             RuntimeClassInit = Module.ImportReference(typeof(IL2CPP).GetMethod("il2cpp_runtime_class_init"));
+            TypeFromToken = Module.ImportReference(typeof(Type).GetMethod(nameof(System.Type.GetTypeFromHandle)));
+            RegisterTypeTokenExplicit = Module.ImportReference(typeof(Il2CppClassPointerStore).GetMethod(nameof(UnhollowerBaseLib.Il2CppClassPointerStore.RegisterTypeWithExplicitTokenInfo)));
             ObjectUnbox = Module.ImportReference(typeof(IL2CPP).GetMethod("il2cpp_object_unbox"));
             ObjectBox = Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_value_box)));
             ValueSizeGet = Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_class_value_size)));
@@ -159,7 +183,17 @@ namespace AssemblyUnhollower
             Il2CppMethodInfoToReflection = Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.il2cpp_method_get_object)));
             Il2CppPointerToGeneric = Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.PointerToValueGeneric)));
             Il2CppRenderTypeNameGeneric = Module.ImportReference(typeof(IL2CPP).GetMethod(nameof(IL2CPP.RenderTypeName), new [] {typeof(bool)}));
-            
+
+            ReadStaticFieldGeneric = Module.ImportReference(typeof(GenericMarshallingUtils).GetMethod(nameof(GenericMarshallingUtils.ReadStaticFieldGeneric)));
+            WriteStaticFieldGeneric = Module.ImportReference(typeof(GenericMarshallingUtils).GetMethod(nameof(GenericMarshallingUtils.WriteStaticFieldGeneric)));
+            ReadFieldGeneric = Module.ImportReference(typeof(GenericMarshallingUtils).GetMethod(nameof(GenericMarshallingUtils.ReadFieldGeneric)));
+            WriteFieldGeneric = Module.ImportReference(typeof(GenericMarshallingUtils).GetMethod(nameof(GenericMarshallingUtils.WriteFieldGeneric)));
+            MarshalMethodReturn = Module.ImportReference(typeof(GenericMarshallingUtils).GetMethod(nameof(GenericMarshallingUtils.MarshalGenericMethodReturn)));
+            MarshalMethodParameter = Module.ImportReference(typeof(GenericMarshallingUtils).GetMethod(nameof(GenericMarshallingUtils.MarshalMethodParameter)));
+            MarshalMethodParameterByRef = Module.ImportReference(typeof(GenericMarshallingUtils).GetMethod(nameof(GenericMarshallingUtils.MarshalMethodParameterByRef)));
+            MarshalMethodParameterByRefRestore = Module.ImportReference(typeof(GenericMarshallingUtils).GetMethod(nameof(GenericMarshallingUtils.MarshalMethodParameterByRefRestore)));
+            ScratchSpaceEnter = Module.ImportReference(typeof(MethodCallScratchSpaceAllocator).GetMethod(nameof(MethodCallScratchSpaceAllocator.EnterMethodCall)));
+            ScratchSpaceLeave = Module.ImportReference(typeof(MethodCallScratchSpaceAllocator).GetMethod(nameof(MethodCallScratchSpaceAllocator.ExitMethodCall)));
 
 
             FlagsAttributeCtor = new MethodReference(".ctor", Void, Module.ImportReference(TargetTypeSystemHandler.FlagsAttribute)) { HasThis = true};
@@ -171,7 +205,10 @@ namespace AssemblyUnhollower
             
             ObfuscatedNameAttributeCtor = new MethodReference(".ctor", Void, Module.ImportReference(typeof(ObfuscatedNameAttribute)))
                     {HasThis = true, Parameters = {new ParameterDefinition(String)}};
-            
+
+            NativeTypeTokenAttributeCtor = new MethodReference(".ctor", Void, Module.ImportReference(typeof(NativeTypeTokenAttribute)))
+                    { HasThis = true, Parameters = { } };
+
             CallerCountAttributeCtor = new MethodReference(".ctor", Void, Module.ImportReference(typeof(CallerCountAttribute)))
                     {HasThis = true, Parameters = {new ParameterDefinition(Int)}};
             
