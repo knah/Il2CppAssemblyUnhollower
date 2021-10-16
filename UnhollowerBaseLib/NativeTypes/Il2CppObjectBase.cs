@@ -5,7 +5,7 @@ using UnhollowerBaseLib.Runtime;
 namespace UnhollowerBaseLib
 {
     /// <summary>
-    /// todo: update casting code, implement boxing and unboxing
+    /// todo: update casting code
     /// </summary>
     public class Il2CppObjectBase : IIl2CppObjectBase
     {
@@ -100,8 +100,7 @@ namespace UnhollowerBaseLib
             if (!IL2CPP.il2cpp_class_is_assignable_from(nestedTypeClassPointer, ownClass))
                 throw new InvalidCastException($"Can't cast object of type {Marshal.PtrToStringAnsi(IL2CPP.il2cpp_class_get_name(IL2CPP.il2cpp_object_get_class(Pointer)))} to type {typeof(T)}");
 
-            //return GenericMarshallingUtils.MarshalObjectFromPointerKnownTypeBound<T>(Pointer);
-            throw new NotImplementedException();
+            return GenericMarshallingUtils.MarshalObjectFromPointerKnownTypeBound<T>(Pointer);
         }
 
         ~Il2CppObjectBase()
