@@ -15,8 +15,9 @@ namespace UnhollowerBaseLib
 {
     public static unsafe class IL2CPP
     {
-        private static Dictionary<string, IntPtr> ourImagesMap = new Dictionary<string, IntPtr>();
-        
+        private static readonly Dictionary<string, IntPtr> ourImagesMap = new Dictionary<string, IntPtr>();
+        private static readonly Dictionary<IntPtr, Dictionary<uint, IntPtr>> ourTypeTokensMap = new Dictionary<IntPtr, Dictionary<uint, IntPtr>>();
+
         static IL2CPP()
         {
             var domain = il2cpp_domain_get();
@@ -32,7 +33,48 @@ namespace UnhollowerBaseLib
                 var image = il2cpp_assembly_get_image(assemblies[i]);
                 var name = Marshal.PtrToStringAnsi(il2cpp_image_get_name(image));
                 ourImagesMap[name] = image;
+
+                if (name.EndsWith(".dll"))
+                    ourImagesMap[name.Substring(0, name.Length - 4)] = image;
+                else
+                    ourImagesMap[name + ".dll"] = image;
+
+                var typeTokens = new Dictionary<uint, IntPtr>();
+                ourTypeTokensMap[image] = typeTokens;
+                var numClasses = il2cpp_image_get_class_count(image);
+                for (var j = 0u; j < numClasses; j++)
+                {
+                    var classPtr = il2cpp_image_get_class(image, j);
+                    var token = il2cpp_class_get_type_token(classPtr);
+
+                    typeTokens[token] = classPtr;
+                }
             }
+        }
+
+        public static IntPtr GetImagePointer(string assemblyName)
+        {
+            if (!ourImagesMap.TryGetValue(assemblyName, out var image))
+            {
+                LogSupport.Error($"Assembly {assemblyName} is not registered in il2cpp");
+                return IntPtr.Zero;
+            }
+
+            return image;
+        }
+
+        public static IntPtr GetClassPointerByToken(string assemblyName, uint token, Type requestedType)
+        {
+            if (!ourImagesMap.TryGetValue(assemblyName, out var image))
+                throw new ArgumentException($"Image for {assemblyName} ({requestedType}) not found!");
+
+            if (!ourTypeTokensMap.TryGetValue(image, out var map))
+                throw new ArgumentException($"Token map for {assemblyName}/{image} ({requestedType}) not found!");
+
+            if (!map.TryGetValue(token, out var result))
+                throw new AggregateException($"Token for {assemblyName}/{image}/{token} ({requestedType}) not found!");
+
+            return result;
         }
 
         internal static IntPtr GetIl2CppImage(string name)
@@ -43,7 +85,7 @@ namespace UnhollowerBaseLib
 
         internal static IntPtr[] GetIl2CppImages()
         {
-            return ourImagesMap.Values.ToArray<IntPtr>();
+            return ourImagesMap.Values.Distinct<IntPtr>().ToArray<IntPtr>();
         }
 
         public static IntPtr GetIl2CppClass(string assemblyName, string namespaze, string className)
@@ -204,9 +246,15 @@ namespace UnhollowerBaseLib
             return obj?.Pointer ?? IntPtr.Zero;
         }
         
+        /// <summary>
+        /// todo: switch implementation
+        /// </summary>
         public static IntPtr Il2CppObjectBaseToPtrNotNull(Il2CppObjectBase obj)
         {
             return obj?.Pointer ?? throw new NullReferenceException();
+            //var pointer = obj?.PointerNullable ?? IntPtr.Zero;
+            //if (pointer == IntPtr.Zero) throw new NullReferenceException();
+            //return pointer;
         }
 
         public static IntPtr GetIl2CppNestedType(IntPtr enclosingType, string nestedTypeName)
@@ -265,8 +313,17 @@ namespace UnhollowerBaseLib
             return (T) trampoline.CreateDelegate(typeof(T));
         }
 
+        /// <summary>
+        /// todo: remove
+        /// </summary>
         private static readonly MethodInfo UnboxMethod = typeof(Il2CppObjectBase).GetMethod(nameof(Il2CppObjectBase.Unbox));
+        /// <summary>
+        /// todo: remove
+        /// </summary>
         private static readonly MethodInfo CastMethod = typeof(Il2CppObjectBase).GetMethod(nameof(Il2CppObjectBase.Cast));
+        /// <summary>
+        /// todo: remove
+        /// </summary>
         public static T PointerToValueGeneric<T>(IntPtr objectPointer, bool isFieldPointer, bool valueTypeWouldBeBoxed)
         {
             if (isFieldPointer)
@@ -323,6 +380,7 @@ namespace UnhollowerBaseLib
                 return builder.ToString();
             }
 
+            //todo: remove this if block
             if (t == typeof(Il2CppStringArray))
                 return "System.String[]";
 
