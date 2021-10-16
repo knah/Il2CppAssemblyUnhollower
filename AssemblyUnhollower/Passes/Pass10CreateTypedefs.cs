@@ -1,11 +1,20 @@
 using AssemblyUnhollower.Contexts;
 using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
+using System.Collections.Generic;
+using UnhollowerBaseLib;
 
 namespace AssemblyUnhollower.Passes
 {
     public static class Pass10CreateTypedefs
     {
+        // These interfaces seem to be runtime-specific and are incompatible as a result
+        // TODO: check that methods match between managed/il2cpp versions in general?
+        private static readonly HashSet<string> UnsuitableSystemInterfaces = new()
+        {
+            "System.Runtime.InteropServices._Attribute"
+        };
+
         public static void DoPass(RewriteGlobalContext context)
         {
             foreach (var assemblyContext in context.Assemblies)
@@ -13,6 +22,8 @@ namespace AssemblyUnhollower.Passes
                 foreach (var type in assemblyContext.OriginalAssembly.MainModule.Types)
                     ProcessType(type, assemblyContext, null);
             }
+
+            LogSupport.Trace($"Interface statistics: {context.Statistics.SystemInterfaceCandidates} candidates, of them {context.Statistics.EligibleSystemInterfaces} used");
         }
 
         private static void ProcessType(TypeDefinition type, AssemblyRewriteContext assemblyContext, TypeDefinition? parentType)
@@ -36,7 +47,7 @@ namespace AssemblyUnhollower.Passes
             foreach (var typeNestedType in type.NestedTypes) 
                 ProcessType(typeNestedType, assemblyContext, newType);
 
-            assemblyContext.RegisterTypeRewrite(new TypeRewriteContext(assemblyContext, type, newType));
+            assemblyContext.RegisterTypeRewrite(new TypeRewriteContext(assemblyContext, type, newType, newType.IsInterface ? TypeRewriteContext.TypeRewriteSemantic.Interface : TypeRewriteContext.TypeRewriteSemantic.Default));
         }
 
         internal static (string? Namespace, string Name) GetConvertedTypeName(RewriteGlobalContext assemblyContextGlobalContext, TypeDefinition type, TypeDefinition? enclosingType)

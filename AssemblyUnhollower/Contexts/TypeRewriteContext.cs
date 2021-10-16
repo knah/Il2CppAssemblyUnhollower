@@ -11,6 +11,8 @@ namespace AssemblyUnhollower.Contexts
         public readonly TypeDefinition NewType;
         public readonly int Il2CppToken;
 
+        public readonly TypeRewriteSemantic RewriteSemantic;
+
         public readonly bool OriginalNameWasObfuscated;
 
         public FieldReference ClassPointerFieldRef { get; private set; }
@@ -25,11 +27,12 @@ namespace AssemblyUnhollower.Contexts
         public IEnumerable<FieldRewriteContext> Fields => myFieldContexts.Values;
         public IEnumerable<MethodRewriteContext> Methods => myMethodContexts.Values;
 
-        public TypeRewriteContext(AssemblyRewriteContext assemblyContext, TypeDefinition originalType, TypeDefinition newType)
+        public TypeRewriteContext(AssemblyRewriteContext assemblyContext, TypeDefinition originalType, TypeDefinition newType, TypeRewriteSemantic semantic)
         {
             AssemblyContext = assemblyContext ?? throw new ArgumentNullException(nameof(assemblyContext));
             OriginalType = originalType;
             NewType = newType ?? throw new ArgumentNullException(nameof(newType));
+            RewriteSemantic = semantic;
 
             if (OriginalType == null) return;
             
@@ -141,6 +144,15 @@ namespace AssemblyUnhollower.Contexts
             ReferenceType,
             BlittableStruct,
             NonBlittableStruct
+        }
+
+        public enum TypeRewriteSemantic
+        {
+            Default,
+            Interface,
+            UseSystemInterface,
+            UseSystemValueType,
+            Unstripped
         }
     }
 }
