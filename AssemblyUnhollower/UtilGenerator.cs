@@ -7,6 +7,9 @@ using UnhollowerBaseLib;
 
 namespace AssemblyUnhollower
 {
+    /// <summary>
+    /// todo: remove
+    /// </summary>
     public static class UtilGenerator
     {
         private static readonly OpCode[] I4Constants = {
