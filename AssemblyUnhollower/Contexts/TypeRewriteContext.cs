@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
 
 namespace AssemblyUnhollower.Contexts
@@ -34,12 +35,18 @@ namespace AssemblyUnhollower.Contexts
             NewType = newType ?? throw new ArgumentNullException(nameof(newType));
             RewriteSemantic = semantic;
 
-            if (OriginalType == null) return;
-            
-            OriginalNameWasObfuscated = OriginalType.Name != NewType.Name;
-            if (OriginalNameWasObfuscated)
-                NewType.CustomAttributes.Add(new CustomAttribute(assemblyContext.Imports.ObfuscatedNameAttributeCtor)
-                    {ConstructorArguments = {new CustomAttributeArgument(assemblyContext.Imports.String, originalType.FullName)}});
+            if (semantic != TypeRewriteSemantic.Unstripped)
+            {
+                Il2CppToken = originalType.ExtractToken();
+
+                OriginalNameWasObfuscated = OriginalType.Name != NewType.Name;
+                if (OriginalNameWasObfuscated)
+                    NewType.CustomAttributes.Add(
+                        new CustomAttribute(assemblyContext.Imports.ObfuscatedNameAttributeCtor)
+                        {
+                            ConstructorArguments = { new CustomAttributeArgument(assemblyContext.Imports.String, originalType.FullName) }
+                        });
+            }
 
             if (!OriginalType.IsValueType)
                 ComputedTypeSpecifics = TypeSpecifics.ReferenceType;
