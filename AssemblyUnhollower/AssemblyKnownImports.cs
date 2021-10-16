@@ -26,6 +26,7 @@ namespace AssemblyUnhollower
         public TypeReference IntPtr { get; }
         public TypeReference String { get; }
         public TypeReference Int { get; }
+        public TypeReference UInt { get; }
         public TypeReference Long { get; }
         public TypeDefinition Type { get; }
         public TypeReference Enum { get; }
@@ -121,6 +122,7 @@ namespace AssemblyUnhollower
             IntPtr = Module.ImportReference(TargetTypeSystemHandler.IntPtr);
             String = Module.ImportReference(TargetTypeSystemHandler.String);
             Int = Module.ImportReference(TargetTypeSystemHandler.Int);
+            UInt = Module.ImportReference(TargetTypeSystemHandler.UInt);
             Long = Module.ImportReference(TargetTypeSystemHandler.Long);
             Type = TargetTypeSystemHandler.Type;
             Enum = Module.ImportReference(TargetTypeSystemHandler.Enum);

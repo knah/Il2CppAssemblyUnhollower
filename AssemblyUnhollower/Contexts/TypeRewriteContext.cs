@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
+using UnhollowerBaseLib.Attributes;
 
 namespace AssemblyUnhollower.Contexts
 {
@@ -46,6 +47,21 @@ namespace AssemblyUnhollower.Contexts
                         {
                             ConstructorArguments = { new CustomAttributeArgument(assemblyContext.Imports.String, originalType.FullName) }
                         });
+            }
+
+            if (semantic == TypeRewriteSemantic.Default || semantic == TypeRewriteSemantic.Interface)
+            {
+                NewType.CustomAttributes.Add(new CustomAttribute(assemblyContext.Imports.NativeTypeTokenAttributeCtor)
+                {
+                    Fields =
+                    {
+                        new CustomAttributeNamedArgument(nameof(NativeTypeTokenAttribute.AssemblyName),
+                            new CustomAttributeArgument(assemblyContext.Imports.String, originalType.Module.Assembly.Name.Name)),
+
+                        new CustomAttributeNamedArgument(nameof(NativeTypeTokenAttribute.Token),
+                            new CustomAttributeArgument(assemblyContext.Imports.UInt, Il2CppToken))
+                    }
+                });
             }
 
             if (!OriginalType.IsValueType)
