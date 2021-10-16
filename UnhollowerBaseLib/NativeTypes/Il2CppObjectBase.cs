@@ -4,6 +4,9 @@ using UnhollowerBaseLib.Runtime;
 
 namespace UnhollowerBaseLib
 {
+    /// <summary>
+    /// todo: update casting code, implement boxing and unboxing
+    /// </summary>
     public class Il2CppObjectBase : IIl2CppObjectBase
     {
         public IntPtr Pointer
@@ -39,20 +42,7 @@ namespace UnhollowerBaseLib
             return TryCast<T>() ?? throw new InvalidCastException($"Can't cast object of type {Marshal.PtrToStringAnsi(IL2CPP.il2cpp_class_get_name(IL2CPP.il2cpp_object_get_class(Pointer)))} to type {typeof(T)}");
         }
 
-        public T Unbox<T>() where T : unmanaged
-        {
-            var nestedTypeClassPointer = Il2CppClassPointerStore<T>.NativeClassPtr;
-            if (nestedTypeClassPointer == IntPtr.Zero)
-                throw new ArgumentException($"{typeof(T)} is not an Il2Cpp reference type");
-            
-            var ownClass = IL2CPP.il2cpp_object_get_class(Pointer);
-            if (!IL2CPP.il2cpp_class_is_assignable_from(nestedTypeClassPointer, ownClass))
-                throw new InvalidCastException($"Can't cast object of type {Marshal.PtrToStringAnsi(IL2CPP.il2cpp_class_get_name(IL2CPP.il2cpp_object_get_class(Pointer)))} to type {typeof(T)}");
-
-            return Marshal.PtrToStructure<T>(IL2CPP.il2cpp_object_unbox(Pointer));
-        } 
-        
-        public T TryCast<T>() where T: Il2CppObjectBase
+        public T TryCast<T>() where T : Il2CppObjectBase
         {
             var nestedTypeClassPointer = Il2CppClassPointerStore<T>.NativeClassPtr;
             if (nestedTypeClassPointer == IntPtr.Zero)
@@ -65,8 +55,21 @@ namespace UnhollowerBaseLib
             if (RuntimeSpecificsStore.IsInjected(ownClass))
                 return ClassInjectorBase.GetMonoObjectFromIl2CppPointer(Pointer) as T;
 
-            return (T) Activator.CreateInstance(Il2CppClassPointerStore<T>.CreatedTypeRedirect ?? typeof(T), Pointer);
+            return (T)Activator.CreateInstance(Il2CppClassPointerStore<T>.CreatedTypeRedirect ?? typeof(T), Pointer);
         }
+
+        public T Unbox<T>() where T : unmanaged
+        {
+            var nestedTypeClassPointer = Il2CppClassPointerStore<T>.NativeClassPtr;
+            if (nestedTypeClassPointer == IntPtr.Zero)
+                throw new ArgumentException($"{typeof(T)} is not an Il2Cpp reference type");
+            
+            var ownClass = IL2CPP.il2cpp_object_get_class(Pointer);
+            if (!IL2CPP.il2cpp_class_is_assignable_from(nestedTypeClassPointer, ownClass))
+                throw new InvalidCastException($"Can't cast object of type {Marshal.PtrToStringAnsi(IL2CPP.il2cpp_class_get_name(IL2CPP.il2cpp_object_get_class(Pointer)))} to type {typeof(T)}");
+
+            return Marshal.PtrToStructure<T>(IL2CPP.il2cpp_object_unbox(Pointer));
+        } 
 
         ~Il2CppObjectBase()
         {
