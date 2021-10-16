@@ -9,6 +9,7 @@ namespace AssemblyUnhollower.Contexts
         public readonly AssemblyRewriteContext AssemblyContext;
         public readonly TypeDefinition OriginalType;
         public readonly TypeDefinition NewType;
+        public readonly int Il2CppToken;
 
         public readonly bool OriginalNameWasObfuscated;
 

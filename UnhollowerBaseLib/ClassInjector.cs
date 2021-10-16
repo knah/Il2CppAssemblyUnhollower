@@ -177,7 +177,7 @@ namespace UnhollowerRuntimeLib
 
             AddToClassFromNameDictionary(type, classPointer.Pointer);
 
-            //MarshallingUtils.TokensMap.RegisterRuntimeInjectedType(classPointer.Pointer, type);
+            MarshallingUtils.TokensMap.RegisterRuntimeInjectedType(classPointer.Pointer, type);
 
             if (logSuccess) LogSupport.Info($"Registered mono type {type} in il2cpp domain");
         }

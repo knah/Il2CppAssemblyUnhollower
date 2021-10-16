@@ -285,6 +285,9 @@ namespace AssemblyUnhollower
             using(new TimingCookie("Writing method pointer map"))
                 Pass91GenerateMethodPointerMap.DoPass(rewriteContext, options);
 
+            using (new TimingCookie("Writing type token map"))
+                Pass91GenerateTypeTokenMap.DoPass(rewriteContext, options);
+
             if (!options.NoCopyUnhollowerLibs)
             {
                 File.Copy(typeof(IL2CPP).Assembly.Location, Path.Combine(options.OutputDir, typeof(IL2CPP).Assembly.GetName().Name + ".dll"), true);
