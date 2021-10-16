@@ -28,6 +28,7 @@ namespace UnhollowerBaseLib
         /// </summary>
         protected static void StaticCtorBody(Type ownType)
         {
+            //return; //can probably remove; testing didn't reveal any issues
             var nativeClassPtr = Il2CppClassPointerStore<T>.NativeClassPtr;
             if (nativeClassPtr == IntPtr.Zero)
                 return;

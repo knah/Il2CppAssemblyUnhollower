@@ -56,7 +56,7 @@ namespace UnhollowerBaseLib
         }
 
         /// <summary>
-        /// Don't call yet. Todo: apply NativeTypeTokenAttribute to assemblies
+        /// Don't call yet. Suspected to have runtime bugs
         /// </summary>
         public static IntPtr GetClassPointerForType(Type type)
         {

@@ -74,6 +74,19 @@ namespace AssemblyUnhollower.Contexts
 
         public void AddMembers()
         {
+            foreach (var originalTypeMethod in OriginalType.Methods)
+            {
+                if (originalTypeMethod.Name == ".cctor") continue;
+                if (originalTypeMethod.Name == ".ctor" && originalTypeMethod.Parameters.Count == 1 &&
+                    originalTypeMethod.Parameters[0].ParameterType.FullName == "System.IntPtr") continue;
+
+                var methodRewriteContext = new MethodRewriteContext(this, originalTypeMethod);
+                myMethodContexts[originalTypeMethod] = methodRewriteContext;
+                myMethodContextsByName[originalTypeMethod.Name] = methodRewriteContext;
+            }
+
+            if (RewriteSemantic != TypeRewriteSemantic.Default) return;
+
             if (NewType.HasGenericParameters)
             {
                 var genericInstanceType = new GenericInstanceType(NewType);
@@ -97,23 +110,13 @@ namespace AssemblyUnhollower.Contexts
                     NewType.Module.ImportReference(genericTypeRef));
             }
 
+            // enums are filled in Pass22GenerateEnums
             if (OriginalType.IsEnum) return;
 
             var renamedFieldCounts = new Dictionary<string, int>();
             
             foreach (var originalTypeField in OriginalType.Fields)
                 myFieldContexts[originalTypeField] = new FieldRewriteContext(this, originalTypeField, renamedFieldCounts);
-
-            foreach (var originalTypeMethod in OriginalType.Methods)
-            {
-                if (originalTypeMethod.Name == ".cctor") continue;
-                if (originalTypeMethod.Name == ".ctor" && originalTypeMethod.Parameters.Count == 1 &&
-                    originalTypeMethod.Parameters[0].ParameterType.FullName == "System.IntPtr") continue;
-
-                var methodRewriteContext = new MethodRewriteContext(this, originalTypeMethod);
-                myMethodContexts[originalTypeMethod] = methodRewriteContext;
-                myMethodContextsByName[originalTypeMethod.Name] = methodRewriteContext;
-            }
         }
 
         public FieldRewriteContext GetFieldByOldField(FieldDefinition field) => myFieldContexts[field];
