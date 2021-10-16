@@ -246,15 +246,11 @@ namespace UnhollowerBaseLib
             return obj?.Pointer ?? IntPtr.Zero;
         }
         
-        /// <summary>
-        /// todo: switch implementation
-        /// </summary>
         public static IntPtr Il2CppObjectBaseToPtrNotNull(Il2CppObjectBase obj)
         {
-            return obj?.Pointer ?? throw new NullReferenceException();
-            //var pointer = obj?.PointerNullable ?? IntPtr.Zero;
-            //if (pointer == IntPtr.Zero) throw new NullReferenceException();
-            //return pointer;
+            var pointer = obj?.PointerNullable ?? IntPtr.Zero;
+            if (pointer == IntPtr.Zero) throw new NullReferenceException();
+            return pointer;
         }
 
         public static IntPtr GetIl2CppNestedType(IntPtr enclosingType, string nestedTypeName)
