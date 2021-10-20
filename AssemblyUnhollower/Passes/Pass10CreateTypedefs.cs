@@ -2,6 +2,7 @@ using AssemblyUnhollower.Contexts;
 using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
 using System.Collections.Generic;
+using System.Linq;
 using UnhollowerBaseLib;
 
 namespace AssemblyUnhollower.Passes
@@ -35,8 +36,11 @@ namespace AssemblyUnhollower.Passes
             {
                 newType.IsSealed = newType.IsAbstract = true;
             }
-            
-            if(parentType == null)
+
+            //if (type.IsInterface)
+            //    newType.IsInterface = true;
+
+            if (parentType == null)
                 assemblyContext.NewAssembly.MainModule.Types.Add(newType);
             else
             {
@@ -99,6 +103,71 @@ namespace AssemblyUnhollower.Passes
                 return typeAttributes | TypeAttributes.Public;
 
             return typeAttributes & ~(TypeAttributes.VisibilityMask) | TypeAttributes.NestedPublic;
+        }
+
+        private static readonly HashSet<TypeReference> InterfacesUnderConsideration = new HashSet<TypeReference>();
+
+        private static bool IsSystemInterfaceSuitable(TypeDefinition type)
+        {
+            if (type.HasNestedTypes)
+                return false;
+
+            if (InterfacesUnderConsideration.Contains(type))
+                return true;
+
+            if (UnsuitableSystemInterfaces.Contains(type.FullName))
+                return false;
+
+            if (!type.IsPublic && !type.IsNestedPublic)
+                return false;
+
+            try
+            {
+                InterfacesUnderConsideration.Add(type);
+
+                foreach (var interfaceImplementation in type.Interfaces)
+                {
+                    if (!IsSystemInterfaceSuitable(interfaceImplementation.InterfaceType.Resolve()))
+                        return false;
+                }
+
+                foreach (var methodDefinition in type.Methods)
+                {
+                    if (!IsTypeSuitableForSystemInterfaceReuse(methodDefinition.ReturnType) ||
+                        methodDefinition.Parameters.Any(it => !IsTypeSuitableForSystemInterfaceReuse(it.ParameterType)))
+                        return false;
+                }
+
+                return true;
+            }
+            finally
+            {
+                InterfacesUnderConsideration.Remove(type);
+            }
+        }
+
+        private static bool IsTypeSuitableForSystemInterfaceReuse(TypeReference typeRef)
+        {
+            if (typeRef is ArrayType)
+                return false;
+
+            if (typeRef is GenericInstanceType genericInstance)
+            {
+                var genericBase = genericInstance.ElementType.Resolve();
+                if (!genericBase.IsInterface) return false;
+                foreach (var parameter in genericInstance.GenericArguments)
+                    if (parameter is not GenericParameter && !IsTypeSuitableForSystemInterfaceReuse(parameter.Resolve()))
+                        return false;
+            }
+
+            if (typeRef is ByReferenceType byRef)
+                return IsTypeSuitableForSystemInterfaceReuse(byRef.ElementType);
+
+            if (typeRef.FullName == "System.Object" || typeRef.FullName == "System.Void" || typeRef.IsPrimitive || typeRef is GenericParameter)
+                return true;
+
+            var resolved = typeRef.Resolve();
+            return resolved.IsInterface && IsSystemInterfaceSuitable(resolved);
         }
     }
 }
