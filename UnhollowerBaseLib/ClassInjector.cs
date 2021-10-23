@@ -82,7 +82,7 @@ namespace UnhollowerRuntimeLib
             if (type.IsGenericType || type.IsGenericTypeDefinition)
                 throw new ArgumentException($"Type {type} is generic and can't be used in il2cpp");
 
-            var currentPointer = ReadClassPointerForType(type);
+            var currentPointer = Il2CppClassPointerStore.GetClassPointerForType(type);
             if (currentPointer != IntPtr.Zero)
                 return;//already registered in il2cpp
 
@@ -90,11 +90,11 @@ namespace UnhollowerRuntimeLib
             if (baseType == null)
                 throw new ArgumentException($"Class {type} does not inherit from a class registered in il2cpp");
 
-            var baseClassPointer = UnityVersionHandler.Wrap((Il2CppClass*)ReadClassPointerForType(baseType));
+            var baseClassPointer = UnityVersionHandler.Wrap((Il2CppClass*)Il2CppClassPointerStore.GetClassPointerForType(baseType));
             if (baseClassPointer == null)
             {
                 RegisterTypeInIl2Cpp(baseType, logSuccess);
-                baseClassPointer = UnityVersionHandler.Wrap((Il2CppClass*)ReadClassPointerForType(baseType));
+                baseClassPointer = UnityVersionHandler.Wrap((Il2CppClass*)Il2CppClassPointerStore.GetClassPointerForType(baseType));
             }
 
             if (baseClassPointer.ValueType || baseClassPointer.EnumType)
@@ -174,7 +174,7 @@ namespace UnhollowerRuntimeLib
             classPointer.ByValArg.Data = classPointer.ThisArg.Data = (IntPtr)newCounter;
 
             RuntimeSpecificsStore.SetClassInfo(classPointer.Pointer, true, true);
-            WriteClassPointerForType(type, classPointer.Pointer);
+            Il2CppClassPointerStore.SetClassPointerForType(type, classPointer.Pointer);
 
             AddToClassFromNameDictionary(type, classPointer.Pointer);
 
@@ -195,24 +195,6 @@ namespace UnhollowerRuntimeLib
             {
                 ClassFromNameDictionary.Add((namespaze, klass, image), typePointer);
             }
-        }
-
-        /// <summary>
-        /// todo: replace with Il2CppClassPointerStore.GetClassPointerForType and inline
-        /// </summary>
-        internal static IntPtr ReadClassPointerForType(Type type)
-        {
-            if (type == typeof(void)) return Il2CppClassPointerStore<Void>.NativeClassPtr;
-            return (IntPtr)typeof(Il2CppClassPointerStore<>).MakeGenericType(type)
-                .GetField(nameof(Il2CppClassPointerStore<int>.NativeClassPtr)).GetValue(null);
-            //return Il2CppClassPointerStore.GetClassPointerForType(type);
-        }
-
-        internal static void WriteClassPointerForType(Type type, IntPtr value)
-        {
-            Il2CppClassPointerStore.RegisterClassPointerForType(type, value);
-            typeof(Il2CppClassPointerStore<>).MakeGenericType(type)
-                .GetField(nameof(Il2CppClassPointerStore<int>.NativeClassPtr)).SetValue(null, value);
         }
 
         private static bool IsTypeSupported(Type type)
@@ -298,14 +280,14 @@ namespace UnhollowerRuntimeLib
                         param.Position = i;
                         param.Token = 0;
                     }
-                    param.ParameterType = (Il2CppTypeStruct*)IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(parameterInfo.ParameterType));
+                    param.ParameterType = (Il2CppTypeStruct*)IL2CPP.il2cpp_class_get_type(Il2CppClassPointerStore.GetClassPointerForType(parameterInfo.ParameterType));
                 }
             }
 
             converted.InvokerMethod = Marshal.GetFunctionPointerForDelegate(GetOrCreateInvoker(monoMethod));
             converted.MethodPointer = Marshal.GetFunctionPointerForDelegate(GetOrCreateTrampoline(monoMethod));
             converted.Slot = ushort.MaxValue;
-            converted.ReturnType = (Il2CppTypeStruct*)IL2CPP.il2cpp_class_get_type(ReadClassPointerForType(monoMethod.ReturnType));
+            converted.ReturnType = (Il2CppTypeStruct*)IL2CPP.il2cpp_class_get_type(Il2CppClassPointerStore.GetClassPointerForType(monoMethod.ReturnType));
 
             converted.Flags = Il2CppMethodFlags.METHOD_ATTRIBUTE_PUBLIC |
                                Il2CppMethodFlags.METHOD_ATTRIBUTE_HIDE_BY_SIG;

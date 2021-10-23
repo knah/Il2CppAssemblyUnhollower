@@ -16,7 +16,7 @@ namespace UnhollowerBaseLib
         static Il2CppClassPointerStore()
         {
             var targetType = typeof(T);
-            //NativeClassPtr = Il2CppClassPointerStore.GetClassPointerForType(targetType);//todo: uncomment
+            //NativeClassPtr = Il2CppClassPointerStore.CalculateClassPointerForType(targetType);//todo: uncomment
             Il2CppClassPointerStore.InitializeForType(targetType);
         }
     }
@@ -55,10 +55,25 @@ namespace UnhollowerBaseLib
             ourClassPointers[type] = IL2CPP.GetClassPointerByToken(assemblyName, token, type);
         }
 
+        public static IntPtr GetClassPointerForType(Type type)
+        {
+            if (type == typeof(void)) return Il2CppClassPointerStore<Il2CppSystem.Void>.NativeClassPtr;
+            return (IntPtr)typeof(Il2CppClassPointerStore<>).MakeGenericType(type)
+                .GetField(nameof(Il2CppClassPointerStore<int>.NativeClassPtr)).GetValue(null);
+            //return Il2CppClassPointerStore.CalculateClassPointerForType(type); //todo: replace method contents with CalculateClassPointerForType
+        }
+
+        internal static void SetClassPointerForType(Type type, IntPtr value)
+        {
+            RegisterClassPointerForType(type, value);
+            typeof(Il2CppClassPointerStore<>).MakeGenericType(type)
+                .GetField(nameof(Il2CppClassPointerStore<int>.NativeClassPtr)).SetValue(null, value);
+        }
+
         /// <summary>
         /// Don't call yet. Suspected to have runtime bugs
         /// </summary>
-        public static IntPtr GetClassPointerForType(Type type)
+        private static IntPtr CalculateClassPointerForType(Type type)
         {
             return ourClassPointers.GetOrAdd(type, type =>
             {
@@ -67,11 +82,11 @@ namespace UnhollowerBaseLib
                     var genericTypeDefinition = type.GetGenericTypeDefinition();
                     if (genericTypeDefinition == typeof(Il2CppReferenceArray<>) || genericTypeDefinition == typeof(Il2CppStructArray<>))
                     {
-                        var elementNativeType = RuntimeReflectionHelper.GetTypeForClass(GetClassPointerForType(type.GenericTypeArguments[0]));
+                        var elementNativeType = RuntimeReflectionHelper.GetTypeForClass(CalculateClassPointerForType(type.GenericTypeArguments[0]));
                         return IL2CPP.il2cpp_class_from_type(elementNativeType.MakeArrayType(1).TypeHandle.value);
                     }
 
-                    var baseNativeType = GetClassPointerForType(genericTypeDefinition);
+                    var baseNativeType = CalculateClassPointerForType(genericTypeDefinition);
                     return IL2CPP.il2cpp_array_class_get(baseNativeType, 1);
                 }
 
