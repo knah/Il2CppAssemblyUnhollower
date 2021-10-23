@@ -2,9 +2,7 @@ using System;
 
 namespace UnhollowerBaseLib
 {
-    /// <summary>
-    /// todo: remove
-    /// </summary>
+    // todo: remove
     public class Il2CppStringArray : Il2CppArrayBase<string>
     {
         public Il2CppStringArray(IntPtr pointer) : base(pointer)

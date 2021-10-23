@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using Iced.Intel;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Attributes;
-using Type = Il2CppSystem.Type;
+using Type = Il2CppSystem.Type;//todo: remove and allow System.Type to take its place
 
 namespace UnhollowerRuntimeLib.XrefScans
 {

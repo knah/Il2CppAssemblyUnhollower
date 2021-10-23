@@ -5,9 +5,6 @@ using UnhollowerBaseLib.Runtime;
 
 namespace UnhollowerBaseLib
 {
-    /// <summary>
-    /// todo: update casting code
-    /// </summary>
     public class Il2CppObjectBase : IIl2CppObjectBase
     {
         public Il2CppObjectBase(IntPtr pointer)
@@ -38,20 +35,17 @@ namespace UnhollowerBaseLib
         public IntPtr PointerNullable => IL2CPP.il2cpp_gchandle_get_target(myGcHandle);
 
         public bool IsIl2CppObjectAlive() => PointerNullable != IntPtr.Zero;
-
+        //todo: redundency; either remove IsIl2CppObjectAlive() or WasCollected
         public bool WasCollected => PointerNullable == IntPtr.Zero;
 
         private readonly uint myGcHandle;
 
-        public T Cast<T>() where T: Il2CppObjectBase
+        public T Cast<T>() where T: Il2CppObjectBase // todo: replace with: `return (T)this;` and make obsolete
         {
             return TryCast<T>() ?? throw new InvalidCastException($"Can't cast object of type {Marshal.PtrToStringAnsi(IL2CPP.il2cpp_class_get_name(IL2CPP.il2cpp_object_get_class(Pointer)))} to type {typeof(T)}");
         }
 
-        /// <summary>
-        /// todo: replace with: `return this as T;` and make obsolete
-        /// </summary>
-        public T TryCast<T>() where T : Il2CppObjectBase
+        public T TryCast<T>() where T : Il2CppObjectBase // todo: replace with: `return this as T;` and make obsolete
         {
             var nestedTypeClassPointer = Il2CppClassPointerStore<T>.NativeClassPtr;
             if (nestedTypeClassPointer == IntPtr.Zero)

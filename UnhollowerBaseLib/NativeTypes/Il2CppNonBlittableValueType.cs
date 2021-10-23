@@ -2,9 +2,7 @@
 
 namespace UnhollowerBaseLib
 {
-    /// <summary>
-    /// todo: generate non-blittable types inherited from this
-    /// </summary>
+    // todo: generate non-blittable types inherited from this
     public class Il2CppNonBlittableValueType : Il2CppSystem.ValueType, IIl2CppNonBlittableValueType
     {
         private readonly int mySize;
