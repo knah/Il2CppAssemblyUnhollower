@@ -1,4 +1,3 @@
-using System.IO;
 using System.Linq;
 using AssemblyUnhollower.Contexts;
 using Mono.Cecil;

@@ -1,4 +1,3 @@
-using System;
 using AssemblyUnhollower.Contexts;
 
 namespace AssemblyUnhollower.Passes

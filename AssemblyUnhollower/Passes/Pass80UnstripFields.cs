@@ -1,7 +1,4 @@
-using System.IO;
-using System.Linq;
 using AssemblyUnhollower.Contexts;
-using AssemblyUnhollower.Utils;
 using Mono.Cecil;
 using UnhollowerBaseLib;
 

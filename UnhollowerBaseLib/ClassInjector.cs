@@ -9,7 +9,6 @@ using System.Text;
 using System.Threading;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Attributes;
-using UnhollowerBaseLib.Maps;
 using UnhollowerBaseLib.Marshalling;
 using UnhollowerBaseLib.Runtime;
 using UnhollowerBaseLib.Runtime.VersionSpecific.Assembly;
