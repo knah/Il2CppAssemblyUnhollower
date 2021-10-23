@@ -16,7 +16,7 @@ namespace AssemblyUnhollower.Passes
         private static void ComputeSpecifics(TypeRewriteContext typeContext)
         {
             if (typeContext.ComputedTypeSpecifics != TypeRewriteContext.TypeSpecifics.NotComputed) return;
-            //if (typeContext.RewriteSemantic != TypeRewriteContext.TypeRewriteSemantic.Default) return;
+            //if (typeContext.RewriteSemantic != TypeRewriteContext.TypeRewriteSemantic.Default) return;//todo: uncomment
 
             typeContext.ComputedTypeSpecifics = TypeRewriteContext.TypeSpecifics.Computing;
             

@@ -1,6 +1,7 @@
 using AssemblyUnhollower.Contexts;
 using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnhollowerBaseLib;
@@ -29,6 +30,43 @@ namespace AssemblyUnhollower.Passes
 
         private static void ProcessType(TypeDefinition type, AssemblyRewriteContext assemblyContext, TypeDefinition? parentType)
         {
+            if (false)//parentType == null) //todo: enable
+            {
+                if (type.IsInterface)
+                {
+                    var sameTypeInSystem = assemblyContext.GlobalContext.SystemAssemblies.GetTypeByOriginalTypeAnyAssembly(type);
+                    if (sameTypeInSystem != null)
+                    {
+                        assemblyContext.GlobalContext.Statistics.SystemInterfaceCandidates++;
+                        if (IsSystemInterfaceSuitable(type))
+                        {
+                            assemblyContext.GlobalContext.Statistics.EligibleSystemInterfaces++;
+
+                            var context = new TypeRewriteContext(assemblyContext, type, sameTypeInSystem,
+                                TypeRewriteContext.TypeRewriteSemantic.UseSystemInterface);
+                            assemblyContext.RegisterTypeRewrite(context);
+
+                            return;
+                        }
+                    }
+                }
+
+                if (type.IsPrimitive || type.FullName == "System.Void" || type.IsEnum)
+                {
+                    var systemType = assemblyContext.GlobalContext.SystemAssemblies.GetTypeByOriginalTypeOwnAssemblyFirst(type);
+                    if (systemType == null && !type.IsEnum)
+                        throw new ApplicationException($"System type for primitive type {type} was not found");
+
+                    if (systemType != null && (!type.IsEnum || type.Fields.Count == systemType.Fields.Count) && (systemType.IsPublic || systemType.IsNestedPublic))
+                    {
+                        var context = new TypeRewriteContext(assemblyContext, type, systemType, TypeRewriteContext.TypeRewriteSemantic.UseSystemValueType);
+                        assemblyContext.RegisterTypeRewrite(context);
+
+                        return;
+                    }
+                }
+            }
+
             var convertedTypeName = GetConvertedTypeName(assemblyContext.GlobalContext, type, parentType);
             var newType = new TypeDefinition(convertedTypeName.Namespace ?? type.Namespace.UnSystemify(), convertedTypeName.Name, AdjustAttributes(type.Attributes));
 
@@ -37,7 +75,7 @@ namespace AssemblyUnhollower.Passes
                 newType.IsSealed = newType.IsAbstract = true;
             }
 
-            //if (type.IsInterface)
+            //if (type.IsInterface) //todo: enable
             //    newType.IsInterface = true;
 
             if (parentType == null)
@@ -96,7 +134,7 @@ namespace AssemblyUnhollower.Passes
         private static TypeAttributes AdjustAttributes(TypeAttributes typeAttributes)
         {
             typeAttributes |= TypeAttributes.BeforeFieldInit;
-            typeAttributes &= ~(TypeAttributes.Abstract | TypeAttributes.Interface);
+            typeAttributes &= ~(TypeAttributes.Abstract | TypeAttributes.Interface);//todo: remove
             
             var visibility = typeAttributes & TypeAttributes.VisibilityMask;
             if (visibility == 0 || visibility == TypeAttributes.Public)
