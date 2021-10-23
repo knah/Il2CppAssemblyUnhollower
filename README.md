@@ -1,14 +1,14 @@
 # Il2CppAssemblyUnhollower
 A tool to generate Managed->IL2CPP proxy assemblies from
- [Il2CppDumper](https://github.com/Perfare/Il2CppDumper )'s output.
+ [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL)'s output.
 
 This allows the use of IL2CPP domain and objects in it from a managed domain. 
 This includes generic types and methods, arrays, and new object creation. Some things may be horribly broken. 
  
 ## Usage
   0. Build or get a release
-  1. Obtain dummy assemblies using [Il2CppDumper](https://github.com/Perfare/Il2CppDumper)
-  2. Run `AssemblyUnhollower --input=<path to Il2CppDumper's dummy dll dir> --output=<output directory> --mscorlib=<path to target mscorlib>`    
+  1. Obtain dummy assemblies using [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL)
+  2. Run `AssemblyUnhollower --input=<path to Cpp2IL's dummy dll dir> --output=<output directory> --mscorlib=<path to target mscorlib>`    
        
  Resulting assemblies may be used with your favorite loader that offers a Mono domain in the IL2CPP game process, such as [MelonLoader](https://github.com/HerpDerpinstine/MelonLoader).    
  This appears to be working reasonably well for Unity 2018.4.x games, but more extensive testing is required.  
@@ -20,7 +20,7 @@ Usage: AssemblyUnhollower [parameters]
 Possible parameters:
         --help, -h, /? - Optional. Show this help
         --verbose - Optional. Produce more console output
-        --input=<directory path> - Required. Directory with Il2CppDumper's dummy assemblies
+        --input=<directory path> - Required. Directory with Cpp2IL's dummy assemblies
         --output=<directory path> - Required. Directory to put results into
         --mscorlib=<file path> - Required. mscorlib.dll of target runtime system (typically loader's)
         --unity=<directory path> - Optional. Directory with original Unity assemblies for unstripping
@@ -64,13 +64,13 @@ Before certain features can be used (namely class injection and delegate convers
  * Using generics with value types may lead to exceptions or crashes because of missing method bodies. If a specific value-typed generic signature was not used in original game code, it can't be used externally either.
 
 ## Class injection
-Starting with version 0.4.0.0, managed classes can be injected into IL2CPP domain. Currently this is fairly limited, but functional enough for GC integration and implementing custom MonoBehaviors.
+Starting with version `0.4.0.0`, managed classes can be injected into IL2CPP domain. Currently this is fairly limited, but functional enough for GC integration and implementing custom MonoBehaviors.
 
 How-to:
  * Your class must inherit from a non-abstract IL2CPP class.
  * You must include a constructor that takes IntPtr and passes it to base class constructor. It will be called when objects of your class are created from IL2CPP side.
  * To create your object from managed side, call base class IntPtr constructor with result of `ClassInjector.DerivedConstructorPointer<T>()`, where T is your class type, and call `ClassInjector.DerivedConstructorBody(this)` in constructor body.
- * An example of injected class is `Il2CppToMonoDelegateReference` in [DelegateSupport.cs](UnhollowerRuntimeLib/DelegateSupport.cs)
+ * An example of injected class is `Il2CppToMonoDelegateReference` in [DelegateSupport.cs](UnhollowerBaseLib/DelegateSupport.cs)
  * Call `ClassInjector.RegisterTypeInIl2Cpp<T>()` before first use of class to be injected
  * The injected class can be used normally afterwards, for example a custom MonoBehavior implementation would work with `AddComponent<T>`
  
@@ -96,7 +96,7 @@ Limitations:
  * Only a limited set of types is supported for method signatures
  
 ## Injected components in asset bundles
- Starting with version 0.4.15.0, injected components can be used in asset bundles. Currently, deserialization for component fields is not supported. Any fields on the component will initially have their default value as defined in the mono assembly.
+ Starting with version `0.4.15.0`, injected components can be used in asset bundles. Currently, deserialization for component fields is not supported. Any fields on the component will initially have their default value as defined in the mono assembly.
 
  How-to:
  * Your class must meet the above critereon mentioned in Class Injection.

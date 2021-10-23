@@ -5,7 +5,7 @@ Starting with version `0.4.0.0`, managed classes can be injected into IL2CPP dom
  * Your class must inherit from a non-abstract IL2CPP class.
  * You must include a constructor that takes IntPtr and passes it to base class constructor. It will be called when objects of your class are created from IL2CPP side.
  * To create your object from managed side, call base class IntPtr constructor with result of `ClassInjector.DerivedConstructorPointer<T>()`, where T is your class type, and call `ClassInjector.DerivedConstructorBody(this)` in constructor body.
- * An example of injected class is `Il2CppToMonoDelegateReference` in [DelegateSupport.cs](UnhollowerRuntimeLib/DelegateSupport.cs)
+ * An example of injected class is `Il2CppToMonoDelegateReference` in [DelegateSupport.cs](../UnhollowerBaseLib/DelegateSupport.cs)
  * Call `ClassInjector.RegisterTypeInIl2Cpp<T>()` before first use of class to be injected
  * The injected class can be used normally afterwards, for example a custom MonoBehavior implementation would work with `AddComponent<T>`
  
