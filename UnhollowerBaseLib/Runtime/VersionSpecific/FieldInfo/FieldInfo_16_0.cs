@@ -21,11 +21,6 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.FieldInfo
             else return new NativeFieldInfoStruct((IntPtr)fieldInfoPointer);
         }
 
-        public IntPtr il2cpp_field_get_name(IntPtr field) => ((Il2CppFieldInfo_16_0*)field)->name;
-        public uint il2cpp_field_get_offset(IntPtr field) => (uint)((Il2CppFieldInfo_16_0*)field)->offset;
-        public IntPtr il2cpp_field_get_parent(IntPtr field) => (IntPtr)((Il2CppFieldInfo_16_0*)field)->parent;
-        public IntPtr il2cpp_field_get_type(IntPtr field) => (IntPtr)((Il2CppFieldInfo_16_0*)field)->type;
-
 #if DEBUG
         public string GetName() => "NativeFieldInfoStructHandler_16_0";
 #endif
