@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using UnhollowerBaseLib.Maps;
 
-namespace UnhollowerBaseLib
+namespace UnhollowerBaseLib.Marshalling
 {
     public static class MarshallingUtils
     {
@@ -209,7 +209,7 @@ namespace UnhollowerBaseLib
         public static unsafe ref TTo ReinterpretCast<TFrom, TTo>(ref TFrom from) where TTo : unmanaged where TFrom : unmanaged
         {
             fixed (TFrom* ptr = &from)
-                return ref *(TTo*)(ptr);
+                return ref *(TTo*)ptr;
         }
     }
 }

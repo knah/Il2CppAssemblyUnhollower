@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace UnhollowerBaseLib
+namespace UnhollowerBaseLib.Marshalling
 {
     public static class GenericMarshalDelegates<T>
     {

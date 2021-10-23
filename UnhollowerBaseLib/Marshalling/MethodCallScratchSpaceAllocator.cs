@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace UnhollowerBaseLib
+namespace UnhollowerBaseLib.Marshalling
 {
     public static class MethodCallScratchSpaceAllocator
     {

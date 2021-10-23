@@ -1,5 +1,6 @@
 using System;
 using UnhollowerBaseLib;
+using UnhollowerBaseLib.Marshalling;
 
 namespace UnhollowerRuntimeLib
 {

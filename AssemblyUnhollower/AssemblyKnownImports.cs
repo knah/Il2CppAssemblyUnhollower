@@ -6,11 +6,12 @@ using AssemblyUnhollower.Extensions;
 using Mono.Cecil;
 using UnhollowerBaseLib;
 using UnhollowerBaseLib.Attributes;
+using UnhollowerBaseLib.Marshalling;
 using UnhollowerRuntimeLib;
 
 namespace AssemblyUnhollower
 {
-	public class AssemblyKnownImports
+    public class AssemblyKnownImports
     {
         private static readonly Dictionary<ModuleDefinition, AssemblyKnownImports> AssemblyMap = new Dictionary<ModuleDefinition, AssemblyKnownImports>();
 

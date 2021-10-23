@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 
-namespace UnhollowerBaseLib
+namespace UnhollowerBaseLib.Marshalling
 {
     public static class GenericMarshallingUtils
     {
