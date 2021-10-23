@@ -15,6 +15,8 @@ namespace AssemblyUnhollower.Passes
             {
                 foreach (var typeContext in assemblyContext.Types)
                 {
+                    //if (typeContext.RewriteSemantic != TypeRewriteContext.TypeRewriteSemantic.Default) continue;//todo: uncomment
+
                     foreach (var methodContext in typeContext.Methods)
                     {
                         var oldMethod = methodContext.OriginalMethod;
