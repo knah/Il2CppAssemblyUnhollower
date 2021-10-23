@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using AssemblyUnhollower.Contexts;
 using Mono.Cecil;
@@ -33,6 +34,46 @@ namespace AssemblyUnhollower
                 body.Emit(OpCodes.Ldc_I4_S, (sbyte) constant);
             else
                 body.Emit(OpCodes.Ldc_I4, constant);
+        }
+
+        public static void EmitMethodThisToPointer(this ILProcessor body, TypeReference originalType, TypeReference newType, TypeRewriteContext enclosingType, int argumentIndex)
+        {
+            // input stack: not used
+            // output stack: IntPtr to either Il2CppObject or IL2CPP value type
+
+            if (originalType is GenericParameter)
+            {
+                Debug.Fail("Can't emit generic object-to-pointers");
+                return;
+            }
+
+            var imports = enclosingType.AssemblyContext.Imports;
+            if (originalType is ByReferenceType)
+            {
+                Debug.Fail("Can't emit byref object-to-pointers");
+            }
+            else if (originalType.IsValueType)
+            {
+                if (newType.IsValueType)
+                {
+                    body.Emit(OpCodes.Ldarg_0);
+                }
+                else
+                {
+                    body.Emit(OpCodes.Ldarg_0);
+                    body.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointerNotNull);
+                    body.Emit(OpCodes.Call, imports.ObjectUnbox);
+                }
+            }
+            else if (newType.FullName == "System.String")
+            {
+                Debug.Fail("Can't emit string object-to-pointers");
+            }
+            else
+            {
+                body.Emit(OpCodes.Ldarg_0);
+                body.Emit(OpCodes.Call, imports.Il2CppObjectBaseToPointerNotNull);
+            }
         }
 
         public static void EmitObjectStore(this ILProcessor body, TypeReference originalType, TypeReference newType, TypeRewriteContext enclosingType, int argumentIndex)
@@ -362,6 +403,78 @@ namespace AssemblyUnhollower
             body.Emit(extraDerefForNonValueTypes ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
             body.Emit(unboxValueType ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
             body.Emit(OpCodes.Call, imports.Module.ImportReference(new GenericInstanceMethod(imports.Il2CppPointerToGeneric) { GenericArguments = { newReturnType }}));
+        }
+
+        public static void GenerateExitMethodCallFinallyBlock(this MethodDefinition newMethod, AssemblyKnownImports imports)
+        {
+            if (newMethod.ReturnType.FullName == "System.Void")
+                GenerateExitMethodCallFinallyBlockVoidImpl(newMethod, imports);
+            else
+                GenerateExitMethodCallFinallyBlockValueImpl(newMethod, imports);
+        }
+
+        private static void GenerateExitMethodCallFinallyBlockVoidImpl(this MethodDefinition newMethod,
+            AssemblyKnownImports imports)
+        {
+            var bodyBuilder = newMethod.Body.GetILProcessor();
+
+            var exceptionHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
+            {
+                TryStart = newMethod.Body.Instructions[1],
+            };
+
+            var ret = bodyBuilder.Create(OpCodes.Ret);
+
+            bodyBuilder.Emit(OpCodes.Leave, ret);
+
+            var finallyInstr = bodyBuilder.Create(OpCodes.Call, imports.ScratchSpaceLeave);
+            var endFinally = bodyBuilder.Create(OpCodes.Endfinally);
+            bodyBuilder.Append(finallyInstr);
+            bodyBuilder.Append(endFinally);
+
+            exceptionHandler.TryEnd = finallyInstr;
+
+            bodyBuilder.Append(ret);
+
+            exceptionHandler.HandlerStart = finallyInstr;
+            exceptionHandler.HandlerEnd = ret;
+
+            newMethod.Body.ExceptionHandlers.Add(exceptionHandler);
+        }
+
+        private static void GenerateExitMethodCallFinallyBlockValueImpl(this MethodDefinition newMethod,
+            AssemblyKnownImports imports)
+        {
+            var bodyBuilder = newMethod.Body.GetILProcessor();
+
+            var exceptionHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
+            {
+                TryStart = newMethod.Body.Instructions[1],
+            };
+
+            var resultLocal = new VariableDefinition(newMethod.ReturnType);
+
+            newMethod.Body.Variables.Add(resultLocal);
+
+            var ldResult = bodyBuilder.Create(OpCodes.Ldloc, resultLocal);
+
+            bodyBuilder.Emit(OpCodes.Stloc, resultLocal);
+            bodyBuilder.Emit(OpCodes.Leave, ldResult);
+
+            var finallyInstr = bodyBuilder.Create(OpCodes.Call, imports.ScratchSpaceLeave);
+            var endFinally = bodyBuilder.Create(OpCodes.Endfinally);
+            bodyBuilder.Append(finallyInstr);
+            bodyBuilder.Append(endFinally);
+
+            exceptionHandler.TryEnd = finallyInstr;
+
+            bodyBuilder.Append(ldResult);
+            bodyBuilder.Emit(OpCodes.Ret);
+
+            exceptionHandler.HandlerStart = finallyInstr;
+            exceptionHandler.HandlerEnd = ldResult;
+
+            newMethod.Body.ExceptionHandlers.Add(exceptionHandler);
         }
 
         public static void GenerateBoxMethod(TypeDefinition targetType, FieldReference classHandle, TypeReference il2CppObjectTypeDef)
