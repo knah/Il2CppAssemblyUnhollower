@@ -27,9 +27,8 @@ namespace AssemblyUnhollower.Passes
                                 originalMethodParameter.Attributes & ~ParameterAttributes.HasFieldMarshal,
                                 assemblyContext.RewriteTypeRef(originalMethodParameter.ParameterType));
 
-                            if (originalMethodParameter.HasConstant && (originalMethodParameter.Constant == null ||
-                                                                        originalMethodParameter.Constant is string ||
-                                                                        originalMethodParameter.Constant is bool))
+                            if (originalMethodParameter.HasConstant && (originalMethodParameter.Constant is null or string or bool))//todo: include the other primitives
+                            //if (originalMethodParameter.HasConstant && originalMethodParameter.Constant is null or int or byte or sbyte or char or short or ushort or uint or long or ulong or bool)
                                 newParameter.Constant = originalMethodParameter.Constant;
                             else
                                 newParameter.Attributes &= ~ParameterAttributes.HasDefault;
@@ -37,6 +36,21 @@ namespace AssemblyUnhollower.Passes
                             newMethod.Parameters.Add(newParameter);
                         }
                     }
+                }
+            }
+
+            return;//todo: remove and allow explicit overrides to be assigned
+
+            // overrides resolve requires parameters
+            foreach (var assemblyContext in context.Assemblies)
+            {
+                foreach (var typeContext in assemblyContext.Types)
+                {
+                    if (typeContext.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.UseSystemInterface || typeContext.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.UseSystemValueType)
+                        continue;
+
+                    foreach (var methodContext in typeContext.Methods)
+                        methodContext.AssignExplicitOverrides();
                 }
             }
         }

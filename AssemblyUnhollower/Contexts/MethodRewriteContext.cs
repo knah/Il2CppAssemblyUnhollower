@@ -44,8 +44,12 @@ namespace AssemblyUnhollower.Contexts
                                      (OriginalMethod?.Name?.IsObfuscated(declaringType.AssemblyContext.GlobalContext
                                          .Options) ?? false);
 
-            var newMethod = new MethodDefinition("", AdjustAttributes(originalMethod.Attributes), declaringType.AssemblyContext.Imports.Void);
+            var reusingSystemInterface = declaringType.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.UseSystemInterface;
+
+            var newMethod = reusingSystemInterface ? declaringType.NewType.Methods.Single(it => it.Name == originalMethod.Name) : new MethodDefinition("", AdjustAttributes(originalMethod.Attributes), declaringType.AssemblyContext.Imports.Void);
             NewMethod = newMethod;
+
+            if (reusingSystemInterface) return;
 
             if (originalMethod.CustomAttributes.Any(x => x.AttributeType.FullName == typeof(ExtensionAttribute).FullName))
             {
@@ -74,6 +78,12 @@ namespace AssemblyUnhollower.Contexts
         }
 
         public void CtorPhase2()
+        {
+            OldCtorPhase2();//todo: switch with new method
+            //NewCtorPhase2();
+        }
+        
+        private void OldCtorPhase2()
         {
             UnmangledName = UnmangleMethodName();
             UnmangledNameWithSignature = UnmangleMethodNameWithSignature();
@@ -129,15 +139,174 @@ namespace AssemblyUnhollower.Contexts
             DeclaringType.NewType.Methods.Add(NewMethod);
         }
 
+        private void NewCtorPhase2()
+        {
+            UnmangledName = UnmangleMethodName();
+            UnmangledNameWithSignature = UnmangleMethodNameWithSignature();
+
+            if (DeclaringType.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.UseSystemInterface) return;
+
+            NewMethod.Name = UnmangledName;
+            NewMethod.ReturnType = DeclaringType.AssemblyContext.RewriteTypeRef(OriginalMethod.ReturnType);
+
+            if (OriginalNameObfuscated)
+                NewMethod.CustomAttributes.Add(
+                    new CustomAttribute(DeclaringType.AssemblyContext.Imports.ObfuscatedNameAttributeCtor)
+                    {
+                        ConstructorArguments = { new CustomAttributeArgument(DeclaringType.AssemblyContext.Imports.String, OriginalMethod.Name) }
+                    });
+
+            if (DeclaringType.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.Default)
+            {
+                var nonGenericMethodInfoPointerField = new FieldDefinition(
+                    "NativeMethodInfoPtr_" + UnmangledNameWithSignature,
+                    FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly,
+                    DeclaringType.AssemblyContext.Imports.IntPtr);
+                DeclaringType.NewType.Fields.Add(nonGenericMethodInfoPointerField);
+
+                NonGenericMethodInfoPointerField = new FieldReference(nonGenericMethodInfoPointerField.Name,
+                    nonGenericMethodInfoPointerField.FieldType, DeclaringType.SelfSubstitutedRef);
+
+
+                if (OriginalMethod.HasGenericParameters)
+                {
+                    var genericParams = OriginalMethod.GenericParameters;
+                    var genericMethodInfoStoreType = new TypeDefinition("",
+                        "MethodInfoStoreGeneric_" + UnmangledNameWithSignature + "`" + genericParams.Count,
+                        TypeAttributes.NestedPrivate | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+                        DeclaringType.AssemblyContext.Imports.Object);
+                    genericMethodInfoStoreType.DeclaringType = DeclaringType.NewType;
+                    DeclaringType.NewType.NestedTypes.Add(genericMethodInfoStoreType);
+                    GenericInstantiationsStore = genericMethodInfoStoreType;
+
+                    var selfSubstRef = new GenericInstanceType(genericMethodInfoStoreType);
+                    var selfSubstMethodRef = new GenericInstanceType(genericMethodInfoStoreType);
+
+                    for (var index = 0; index < genericParams.Count; index++)
+                    {
+                        var oldParameter = genericParams[index];
+                        var genericParameter = new GenericParameter(oldParameter.Name, genericMethodInfoStoreType);
+                        genericMethodInfoStoreType.GenericParameters.Add(genericParameter);
+                        selfSubstRef.GenericArguments.Add(genericParameter);
+                        var newParameter = NewMethod.GenericParameters[index];
+                        selfSubstMethodRef.GenericArguments.Add(newParameter);
+                    }
+
+                    var pointerField = new FieldDefinition("Pointer", FieldAttributes.Assembly | FieldAttributes.Static,
+                        DeclaringType.AssemblyContext.Imports.IntPtr);
+                    genericMethodInfoStoreType.Fields.Add(pointerField);
+
+                    GenericInstantiationsStoreSelfSubstRef = DeclaringType.NewType.Module.ImportReference(selfSubstRef);
+                    GenericInstantiationsStoreSelfSubstMethodRef =
+                        DeclaringType.NewType.Module.ImportReference(selfSubstMethodRef);
+                }
+            }
+
+            if (OriginalMethod.HasGenericParameters)
+            {
+                var genericParams = OriginalMethod.GenericParameters;
+                
+                for (var index = 0; index < genericParams.Count; index++)
+                {
+                    var oldParameter = genericParams[index];
+                    var newParameter = NewMethod.GenericParameters[index];
+
+                    foreach (var oldConstraint in oldParameter.Constraints)
+                    {
+                        if (oldConstraint.ConstraintType.FullName == "System.ValueType" || oldConstraint.ConstraintType.Resolve()?.IsInterface == true) continue;
+
+                        newParameter.Constraints.Add(new GenericParameterConstraint(
+                            DeclaringType.AssemblyContext.RewriteTypeRef(oldConstraint.ConstraintType)));
+                    }
+                }
+            }
+
+            DeclaringType.NewType.Methods.Add(NewMethod);
+        }
+
+        public void AssignExplicitOverrides()
+        {
+            // todo: translate explicit overrides based on names perhaps?; dumper doesn't generate those though, so interface implementations can end up scuffed
+            // todo: properly rewrite the entire method signature including parameters and generic types in them
+            foreach (var originalMethodOverride in OriginalMethod.Overrides)
+            {
+                var specificOverride =
+                    DeclaringType.AssemblyContext.NewAssembly.MainModule.ImportReference(
+                        DeclaringType.AssemblyContext.RewriteMethodRef(originalMethodOverride));
+
+                NewMethod.Overrides.Add(specificOverride);
+            }
+
+            if (OriginalMethod.Overrides.Count == 0 && OriginalMethod.Name.Contains("."))
+            {
+                var originalImplementingInterface = OriginalMethod.DeclaringType.Interfaces.FirstOrDefault(it => CanMethodBeImplementingInterface(OriginalMethod.Name, it.InterfaceType));
+                if (originalImplementingInterface != null)
+                {
+                    var interfaceRewrite = DeclaringType.AssemblyContext.RewriteTypeRef(originalImplementingInterface.InterfaceType);
+                    var newImplementingInterface = DeclaringType.NewType.Interfaces.Single(it => it.InterfaceType.FullName == interfaceRewrite.FullName);
+
+                    var originalImplementedMethod = FindMatchingMethod(originalImplementingInterface.InterfaceType, OriginalMethod);
+
+                    if (originalImplementedMethod != null)
+                    {
+                        var newMethod = FindMatchingMethod(newImplementingInterface.InterfaceType, originalImplementedMethod, false);
+                        NewMethod.Overrides.Add(DeclaringType.AssemblyContext.NewAssembly.MainModule.ImportReference(newMethod));
+                    }
+                }
+            }
+        }
+
+        private static MethodReference? FindMatchingMethod(TypeReference type, MethodReference originalMethod, bool typePrefixedName = true)
+        {
+            if (type is GenericInstanceType generic)
+            {
+                var baseReference = FindMatchingMethod(generic.ElementType, originalMethod, typePrefixedName);
+                if (baseReference == null) return null;
+
+                var newReference = new MethodReference(baseReference.Name, baseReference.ReturnType, type)
+                {
+                    HasThis = baseReference.HasThis,
+                };
+
+                foreach (var baseReferenceParameter in baseReference.Parameters)
+                    newReference.Parameters.Add(baseReferenceParameter);
+                return newReference;
+            }
+
+            return type.Resolve().Methods
+                .Single(it =>
+                    (typePrefixedName ? originalMethod.Name.EndsWith("." + it.Name) : originalMethod.Name == it.Name) && // todo: also match parameter types?
+                    originalMethod.Parameters.Count == it.Parameters.Count);
+        }
+
+        private static bool CanMethodBeImplementingInterface(string methodName, TypeReference interfaceType)
+        {
+            if (interfaceType is GenericInstanceType generic)
+            {
+                var includedType = generic.ElementType.FullName;
+                var backtickIndex = includedType.IndexOf('`');
+                if (backtickIndex != -1)
+                    includedType = includedType.Substring(0, backtickIndex);
+
+                if (methodName.Length <= includedType.Length || !methodName.StartsWith(includedType))
+                    return false;
+
+                var nextChar = methodName[includedType.Length];
+                return nextChar is '`' or '<' or '[' or '.';
+            }
+
+            return methodName.StartsWith(interfaceType.FullName + ".");
+        }
+
         private MethodAttributes AdjustAttributes(MethodAttributes original)
         {
             original &= ~(MethodAttributes.MemberAccessMask); // todo: handle Object overload correctly
             original &= ~(MethodAttributes.PInvokeImpl);
-            original &= ~(MethodAttributes.Abstract);
-            original &= ~(MethodAttributes.Virtual);
-            original &= ~(MethodAttributes.Final);
-            original &= ~(MethodAttributes.NewSlot);
-            original &= ~(MethodAttributes.ReuseSlot);
+            original &= ~(MethodAttributes.Abstract); //todo: remove
+            original &= ~(MethodAttributes.Virtual); //todo: remove
+            original &= ~(MethodAttributes.Final); //todo: remove
+            original &= ~(MethodAttributes.NewSlot); //todo: remove
+            original &= ~(MethodAttributes.ReuseSlot); //todo: remove
             original &= ~(MethodAttributes.CheckAccessOnOverride);
             original |= MethodAttributes.Public;
             return original;

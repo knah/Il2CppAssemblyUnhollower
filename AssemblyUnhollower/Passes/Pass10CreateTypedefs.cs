@@ -147,6 +147,7 @@ namespace AssemblyUnhollower.Passes
 
         private static bool IsSystemInterfaceSuitable(TypeDefinition type)
         {
+            return false;//todo: remove
             if (type.HasNestedTypes)
                 return false;
 
