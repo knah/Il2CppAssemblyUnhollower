@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace AssemblyUnhollower.Extensions
 {
-	public static class MetadataAccessEx
-	{
+    public static class MetadataAccessEx
+    {
         public static TypeDefinition? GetTypeByOriginalType(this IMetadataAccess metadataAccess, TypeDefinition originalType)
         {
             var typeFullName = originalType.GetFullNameWithNesting();

@@ -12,7 +12,7 @@ namespace UnhollowerBaseLib
         protected static bool ElementIsValueType;
 
         static Il2CppArrayBase()
-		{
+        {
             ElementTypeSize = IntPtr.Size;
             var nativeClassPtr = Il2CppClassPointerStore<T>.NativeClassPtr;
             if (nativeClassPtr == IntPtr.Zero) return;

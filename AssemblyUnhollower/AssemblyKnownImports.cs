@@ -84,8 +84,8 @@ namespace AssemblyUnhollower
         
         public MethodReference LdTokUnstrippedImpl 
         {
-			get
-			{
+            get
+            {
                 var declaringTypeRef = Module.ImportReference(typeof(RuntimeReflectionHelper));
                 var returnTypeRef = Module.ImportReference(myContext.GetAssemblyByName("mscorlib").NewAssembly.MainModule.GetType("Il2CppSystem.RuntimeTypeHandle"));
                 var methodReference = new MethodReference("GetRuntimeTypeHandle", returnTypeRef, declaringTypeRef) { HasThis = false };

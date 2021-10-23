@@ -13,7 +13,7 @@ using UnhollowerBaseLib.Runtime;
 
 namespace UnhollowerBaseLib.Maps
 {
-	public class TypeTokensMap : IDisposable
+    public class TypeTokensMap : IDisposable
     {
         public const int Magic = 0x4D545455; // UTTM
         public const int Version = 1;

@@ -7,7 +7,7 @@ using UnhollowerBaseLib.Maps;
 
 namespace AssemblyUnhollower.Passes
 {
-	public static class Pass91GenerateTypeTokenMap
+    public static class Pass91GenerateTypeTokenMap
     {
         public static void DoPass(RewriteGlobalContext context, UnhollowerOptions options)
         {
