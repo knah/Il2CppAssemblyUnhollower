@@ -52,18 +52,18 @@ namespace UnhollowerBaseLib
             }
         }
 
-        public static IntPtr GetImagePointer(string assemblyName)
+        internal static IntPtr GetImagePointer(string assemblyName)
         {
-            if (!ourImagesMap.TryGetValue(assemblyName, out var image))
+            if (ourImagesMap.TryGetValue(assemblyName, out var image))
             {
-                LogSupport.Error($"Assembly {assemblyName} is not registered in il2cpp");
-                return IntPtr.Zero;
+                return image;
             }
 
-            return image;
+            //LogSupport.Error($"Assembly {assemblyName} is not registered in il2cpp");
+            return IntPtr.Zero;
         }
 
-        public static IntPtr GetClassPointerByToken(string assemblyName, uint token, Type requestedType)
+        internal static IntPtr GetClassPointerByToken(string assemblyName, uint token, Type requestedType)
         {
             if (!ourImagesMap.TryGetValue(assemblyName, out var image))
                 throw new ArgumentException($"Image for {assemblyName} ({requestedType}) not found!");

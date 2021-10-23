@@ -50,13 +50,12 @@ namespace UnhollowerBaseLib.Maps
                 throw new FileLoadException($"File version mismatched for {filePath}; Expected {Version}, got {myHeader.Version}");
             }
 
-            LogSupport.Info("Loading the type tokens map. Any registration errors here are just caused by assembly unstripping and can be ignored.");
             var offset = Marshal.SizeOf<FileHeader>();
             using var reader = new BinaryReader(myMapFile.CreateViewStream(offset, 0, MemoryMappedFileAccess.Read), Encoding.UTF8, false);
             for (var i = 0; i < myHeader.NumAssemblies; i++)
             {
                 var il2CppName = reader.ReadString();
-                var nativeAssemblyPointer = IL2CPP.GetImagePointer(il2CppName);
+                var nativeAssemblyPointer = IL2CPP.GetImagePointer(il2CppName);//unstripped assemblies return zero
                 var managedAssemblyName = reader.ReadString();
                 var rangeStart = reader.ReadInt32();
                 var rangeEnd = reader.ReadInt32();
@@ -70,7 +69,8 @@ namespace UnhollowerBaseLib.Maps
                 {
                     LogSupport.Trace($"Assembly {managedAssemblyName} not found for type-to-token map; it probably was ignored; {ex}");
                 }
-                myAssemblyMap[nativeAssemblyPointer] = (assembly, rangeStart, rangeEnd, tokenOffset);
+                if(nativeAssemblyPointer != IntPtr.Zero)
+                    myAssemblyMap[nativeAssemblyPointer] = (assembly, rangeStart, rangeEnd, tokenOffset);
             }
 
             unsafe
