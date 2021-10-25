@@ -173,10 +173,12 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
                 Marshal.OffsetOf<Il2CppClass_27_2>(nameof(Il2CppClass_27_2.bitfield_2)).ToInt32();
 
             private static int byval_arg_mods_byref_pin_offset =
-                Marshal.OffsetOf<Il2CppClass_27_2>(nameof(Il2CppClass_27_2.byval_arg.mods_byref_pin)).ToInt32();
+                Marshal.OffsetOf<Il2CppClass_27_2>(nameof(Il2CppClass_27_2.byval_arg)).ToInt32() +
+                Marshal.OffsetOf<NativeTypeStructHandler_27_2.Il2CppType_27_2>(nameof(NativeTypeStructHandler_27_2.Il2CppType_27_2.mods_byref_pin)).ToInt32();
 
             private static int this_arg_mods_byref_pin_offset =
-                Marshal.OffsetOf<Il2CppClass_27_2>(nameof(Il2CppClass_27_2.this_arg.mods_byref_pin)).ToInt32();
+                Marshal.OffsetOf<Il2CppClass_27_2>(nameof(Il2CppClass_27_2.this_arg)).ToInt32() + 
+                Marshal.OffsetOf<NativeTypeStructHandler_27_2.Il2CppType_27_2>(nameof(NativeTypeStructHandler_27_2.Il2CppType_27_2.mods_byref_pin)).ToInt32();
 
             public bool InitializedAndNoError
             {
