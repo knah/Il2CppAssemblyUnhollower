@@ -27,7 +27,7 @@ namespace AssemblyUnhollower.Passes
                         if (!context.Options.PassthroughNames && fieldName.IsObfuscated(context.Options))
                             fieldName = GetUnmangledName(fieldDefinition);
                         
-                        if (context.Options.RenameMap.TryGetValue(typeContext.NewType.GetNamespacePrefix() + "::" + fieldName, out var newName))
+                        if (context.Options.RenameMap.TryGetValue(typeContext.NewType.GetNamespacePrefix() + "." + typeContext.NewType.Name + "::" + fieldName, out var newName))
                             fieldName = newName;
                         
                         var newDef = new FieldDefinition(fieldName, fieldDefinition.Attributes | FieldAttributes.HasDefault, assemblyContext.RewriteTypeRef(fieldDefinition.FieldType));
