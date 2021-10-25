@@ -79,7 +79,7 @@ namespace UnhollowerRuntimeLib.XrefScans
                 if (instruction.FlowControl == FlowControl.UnconditionalBranch)
                     continue;
 
-                if (instruction.Mnemonic == Mnemonic.Mov)
+                if (IsMoveMnemonic(instruction.Mnemonic))
                 {
                     XrefInstance? result = null;
                     try
@@ -116,6 +116,11 @@ namespace UnhollowerRuntimeLib.XrefScans
             }
 
             return false;
+        }
+
+        internal static bool IsMoveMnemonic(Mnemonic mnemonic)
+        {
+            return mnemonic is Mnemonic.Mov or >= Mnemonic.Cmova and <= Mnemonic.Cmovs;
         }
 
         internal static ulong ExtractTargetAddress(in Instruction instruction)
