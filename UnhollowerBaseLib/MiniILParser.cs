@@ -18,8 +18,8 @@ namespace UnhollowerBaseLib
 
                 var fieldValue = (OpCode) fieldInfo.GetValue(null);
                 OpCodesMap[fieldValue.Value] = fieldValue;
-                if (fieldValue.Value > byte.MaxValue) 
-                    PrefixCodes.Add((byte) (fieldValue.Value >> 8));
+                if ((ushort) fieldValue.Value > byte.MaxValue) 
+                    PrefixCodes.Add((byte) ((ushort) fieldValue.Value >> 8));
             }
         }
 
@@ -30,7 +30,7 @@ namespace UnhollowerBaseLib
             {
                 short currentOp = ilBytes[index++];
                 if (PrefixCodes.Contains(currentOp)) 
-                    currentOp |= (short) (ilBytes[index++] << 8);
+                    currentOp = (short) ((ushort) (currentOp << 8) | ilBytes[index++]);
 
                 if (!OpCodesMap.TryGetValue(currentOp, out var opCode))
                     throw new NotSupportedException($"Unknown opcode {currentOp} encountered");
