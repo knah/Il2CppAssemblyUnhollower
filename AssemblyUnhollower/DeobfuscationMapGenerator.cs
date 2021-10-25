@@ -39,11 +39,22 @@ namespace AssemblyUnhollower
 
             RewriteGlobalContext rewriteContext;
             IIl2CppMetadataAccess inputAssemblies;
+            IIl2CppMetadataAccess systemAssemblies;
             using (new TimingCookie("Reading assemblies"))
                 inputAssemblies = new CecilMetadataAccess(Directory.EnumerateFiles(options.DeobfuscationNewAssembliesPath, "*.dll"));
             
+            using (new TimingCookie("Reading system assemblies"))
+            {
+                if (!string.IsNullOrEmpty(options.SystemLibrariesPath)) 
+                    systemAssemblies = new CecilMetadataAccess(Directory.EnumerateFiles(options.SystemLibrariesPath, "*.dll")
+                        .Where(it => Path.GetFileName(it).StartsWith("System.") || Path.GetFileName(it) == "mscorlib.dll" || Path.GetFileName(it) == "netstandard.dll"));
+                else
+                    systemAssemblies = new CecilMetadataAccess(new[] {options.MscorlibPath});
+
+            }
+            
             using(new TimingCookie("Creating rewrite assemblies"))
-                rewriteContext = new RewriteGlobalContext(options, inputAssemblies, NullMetadataAccess.Instance, NullMetadataAccess.Instance);
+                rewriteContext = new RewriteGlobalContext(options, inputAssemblies, systemAssemblies, NullMetadataAccess.Instance);
             using(new TimingCookie("Computing renames"))
                 Pass05CreateRenameGroups.DoPass(rewriteContext);
             using(new TimingCookie("Creating typedefs"))
@@ -64,7 +75,7 @@ namespace AssemblyUnhollower
                 cleanAssemblies = new CecilMetadataAccess(Directory.EnumerateFiles(options.SourceDir, "*.dll"));
             
             using(new TimingCookie("Creating clean rewrite assemblies"))
-                cleanContext = new RewriteGlobalContext(options, cleanAssemblies, NullMetadataAccess.Instance, NullMetadataAccess.Instance);
+                cleanContext = new RewriteGlobalContext(options, cleanAssemblies, systemAssemblies, NullMetadataAccess.Instance);
             using(new TimingCookie("Computing clean assembly renames"))
                 Pass05CreateRenameGroups.DoPass(cleanContext);
             using(new TimingCookie("Creating clean assembly typedefs"))
