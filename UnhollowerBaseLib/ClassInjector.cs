@@ -71,11 +71,23 @@ namespace UnhollowerRuntimeLib
             *(IntPtr*)targetGcHandlePointer = handleAsPointer;
         }
 
-        public static void RegisterTypeInIl2Cpp<T>() where T : class => RegisterTypeInIl2Cpp(typeof(T), true);
-        public static void RegisterTypeInIl2Cpp<T>(params INativeClassStruct[] interfaces) where T : class => RegisterTypeInIl2Cpp(typeof(T), true, interfaces);
-        public static void RegisterTypeInIl2Cpp<T>(bool logSuccess, params INativeClassStruct[] interfaces) where T : class => RegisterTypeInIl2Cpp(typeof(T), logSuccess, interfaces);
-        public static void RegisterTypeInIl2Cpp(Type type, params INativeClassStruct[] interfaces) => RegisterTypeInIl2Cpp(type, true, interfaces);
-        public static void RegisterTypeInIl2Cpp(Type type, bool logSuccess, params INativeClassStruct[] interfaces)
+        public static void RegisterTypeInIl2Cpp<T>() where T : class => RegisterTypeInIl2CppImpl(typeof(T), true, Array.Empty<INativeClassStruct>());
+        public static void RegisterTypeInIl2Cpp<T>(bool logSuccess) where T : class => RegisterTypeInIl2CppImpl(typeof(T), logSuccess, Array.Empty<INativeClassStruct>());
+        public static void RegisterTypeInIl2Cpp(Type type, bool logSuccess) => RegisterTypeInIl2CppImpl(type, logSuccess, Array.Empty<INativeClassStruct>());
+        public static void RegisterTypeInIl2CppWithInterfaces<T>(params Type[] interfaces) where T : class => RegisterTypeInIl2CppWithInterfaces(typeof(T), true, interfaces);
+        public static void RegisterTypeInIl2CppWithInterfaces<T>(bool logSuccess, params Type[] interfaces) where T : class => RegisterTypeInIl2CppWithInterfaces(typeof(T), logSuccess, interfaces);
+        public static void RegisterTypeInIl2CppWithInterfaces(Type type, bool logSuccess, params Type[] interfaces)
+        {
+            RegisterTypeInIl2CppImpl(type, logSuccess, interfaces.Select(it =>
+            {
+                var classPointer = ReadClassPointerForType(it);
+                if (classPointer == IntPtr.Zero)
+                    throw new ArgumentException($"Type {it} doesn't have an IL2CPP class pointer, which means it's not an IL2CPP interface");
+                return UnityVersionHandler.Wrap((Il2CppClass*)classPointer);
+            }).ToArray());
+        }
+        
+        public static void RegisterTypeInIl2CppImpl(Type type, bool logSuccess, params INativeClassStruct[] interfaces)
         {
             if(type == null)
                 throw new ArgumentException($"Type argument cannot be null");
