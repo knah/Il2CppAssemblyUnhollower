@@ -83,8 +83,11 @@ namespace AssemblyUnhollower
         // public readonly MethodReference Il2CppPointerToGeneric;
         public readonly MethodReference Il2CppRenderTypeNameGeneric;
         
-        public readonly MethodReference DelegateCombine;
-        public readonly MethodReference DelegateRemove;
+        public readonly Lazy<MethodReference> myDelegateCombine;
+        public readonly Lazy<MethodReference> myDelegateRemove;
+        
+        public MethodReference DelegateCombine => myDelegateCombine.Value;
+        public MethodReference DelegateRemove => myDelegateRemove.Value;
         
         public MethodReference LdTokUnstrippedImpl => myLdTokUnstrippedImpl.Value;
         public readonly Lazy<MethodReference> myLdTokUnstrippedImpl;
@@ -139,7 +142,7 @@ namespace AssemblyUnhollower
             var name = typeof(Il2CppObjectBase).Assembly.GetName();
             Il2CppNonBlittableValueType = Module.ImportReference(new TypeReference(nameof(UnhollowerBaseLib),
                 nameof(UnhollowerBaseLib.Il2CppNonBlittableValueType), Module,
-                new AssemblyNameReference(name.Name, name.Version)));
+                Module.AssemblyReferences.Single(it => it.Name == name.Name)));
             // myIl2CppObject =  Module.ImportReference(TargetTypeSystemHandler.Object);// todo!
             
             Il2CppObjectBaseToPointer =  Module.ImportReference(typeof(IL2CPP).GetMethod("Il2CppObjectBaseToPtr"));
@@ -193,8 +196,8 @@ namespace AssemblyUnhollower
             ScratchSpaceEnter = Module.ImportReference(typeof(MethodCallScratchSpaceAllocator).GetMethod(nameof(MethodCallScratchSpaceAllocator.EnterMethodCall)));
             ScratchSpaceLeave = Module.ImportReference(typeof(MethodCallScratchSpaceAllocator).GetMethod(nameof(MethodCallScratchSpaceAllocator.ExitMethodCall)));
             
-            DelegateCombine = Module.ImportReference(myContext.GetAssemblyByName("mscorlib").NewAssembly.MainModule.GetType("Il2CppSystem.Delegate").Methods.Single(m => m.Name == "Combine" && m.Parameters.Count == 2));
-            DelegateRemove = Module.ImportReference(myContext.GetAssemblyByName("mscorlib").NewAssembly.MainModule.GetType("Il2CppSystem.Delegate").Methods.Single(m => m.Name == "Remove"));
+            myDelegateCombine = new Lazy<MethodReference>(() => Module.ImportReference(myContext.GetAssemblyByName("mscorlib").NewAssembly.MainModule.GetType("Il2CppSystem.Delegate").Methods.Single(m => m.Name == "Combine" && m.Parameters.Count == 2)));
+            myDelegateRemove = new Lazy<MethodReference>(() => Module.ImportReference(myContext.GetAssemblyByName("mscorlib").NewAssembly.MainModule.GetType("Il2CppSystem.Delegate").Methods.Single(m => m.Name == "Remove")));
             
             myLdTokUnstrippedImpl = new Lazy<MethodReference>(() =>
             {
