@@ -19,6 +19,7 @@ namespace AssemblyUnhollower.Contexts
 
         public readonly long FileOffset;
         public readonly long Rva;
+        public readonly int Slot;
 
         public long MetadataInitFlagRva;
         public long MetadataInitTokenRva;
@@ -75,6 +76,8 @@ namespace AssemblyUnhollower.Contexts
             Rva = originalMethod.ExtractRva();
             if (FileOffset != 0)
                 declaringType.AssemblyContext.GlobalContext.MethodStartAddresses.Add(FileOffset);
+
+            Slot = originalMethod.ExtractSlot();
         }
 
         public void CtorPhase2()
@@ -323,9 +326,12 @@ namespace AssemblyUnhollower.Contexts
         
         private string UnmangleMethodNameWithSignature()
         {
-            var unmangleMethodNameWithSignature = ProduceMethodSignatureBase() + "_" + DeclaringType.Methods.Where(ParameterSignatureMatchesThis).TakeWhile(it => it != this).Count();
-            if (DeclaringType.AssemblyContext.GlobalContext.Options.RenameMap.TryGetValue(
-                DeclaringType.NewType.GetNamespacePrefix() + "::" + unmangleMethodNameWithSignature, out var newName))
+            var discriminator = Slot == -1
+                ? DeclaringType.Methods.Where(ParameterSignatureMatchesThis).TakeWhile(it => it != this).Count()
+                    .ToString()
+                : $"Slot{Slot}";
+            var unmangleMethodNameWithSignature = ProduceMethodSignatureBase() + "_" + discriminator;
+            if (DeclaringType.AssemblyContext.GlobalContext.Options.RenameMap.TryGetValue(DeclaringType.NewType.GetNamespacePrefix() + "::" + unmangleMethodNameWithSignature, out var newName))
                 unmangleMethodNameWithSignature = newName;
             return unmangleMethodNameWithSignature;
         }
