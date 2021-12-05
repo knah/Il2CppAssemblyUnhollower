@@ -10,4 +10,4 @@ Changes:
  * Fixed deobfuscation map generator failing to run (it still generates bad maps for deobfuscated types though - some postprocessing is required)
  * Fixed newer Unity versions failing due to wrong native struct description
  * 0.4.16.1 - fixed binary compatibility of ClassInjector API (at the cost of breaking binary compatibility with 0.4.16.0)
- 
+ * 0.4.16.2 - fixed invalid IL error when injecting methods returning non-primitive value types (contributed by @Kasuromi in #75)
