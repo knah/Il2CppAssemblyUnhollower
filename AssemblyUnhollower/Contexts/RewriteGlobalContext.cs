@@ -17,6 +17,7 @@ namespace AssemblyUnhollower.Contexts
         internal readonly MetadataResolver NewMetadataResolver;
         
         private readonly Dictionary<string, AssemblyRewriteContext> myAssemblies = new Dictionary<string, AssemblyRewriteContext>();
+        private readonly Dictionary<string, AssemblyRewriteContext> myAssembliesByNew = new Dictionary<string, AssemblyRewriteContext>();
         private readonly Dictionary<AssemblyDefinition, AssemblyRewriteContext> myAssembliesByOld = new Dictionary<AssemblyDefinition, AssemblyRewriteContext>();
         
         internal readonly Dictionary<(object, string, int), List<TypeDefinition>> RenameGroups = new Dictionary<(object, string, int), List<TypeDefinition>>();
@@ -40,6 +41,9 @@ namespace AssemblyUnhollower.Contexts
             
             TargetTypeSystemHandler.Init(systemAssemblies);
             
+            myNewAssembliesResolver.Register(AssemblyDefinition.ReadAssembly("UnhollowerBaseLib.dll", new ReaderParameters(ReadingMode.Deferred)));
+            myNewAssembliesResolver.Register(systemAssemblies.GetAssemblyBySimpleName("mscorlib")!);
+            
             foreach (var sourceAssembly in gameAssemblies.Assemblies)
             {
                 var assemblyName = sourceAssembly.Name.Name;
@@ -52,12 +56,16 @@ namespace AssemblyUnhollower.Contexts
                 var assemblyRewriteContext = new AssemblyRewriteContext(this, sourceAssembly, newAssembly);
                 AddAssemblyContext(assemblyName, assemblyRewriteContext);
             }
+
+            // hack for looking up use-system semantic types by new type
+            myAssembliesByNew["mscorlib"] = myAssemblies["mscorlib"];
         }
 
         internal void AddAssemblyContext(string assemblyName, AssemblyRewriteContext context)
         {
             myAssemblies[assemblyName] = context;
             myNewAssembliesResolver.Register(context.NewAssembly);
+            myAssembliesByNew[context.NewAssembly.Name.Name] = context;
             if (context.OriginalAssembly != null)
                 myAssembliesByOld[context.OriginalAssembly] = context;
         }
@@ -66,11 +74,22 @@ namespace AssemblyUnhollower.Contexts
         {
             return myAssemblies[oldAssembly.Name.Name];
         }
+        
+        public AssemblyRewriteContext GetAssemblyContextForNewAssembly(AssemblyDefinition newAssembly)
+        {
+            return myAssembliesByNew[newAssembly.Name.Name];
+        }
 
         public TypeRewriteContext GetNewTypeForOriginal(TypeDefinition originalType)
         {
             return GetNewAssemblyForOriginal(originalType.Module.Assembly)
                 .GetContextForOriginalType(originalType);
+        }
+        
+        public TypeRewriteContext GetContextForNewType(TypeDefinition newType)
+        {
+            return GetAssemblyContextForNewAssembly(newType.Module.Assembly)
+                .GetContextForNewType(newType);
         }
         
         public TypeRewriteContext? TryGetNewTypeForOriginal(TypeDefinition originalType)

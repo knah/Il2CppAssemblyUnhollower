@@ -14,7 +14,11 @@ namespace AssemblyUnhollower.Passes
         // TODO: check that methods match between managed/il2cpp versions in general?
         private static readonly HashSet<string> UnsuitableSystemInterfaces = new()
         {
-            "System.Runtime.InteropServices._Attribute"
+            "System.Runtime.InteropServices._Attribute",
+            "System.Runtime.InteropServices._Exception",
+            "System.Runtime.InteropServices._Assembly",
+            "System.Runtime.InteropServices._MemberInfo",
+            "System.Runtime.CompilerServices.ITuple",
         };
 
         public static void DoPass(RewriteGlobalContext context)
@@ -38,7 +42,7 @@ namespace AssemblyUnhollower.Passes
                     if (sameTypeInSystem != null)
                     {
                         assemblyContext.GlobalContext.Statistics.SystemInterfaceCandidates++;
-                        if (IsSystemInterfaceSuitable(type))
+                        if (IsSystemInterfaceSuitable(type, sameTypeInSystem))
                         {
                             assemblyContext.GlobalContext.Statistics.EligibleSystemInterfaces++;
 
@@ -142,31 +146,39 @@ namespace AssemblyUnhollower.Passes
 
         private static readonly HashSet<TypeReference> InterfacesUnderConsideration = new HashSet<TypeReference>();
 
-        private static bool IsSystemInterfaceSuitable(TypeDefinition type)
+        private static bool IsSystemInterfaceSuitable(TypeDefinition il2CppType, TypeDefinition? sameTypeInSystem)
         {
-            if (type.HasNestedTypes) 
+            if (sameTypeInSystem != null && sameTypeInSystem.Methods.Count != il2CppType.Methods.Count) 
+                return false;
+            
+            if (il2CppType.HasNestedTypes) 
                 return false;
 
-            if (InterfacesUnderConsideration.Contains(type))
+            if (InterfacesUnderConsideration.Contains(il2CppType))
                 return true;
 
-            if (UnsuitableSystemInterfaces.Contains(type.FullName))
+            if (UnsuitableSystemInterfaces.Contains(il2CppType.FullName))
                 return false;
 
-            if (!type.IsPublic && !type.IsNestedPublic)
+            if (!il2CppType.IsPublic && !il2CppType.IsNestedPublic)
+                return false;
+
+            if (sameTypeInSystem != null && sameTypeInSystem.Interfaces.Count != il2CppType.Interfaces.Count)
                 return false;
 
             try
             {
-                InterfacesUnderConsideration.Add(type);
+                InterfacesUnderConsideration.Add(il2CppType);
                 
-                foreach (var interfaceImplementation in type.Interfaces)
+                foreach (var interfaceImplementation in il2CppType.Interfaces)
                 {
-                    if (!IsSystemInterfaceSuitable(interfaceImplementation.InterfaceType.Resolve()))
+                    var il2CppBaseInterface = sameTypeInSystem?.Interfaces.Single(it => it.InterfaceType.FullName == interfaceImplementation.InterfaceType.FullName);
+                    
+                    if (!IsSystemInterfaceSuitable(interfaceImplementation.InterfaceType.Resolve(), il2CppBaseInterface?.InterfaceType.Resolve()))
                         return false;
                 }
 
-                foreach (var methodDefinition in type.Methods)
+                foreach (var methodDefinition in il2CppType.Methods)
                 {
                     if (!IsTypeSuitableForSystemInterfaceReuse(methodDefinition.ReturnType) ||
                         methodDefinition.Parameters.Any(it => !IsTypeSuitableForSystemInterfaceReuse(it.ParameterType)))
@@ -177,32 +189,35 @@ namespace AssemblyUnhollower.Passes
             }
             finally
             {
-                InterfacesUnderConsideration.Remove(type);
+                InterfacesUnderConsideration.Remove(il2CppType);
             }
         }
 
-        private static bool IsTypeSuitableForSystemInterfaceReuse(TypeReference typeRef)
+        private static bool IsTypeSuitableForSystemInterfaceReuse(TypeReference il2CppType)
         {
-            if (typeRef is ArrayType)
+            if (il2CppType is ArrayType)
                 return false;
             
-            if (typeRef is GenericInstanceType genericInstance)
+            if (il2CppType is GenericInstanceType genericInstance)
             {
                 var genericBase = genericInstance.ElementType.Resolve();
                 if (!genericBase.IsInterface) return false;
-                foreach (var parameter in genericInstance.GenericArguments)
+                for (var i = 0; i < genericInstance.GenericArguments.Count; i++)
+                {
+                    var parameter = genericInstance.GenericArguments[i];
                     if (parameter is not GenericParameter && !IsTypeSuitableForSystemInterfaceReuse(parameter.Resolve()))
                         return false;
+                }
             }
 
-            if (typeRef is ByReferenceType byRef)
+            if (il2CppType is ByReferenceType byRef)
                 return IsTypeSuitableForSystemInterfaceReuse(byRef.ElementType);
 
-            if (typeRef.FullName == "System.Object" || typeRef.FullName == "System.Void" || typeRef.IsPrimitive || typeRef is GenericParameter)
+            if (il2CppType.FullName == "System.Object" || il2CppType.FullName == "System.Void" || il2CppType.IsPrimitive || il2CppType is GenericParameter)
                 return true;
 
-            var resolved = typeRef.Resolve();
-            return resolved.IsInterface && IsSystemInterfaceSuitable(resolved);
+            var resolvedType = il2CppType.Resolve();
+            return resolvedType.IsInterface && IsSystemInterfaceSuitable(resolvedType, null);
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Text;
 using AssemblyUnhollower.Extensions;
 using AssemblyUnhollower.Passes;
 using Mono.Cecil;
+using UnhollowerBaseLib;
 using UnhollowerRuntimeLib.XrefScans;
 
 namespace AssemblyUnhollower.Contexts
@@ -179,9 +180,10 @@ namespace AssemblyUnhollower.Contexts
                 NewMethod.Overrides.Add(specificOverride);
             }
 
-            if (OriginalMethod.Overrides.Count == 0 && OriginalMethod.Name.Contains("."))
+            if (OriginalMethod.Overrides.Count == 0 && OriginalMethod.Name.Contains(".") && OriginalMethod.Name != ".ctor" && !OriginalMethod.Name.StartsWith("<"))
             {
-                var originalImplementingInterface = OriginalMethod.DeclaringType.Interfaces.FirstOrDefault(it => CanMethodBeImplementingInterface(OriginalMethod.Name, it.InterfaceType));
+                LogSupport.Info($"Potentially missing override on method {OriginalMethod.Name} on type {DeclaringType.NewType.FullName}");
+                /*var originalImplementingInterface = OriginalMethod.DeclaringType.Interfaces.FirstOrDefault(it => CanMethodBeImplementingInterface(OriginalMethod.Name, it.InterfaceType));
                 if (originalImplementingInterface != null)
                 {
                     var interfaceRewrite = DeclaringType.AssemblyContext.RewriteTypeRef(originalImplementingInterface.InterfaceType);
@@ -194,7 +196,7 @@ namespace AssemblyUnhollower.Contexts
                         var newMethod = FindMatchingMethod(newImplementingInterface.InterfaceType, originalImplementedMethod, false);
                         NewMethod.Overrides.Add(DeclaringType.AssemblyContext.NewAssembly.MainModule.ImportReference(newMethod));
                     }
-                }
+                }*/
             }
         }
 

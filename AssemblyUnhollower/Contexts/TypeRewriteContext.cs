@@ -24,6 +24,7 @@ namespace AssemblyUnhollower.Contexts
 
         private readonly Dictionary<FieldDefinition, FieldRewriteContext> myFieldContexts = new Dictionary<FieldDefinition, FieldRewriteContext>();
         private readonly Dictionary<MethodDefinition, MethodRewriteContext> myMethodContexts = new Dictionary<MethodDefinition, MethodRewriteContext>();
+        private readonly Dictionary<MethodDefinition, MethodRewriteContext> myMethodContextsByNewMethod = new Dictionary<MethodDefinition, MethodRewriteContext>();
         private readonly Dictionary<string, MethodRewriteContext> myMethodContextsByName = new Dictionary<string, MethodRewriteContext>();
 
         public IEnumerable<FieldRewriteContext> Fields => myFieldContexts.Values;
@@ -82,6 +83,7 @@ namespace AssemblyUnhollower.Contexts
                 var methodRewriteContext = new MethodRewriteContext(this, originalTypeMethod);
                 myMethodContexts[originalTypeMethod] = methodRewriteContext;
                 myMethodContextsByName[originalTypeMethod.Name] = methodRewriteContext;
+                myMethodContextsByNewMethod[methodRewriteContext.NewMethod] = methodRewriteContext;
             }
             
             if (RewriteSemantic != TypeRewriteSemantic.Default) return;
@@ -120,6 +122,7 @@ namespace AssemblyUnhollower.Contexts
 
         public FieldRewriteContext GetFieldByOldField(FieldDefinition field) => myFieldContexts[field];
         public MethodRewriteContext GetMethodByOldMethod(MethodDefinition method) => myMethodContexts[method];
+        public MethodRewriteContext GetMethodByNewMethod(MethodDefinition method) => myMethodContextsByNewMethod[method];
         public MethodRewriteContext? TryGetMethodByOldMethod(MethodDefinition method) => myMethodContexts.TryGetValue(method, out var result) ? result : null;
         public MethodRewriteContext? TryGetMethodByName(string name) => myMethodContextsByName.TryGetValue(name, out var result) ? result : null;
         public MethodRewriteContext? TryGetMethodByUnityAssemblyMethod(MethodDefinition method)

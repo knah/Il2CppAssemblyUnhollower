@@ -10,27 +10,32 @@ namespace AssemblyUnhollower.Passes
         {
             foreach (var assemblyContext in context.Assemblies)
             foreach (var typeContext in assemblyContext.Types)
-            foreach (var methodRewriteContext in typeContext.Methods)
             {
-                var originalMethod = methodRewriteContext.OriginalMethod;
-                var newMethod = methodRewriteContext.NewMethod;
-
-                foreach (var originalMethodParameter in originalMethod.Parameters)
+                if (typeContext.RewriteSemantic is TypeRewriteContext.TypeRewriteSemantic.UseSystemInterface or TypeRewriteContext.TypeRewriteSemantic.UseSystemValueType) continue;
+                
+                foreach (var methodRewriteContext in typeContext.Methods)
                 {
-                    var newName = originalMethodParameter.Name.IsObfuscated(context.Options)
-                        ? $"param_{originalMethodParameter.Sequence}"
-                        : originalMethodParameter.Name;
-                    
-                    var newParameter = new ParameterDefinition(newName,
-                        originalMethodParameter.Attributes & ~ParameterAttributes.HasFieldMarshal,
-                        assemblyContext.RewriteTypeRef(originalMethodParameter.ParameterType));
+                    var originalMethod = methodRewriteContext.OriginalMethod;
+                    var newMethod = methodRewriteContext.NewMethod;
 
-                    if (originalMethodParameter.HasConstant && originalMethodParameter.Constant is null or int or byte or sbyte or char or short or ushort or uint or long or ulong or bool)
-                        newParameter.Constant = originalMethodParameter.Constant;
-                    else
-                        newParameter.Attributes &= ~ParameterAttributes.HasDefault;
+                    foreach (var originalMethodParameter in originalMethod.Parameters)
+                    {
+                        var newName = originalMethodParameter.Name.IsObfuscated(context.Options)
+                            ? $"param_{originalMethodParameter.Sequence}"
+                            : originalMethodParameter.Name;
 
-                    newMethod.Parameters.Add(newParameter);
+                        var newParameter = new ParameterDefinition(newName,
+                            originalMethodParameter.Attributes & ~ParameterAttributes.HasFieldMarshal,
+                            assemblyContext.RewriteTypeRef(originalMethodParameter.ParameterType));
+
+                        if (originalMethodParameter.HasConstant && originalMethodParameter.Constant is null or int
+                                or byte or sbyte or char or short or ushort or uint or long or ulong or bool)
+                            newParameter.Constant = originalMethodParameter.Constant;
+                        else
+                            newParameter.Attributes &= ~ParameterAttributes.HasDefault;
+
+                        newMethod.Parameters.Add(newParameter);
+                    }
                 }
             }
             

@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
 using Mono.Cecil;
-using UnhollowerBaseLib;
 
 namespace AssemblyUnhollower.Contexts
 {
@@ -43,15 +41,34 @@ namespace AssemblyUnhollower.Contexts
 
         public MethodReference RewriteMethodRef(MethodReference methodRef)
         {
-            // todo: method on instantiated generic types?
-            var newType = GlobalContext.GetNewTypeForOriginal(methodRef.DeclaringType.Resolve());
-            if (newType.RewriteSemantic == TypeRewriteContext.TypeRewriteSemantic.UseSystemInterface)
-                return newType.NewType.Methods.Single(it => it.Name == methodRef.Name);
+            if (methodRef is MethodDefinition methodDef)
+                return GetContextForOriginalType(methodDef.DeclaringType).GetMethodByOldMethod(methodDef).NewMethod;
             
-            return newType.GetMethodByOldMethod(methodRef.Resolve()).NewMethod; 
+            var newType = GlobalContext.GetNewTypeForOriginal(methodRef.DeclaringType.Resolve());
+            var baseMethod = newType.GetMethodByOldMethod(methodRef.Resolve());
+            var newTypeRewritten = RewriteTypeRef(methodRef.DeclaringType);
+            
+            var newMethodRef = new MethodReference(baseMethod.NewMethod.Name, Imports.Void, newTypeRewritten);
+            newMethodRef.HasThis = methodRef.HasThis;
+
+            foreach (var parameter in methodRef.GenericParameters)
+            {
+                var newOwner = parameter.DeclaringMethod == methodRef ? (IGenericParameterProvider) newMethodRef : RewriteTypeRef(parameter);
+                newMethodRef.GenericParameters.Add(new GenericParameter(parameter.Name, newOwner));
+            }
+
+            newMethodRef.ReturnType = RewriteTypeRef(methodRef.ReturnType, newMethodRef);
+
+            foreach (var parameter in methodRef.Parameters)
+            {
+                newMethodRef.Parameters.Add(new ParameterDefinition(parameter.Name, parameter.Attributes,
+                    RewriteTypeRef(parameter.ParameterType, newMethodRef)));
+            }
+
+            return newMethodRef;
         }
         
-        public TypeReference RewriteTypeRef(TypeReference? typeRef)
+        public TypeReference RewriteTypeRef(TypeReference? typeRef, MethodReference? currentlyRewrittenParameterOwner = null)
         {
             if (typeRef == null) return Imports.Object;
             
@@ -79,6 +96,9 @@ namespace AssemblyUnhollower.Contexts
                 if(genericParameterDeclaringType != null)
                     return RewriteTypeRef(genericParameterDeclaringType).GenericParameters[genericParameter.Position];
 
+                if (currentlyRewrittenParameterOwner != null)
+                    return currentlyRewrittenParameterOwner.GenericParameters[genericParameter.Position];
+                
                 return RewriteMethodRef(genericParameter.DeclaringMethod).GenericParameters[genericParameter.Position];
             }
 
@@ -90,9 +110,9 @@ namespace AssemblyUnhollower.Contexts
 
             if (typeRef is GenericInstanceType genericInstance)
             {
-                var newRef = new GenericInstanceType(RewriteTypeRef(genericInstance.ElementType));
+                var newRef = new GenericInstanceType(RewriteTypeRef(genericInstance.ElementType, currentlyRewrittenParameterOwner));
                 foreach (var originalParameter in genericInstance.GenericArguments)
-                    newRef.GenericArguments.Add(RewriteTypeRef(originalParameter));
+                    newRef.GenericArguments.Add(RewriteTypeRef(originalParameter, currentlyRewrittenParameterOwner));
 
                 return newRef;
             }

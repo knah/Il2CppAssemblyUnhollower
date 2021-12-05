@@ -237,6 +237,8 @@ namespace AssemblyUnhollower
             using(new TimingCookie("Filling method parameters"))
                 Pass19CopyMethodParameters.DoPass(rewriteContext);
             
+            using(new TimingCookie("Fixing up missing interface overrides"))
+                Pass20FixupMissingInterfaceMethods.DoPass(rewriteContext);
             using(new TimingCookie("Creating static constructors"))
                 Pass20GenerateStaticConstructors.DoPass(rewriteContext);
             using(new TimingCookie("Creating value type fields"))
