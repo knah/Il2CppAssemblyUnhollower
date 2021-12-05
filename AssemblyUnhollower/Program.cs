@@ -190,7 +190,7 @@ namespace AssemblyUnhollower
 
             RewriteGlobalContext rewriteContext;
             IIl2CppMetadataAccess gameAssemblies;
-            IMetadataAccess systemAssemblies;
+            CecilMetadataAccess systemAssemblies;
             IMetadataAccess unityAssemblies;
 
             using (new TimingCookie("Reading assemblies"))
@@ -209,7 +209,7 @@ namespace AssemblyUnhollower
             if (!string.IsNullOrEmpty(options.UnityBaseLibsDir))
             {
                 using (new TimingCookie("Reading unity assemblies"))
-                    unityAssemblies = new CecilMetadataAccess(Directory.EnumerateFiles(options.UnityBaseLibsDir, "*.dll"));
+                    unityAssemblies = new CecilMetadataAccess(Directory.EnumerateFiles(options.UnityBaseLibsDir, "*.dll"), systemAssemblies);
             }
             else
                 unityAssemblies = NullMetadataAccess.Instance;
