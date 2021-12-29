@@ -12,7 +12,7 @@ namespace AssemblyUnhollower.Extensions
                 || str.StartsWith("Microsoft") 
                 || str.StartsWith("Mono") 
                 || str.StartsWith("I18N")
-                || str.StartsWith("Newtonsoft")
+                || str.StartsWith("Newtonsoft") || str.StartsWith("Valve.Newtonsoft")
                 || str.StartsWith("TinyJson")
                 || str.StartsWith("ICSharpCode"))
                 return "Il2Cpp" + str;
