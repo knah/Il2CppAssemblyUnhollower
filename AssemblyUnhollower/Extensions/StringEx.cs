@@ -5,10 +5,11 @@ namespace AssemblyUnhollower.Extensions
 {
     public static class StringEx
     {
-        public static string UnSystemify(this string str)
+        public static string UnSystemify(this string str, UnhollowerOptions options)
         {
-            if (str.StartsWith("System") || str.StartsWith("mscorlib") || str.StartsWith("Microsoft") || str.StartsWith("Mono") || str.StartsWith("I18N"))
-                return "Il2Cpp" + str;
+            foreach (var prefix in options.NamespacesAndAssembliesToPrefix)
+                if (str.StartsWith(prefix))
+                    return "Il2Cpp" + str;
 
             return str;
         }

@@ -29,6 +29,7 @@ Possible parameters:
         --deobf-uniq-max=<number> - Optional. How many maximum unique tokens per type are allowed during deobfuscation
         --deobf-analyze - Optional. Analyze deobfuscation performance with different parameter values. Will not generate assemblies.
         --blacklist-assembly=<assembly name> - Optional. Don't write specified assembly to output. Can be used multiple times
+        --add-prefix-to=<assembly name/namespace> - Optional. Assemblies and namespaces starting with these will get an Il2Cpp prefix in generated assemblies. Can be used multiple times.
         --no-xref-cache - Optional. Don't generate xref scanning cache. All scanning will be done at runtime.
         --no-copy-unhollower-libs - Optional. Don't copy unhollower libraries to output directory
         --obf-regex=<regex> - Optional. Specifies a regex for obfuscated names. All types and members matching will be renamed
@@ -113,6 +114,18 @@ Known caveats:
  * `obj.Cast<InterfaceType>()` will fail if you try to cast an object of your injected type to an interface. You can work around that with `new InterfaceType(obj.Pointer)` if you're absolutely sure it implements that interface.
  * Limited method matching might result in some interfaces being trickier or impossible to implement, namely those with overloads differing only in parameter types.
 
+## PDB generator
+UnhollowerPdbGen builds an executable that can be ran to generate a Microsoft PDB file (debug symbols) for GameAssembly.dll based on unhollower-generated names.  
+This can be useful for analyzing code of obfuscated games. For unobfuscated games, using [Il2CppInspector](https://github.com/djkaty/Il2CppInspector) would provide way better results for code analysis.  
+Generated PDBs were tested with windbg, lldb, WPA viewer/ETL performance analysis and IDA.  
+Generated PDBs only include generated methods, and don't include type info, generic method info and IL2CPP internals.   
+You need to manually copy the following Microsoft-provided libraries from Visual Studio (or other build tools) for this to work - I'm not redistributing them as license on them is not clear.  
+ * `mspdbcore.dll`
+ * `msobj140.dll`
+ * `tbbmalloc.dll`
+
+These need to be placed next to the built .exe file. Use file search to find `mspdbcore` in VS install. 
+
 ## Upcoming features (aka TODO list)
  * Unstripping engine code - fix current issues with unstripping failing or generating invalid bytecode
  * Proper interface support - IL2CPP interfaces will be generated as interfaces and properly implemented by IL2CPP types
@@ -125,3 +138,6 @@ Bundled into output files:
 
 Used by generator itself:
  * [Mono.Cecil](https://github.com/jbevain/cecil) by jbevain, the main tool to produce assemblies
+
+Parts of source used:
+ * [microsoft-pdb](https://github.com/microsoft/microsoft-pdb) for the PDB generator

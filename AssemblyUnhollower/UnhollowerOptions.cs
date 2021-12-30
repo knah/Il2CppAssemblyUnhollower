@@ -21,6 +21,7 @@ namespace AssemblyUnhollower
         public Regex? ObfuscatedNamesRegex { get; set; }
         public Dictionary<string, string> RenameMap { get; } = new Dictionary<string, string>();
         public bool PassthroughNames { get; set; }
+        public HashSet<string> NamespacesAndAssembliesToPrefix { get; } = new() {"System", "mscorlib", "Microsoft", "Mono", "I18N"};
         
         public List<string> DeobfuscationGenerationAssemblies { get; } = new List<string>();
         public string DeobfuscationNewAssembliesPath { get; set; }

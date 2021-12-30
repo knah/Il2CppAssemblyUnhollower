@@ -56,6 +56,7 @@ namespace AssemblyUnhollower
         private const string ParamGenerateDeobMapAssembly = "--deobf-generate-asm=";
         private const string ParamGenerateDeobMapNew = "--deobf-generate-new=";
         private const string ParamBlacklistAssembly = "--blacklist-assembly=";
+        private const string ParamAddPrefix = "--add-prefix-to=";
         private const string ParamNoXrefCache = "--no-xref-cache";
         private const string ParamNoCopyUnhollowerLibs = "--no-copy-unhollower-libs";
         private const string ParamObfRegex = "--obf-regex=";
@@ -82,6 +83,7 @@ namespace AssemblyUnhollower
             Console.WriteLine($"\t{ParamUniqMax}<number> - Optional. How many maximum unique tokens per type are allowed during deobfuscation");
             Console.WriteLine($"\t{ParamAnalyze} - Optional. Analyze deobfuscation performance with different parameter values. Will not generate assemblies.");
             Console.WriteLine($"\t{ParamBlacklistAssembly}<assembly name> - Optional. Don't write specified assembly to output. Can be used multiple times");
+            Console.WriteLine($"\t{ParamAddPrefix}<assembly name/namespace> - Optional. Assemblies and namespaces starting with these will get an Il2Cpp prefix in generated assemblies. Can be used multiple times.");
             Console.WriteLine($"\t{ParamNoXrefCache} - Optional. Don't generate xref scanning cache. All scanning will be done at runtime.");
             Console.WriteLine($"\t{ParamNoCopyUnhollowerLibs} - Optional. Don't copy unhollower libraries to output directory");
             Console.WriteLine($"\t{ParamObfRegex}<regex> - Optional. Specifies a regex for obfuscated names. All types and members matching will be renamed");
@@ -137,6 +139,8 @@ namespace AssemblyUnhollower
                     options.TypeDeobfuscationMaxUniquifiers = Int32.Parse(s.Substring(ParamUniqMax.Length));
                 else if(s.StartsWith(ParamBlacklistAssembly))
                     options.AdditionalAssembliesBlacklist.Add(s.Substring(ParamBlacklistAssembly.Length));
+                else if(s.StartsWith(ParamAddPrefix))
+                    options.NamespacesAndAssembliesToPrefix.Add(s.Substring(ParamAddPrefix.Length));
                 else if (s.StartsWith(ParamObfRegex))
                     options.ObfuscatedNamesRegex = new Regex(s.Substring(ParamObfRegex.Length), RegexOptions.Compiled);
                 else if(s.StartsWith(ParamRenameMap))

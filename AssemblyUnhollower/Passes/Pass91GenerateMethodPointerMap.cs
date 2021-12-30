@@ -35,7 +35,7 @@ namespace AssemblyUnhollower.Passes
             
             data.Sort((a, b) => a.Item1.CompareTo(b.Item1));
 
-            var header = new MethodAddressToTokenMap.FileHeader
+            var header = new MethodAddressToTokenMapFileHeader
             {
                 Magic = MethodAddressToTokenMap.Magic,
                 Version = MethodAddressToTokenMap.Version,

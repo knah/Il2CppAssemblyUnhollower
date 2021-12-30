@@ -1,12 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
         <OutputType>Exe</OutputType>
-        <TargetFrameworks>net4.7.2;net5.0;netstandard2.1</TargetFrameworks>
-        <Nullable>enable</Nullable>
-        <Version>0.4.17.0</Version>
-        <LangVersion>latest</LangVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,6 +13,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\UnhollowerBaseLib\UnhollowerBaseLib.csproj" />
-      <ProjectReference Include="..\UnhollowerRuntimeLib\UnhollowerRuntimeLib.csproj" />
     </ItemGroup>
+
 </Project>

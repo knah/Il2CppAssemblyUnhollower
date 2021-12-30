@@ -41,8 +41,8 @@ namespace AssemblyUnhollower.Contexts
                 if (assemblyName == "Il2CppDummyDll") continue;
                 
                 var newAssembly = AssemblyDefinition.CreateAssembly(
-                    new AssemblyNameDefinition(sourceAssembly.Name.Name.UnSystemify(), sourceAssembly.Name.Version),
-                    sourceAssembly.MainModule.Name.UnSystemify(), sourceAssembly.MainModule.Kind);
+                    new AssemblyNameDefinition(sourceAssembly.Name.Name.UnSystemify(options), sourceAssembly.Name.Version),
+                    sourceAssembly.MainModule.Name.UnSystemify(options), sourceAssembly.MainModule.Kind);
 
                 var assemblyRewriteContext = new AssemblyRewriteContext(this, sourceAssembly, newAssembly);
                 AddAssemblyContext(assemblyName, assemblyRewriteContext);
