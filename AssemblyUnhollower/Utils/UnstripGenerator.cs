@@ -28,7 +28,7 @@ namespace AssemblyUnhollower.Utils
                 invokeMethod.Parameters.Add(new ParameterDefinition("@this", ParameterAttributes.None, imports.IntPtr));
             foreach (var convertedParameter in convertedMethod.Parameters)
                 invokeMethod.Parameters.Add(new ParameterDefinition(convertedParameter.Name,
-                    convertedParameter.Attributes,
+                    convertedParameter.Attributes & ~ParameterAttributes.Optional,
                     convertedParameter.ParameterType.IsValueType ? convertedParameter.ParameterType : imports.IntPtr));
 
             return delegateType;

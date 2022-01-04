@@ -3,4 +3,5 @@ This is a small feature update. Generated assemblies should be fully compatible 
 New features:
  * PDB generator project (not bundled in release zip) - see README
  * New CLI option `--add-prefix-to` to add Il2Cpp prefix to additional assemblies and namespaces to prevent conflicts with managed libs.
+ * 0.4.17.1 - strip Optional attribute off unstripped ICall delegates as Mono crashed on those 
  
