@@ -32,6 +32,8 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
         ref Il2CppMethodFlags Flags { get; }
         ref byte ParametersCount { get; }
         unsafe ref Il2CppParameterInfo* Parameters { get; }
-        ref MethodInfoExtraFlags ExtraFlags { get; }
+        bool IsGeneric { get; set; }
+        bool IsInflated { get; set; }
+        bool IsMarshalledFromNative { get; set; }
     }
 }

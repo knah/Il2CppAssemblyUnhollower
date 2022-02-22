@@ -121,7 +121,35 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
 
             public ref Il2CppParameterInfo* Parameters => ref NativeMethod->parameters;
 
-            public ref MethodInfoExtraFlags ExtraFlags => ref NativeMethod->extra_flags;
+            public bool IsGeneric
+            {
+                get => (NativeMethod->extra_flags & MethodInfoExtraFlags.is_generic) != 0;
+                set
+                {
+                    if (value) NativeMethod->extra_flags |= MethodInfoExtraFlags.is_generic;
+                    else NativeMethod->extra_flags &= ~MethodInfoExtraFlags.is_generic;
+                }
+            }
+
+            public bool IsInflated
+            {
+                get => (NativeMethod->extra_flags & MethodInfoExtraFlags.is_inflated) != 0;
+                set
+                {
+                    if (value) NativeMethod->extra_flags |= MethodInfoExtraFlags.is_inflated;
+                    else NativeMethod->extra_flags &= ~MethodInfoExtraFlags.is_inflated;
+                }
+            }
+
+            public bool IsMarshalledFromNative
+            {
+                get => (NativeMethod->extra_flags & MethodInfoExtraFlags.is_marshalled_from_native) != 0;
+                set
+                {
+                    if (value) NativeMethod->extra_flags |= MethodInfoExtraFlags.is_marshalled_from_native;
+                    else NativeMethod->extra_flags &= ~MethodInfoExtraFlags.is_marshalled_from_native;
+                }
+            }
         }
     }
 }

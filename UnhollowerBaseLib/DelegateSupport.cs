@@ -248,21 +248,35 @@ namespace UnhollowerRuntimeLib
             var managedTrampoline =
                 GetOrCreateNativeToManagedTrampoline(signature, nativeDelegateInvokeMethod, managedInvokeMethod);
 
-            var nativeDelegatePtr = IL2CPP.il2cpp_object_new(classTypePtr);
-            var converted = new Il2CppSystem.Delegate(nativeDelegatePtr);
-
-            converted.method_ptr = Marshal.GetFunctionPointerForDelegate(managedTrampoline);
-            converted.method_info = nativeDelegateInvokeMethod; // todo: is this truly a good hack?
             var methodInfo = UnityVersionHandler.NewMethod();
-            converted.method = methodInfo.Pointer;
-
-            methodInfo.MethodPointer = converted.method_ptr;
-            methodInfo.InvokerMethod = IntPtr.Zero;
+            methodInfo.MethodPointer = Marshal.GetFunctionPointerForDelegate(managedTrampoline);
             methodInfo.ParametersCount = (byte) parameterInfos.Length;
             methodInfo.Slot = ushort.MaxValue;
-            methodInfo.ExtraFlags = MethodInfoExtraFlags.is_marshalled_from_native;
+            methodInfo.IsMarshalledFromNative = true;
             
-            converted.m_target = new Il2CppToMonoDelegateReference(@delegate, methodInfo.Pointer);
+            var delegateReference = new Il2CppToMonoDelegateReference(@delegate, methodInfo.Pointer);
+
+            Il2CppSystem.Delegate converted;
+            if (UnityVersionHandler.MustUseDelegateConstructor)
+            {
+                converted = ((TIl2Cpp) Activator.CreateInstance(typeof(TIl2Cpp), delegateReference.Cast<Object>(), methodInfo.Pointer)).Cast<Il2CppSystem.Delegate>();
+            }
+            else
+            {
+                var nativeDelegatePtr = IL2CPP.il2cpp_object_new(classTypePtr);
+                converted = new Il2CppSystem.Delegate(nativeDelegatePtr);
+            }
+
+            converted.method_ptr = methodInfo.MethodPointer;
+            converted.method_info = nativeDelegateInvokeMethod; // todo: is this truly a good hack?
+            converted.method = methodInfo.Pointer;
+            converted.m_target = delegateReference;
+
+            if (UnityVersionHandler.MustUseDelegateConstructor)
+            { // U2021.2.0+ hack in case the constructor did the wrong thing anyway
+                converted.invoke_impl = converted.method_ptr;
+                converted.method_code = converted.m_target.Pointer;
+            }
 
             return converted.Cast<TIl2Cpp>();
         }

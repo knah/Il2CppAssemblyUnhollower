@@ -202,7 +202,7 @@ namespace UnhollowerRuntimeLib
                 {
                     var vTableMethod = UnityVersionHandler.Wrap(interfaces[i].Methods[j]);
                     var methodName = Marshal.PtrToStringAnsi(vTableMethod.Name);
-                    if (!infos.TryGetValue((methodName, vTableMethod.ParametersCount, (vTableMethod.ExtraFlags & MethodInfoExtraFlags.is_generic) != 0), out var methodIndex))
+                    if (!infos.TryGetValue((methodName, vTableMethod.ParametersCount, vTableMethod.IsGeneric), out var methodIndex))
                     {
                         ++index;
                         continue;
@@ -378,9 +378,9 @@ namespace UnhollowerRuntimeLib
             if (monoMethod.IsGenericMethod)
             {
                 if (monoMethod.ContainsGenericParameters)
-                    converted.ExtraFlags |= MethodInfoExtraFlags.is_generic;
+                    converted.IsGeneric = true;
                 else
-                    converted.ExtraFlags |= MethodInfoExtraFlags.is_inflated;
+                    converted.IsInflated = true;
             }
 
             if (!monoMethod.ContainsGenericParameters)
@@ -645,6 +645,10 @@ namespace UnhollowerRuntimeLib
 
             if (targetMethod == IntPtr.Zero)
                 return;
+
+            var targetTargets = XrefScannerLowLevel.JumpTargets(targetMethod).Take(2).ToList();
+            if (targetTargets.Count == 1) // U2021.2.0+, there's additional shim that takes 3 parameters
+                targetMethod = targetTargets[0];
 
             ourOriginalGenericGetMethod = Detour.Detour(targetMethod, new GenericGetMethodDelegate(GenericGetMethodPatch));
             LogSupport.Trace("il2cpp_class_from_il2cpp_type patched");

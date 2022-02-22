@@ -84,11 +84,17 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
             public ushort slot;
             public byte parameters_count;
 
-            public MethodInfoExtraFlags extra_flags;
-            /*uint8_t is_generic : 1; /* true if method is a generic method definition #1#
-            uint8_t is_inflated : 1; /* true if declaring_type is a generic instance or if method is a generic instance#1#
-            uint8_t wrapper_type : 1; /* always zero (MONO_WRAPPER_NONE) needed for the debugger #1#
-            uint8_t is_marshaled_from_native : 1*/
+            public MethodInfoExtraFlags_27_3 extra_flags;
+        }
+        
+        [Flags]
+        public enum MethodInfoExtraFlags_27_3 : byte
+        {
+            is_generic = 0x1,
+            is_inflated = 0x2,
+            wrapper_type = 0x4,
+            has_full_generic_sharing_signature = 0x8,
+            indirect_call_via_invokers = 0x10
         }
 
 
@@ -125,7 +131,31 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.MethodInfo
 
             public ref Il2CppParameterInfo* Parameters => ref NativeMethod->parameters;
 
-            public ref MethodInfoExtraFlags ExtraFlags => ref NativeMethod->extra_flags;
+            public bool IsGeneric
+            {
+                get => (NativeMethod->extra_flags & MethodInfoExtraFlags_27_3.is_generic) != 0;
+                set
+                {
+                    if (value) NativeMethod->extra_flags |= MethodInfoExtraFlags_27_3.is_generic;
+                    else NativeMethod->extra_flags &= ~MethodInfoExtraFlags_27_3.is_generic;
+                }
+            }
+
+            public bool IsInflated
+            {
+                get => (NativeMethod->extra_flags & MethodInfoExtraFlags_27_3.is_inflated) != 0;
+                set
+                {
+                    if (value) NativeMethod->extra_flags |= MethodInfoExtraFlags_27_3.is_inflated;
+                    else NativeMethod->extra_flags &= ~MethodInfoExtraFlags_27_3.is_inflated;
+                }
+            }
+
+            public bool IsMarshalledFromNative
+            {
+                get => false;
+                set { /* no-op */ }
+            }
         }
     }
 }

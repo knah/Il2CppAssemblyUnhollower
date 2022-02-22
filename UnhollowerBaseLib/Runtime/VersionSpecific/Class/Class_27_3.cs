@@ -225,20 +225,20 @@ namespace UnhollowerBaseLib.Runtime.VersionSpecific.Class
 
             public bool SizeInited
             {
-                get => this.CheckBit(bitfield1offset, 7);
-                set => this.SetBit(bitfield1offset, 7, value);
-            }
-
-            public bool HasFinalize
-            {
                 get => this.CheckBit(bitfield2offset, 0);
                 set => this.SetBit(bitfield2offset, 0, value);
             }
 
+            public bool HasFinalize
+            {
+                get => this.CheckBit(bitfield2offset, 1);
+                set => this.SetBit(bitfield2offset, 1, value);
+            }
+
             public bool IsVtableInitialized
             {
-                get => this.CheckBit(bitfield2offset, 4);
-                set => this.SetBit(bitfield2offset, 4, value);
+                get => this.CheckBit(bitfield2offset, 5);
+                set => this.SetBit(bitfield2offset, 5, value);
             }
 
             public ref IntPtr Name => ref NativeClass->name;
