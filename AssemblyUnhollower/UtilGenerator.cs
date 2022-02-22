@@ -67,6 +67,7 @@ namespace AssemblyUnhollower
                     var classPointerFieldRef = new FieldReference(nameof(Il2CppClassPointerStore<int>.NativeClassPtr), imports.IntPtr, classPointerTypeRef);
                     body.Emit(OpCodes.Ldsfld, enclosingType.NewType.Module.ImportReference(classPointerFieldRef));
                     body.Emit(OpCodes.Ldc_I4_0);
+                    body.Emit(OpCodes.Conv_U);
                     body.Emit(OpCodes.Call, imports.ValueSizeGet);
                     body.Emit(OpCodes.Cpblk);
                     body.Emit(OpCodes.Pop);
