@@ -47,6 +47,13 @@ namespace AssemblyUnhollower.Contexts
             var newMethod = new MethodDefinition("", AdjustAttributes(originalMethod.Attributes), declaringType.AssemblyContext.Imports.Void);
             NewMethod = newMethod;
 
+            var objectMethods = declaringType.AssemblyContext.Imports.Object.Resolve().Methods.Select(x => x.FullName);
+            if (originalMethod.IsVirtual && (!originalMethod.IsNewSlot || objectMethods.Contains(originalMethod.FullName))) // is override
+            {
+                newMethod.IsVirtual = true;
+                newMethod.IsNewSlot = false;
+            }
+
             if (originalMethod.CustomAttributes.Any(x => x.AttributeType.FullName == typeof(ExtensionAttribute).FullName))
             {
                 newMethod.CustomAttributes.Add(new CustomAttribute(declaringType.AssemblyContext.Imports.ExtensionAttributeCtor));
