@@ -94,8 +94,11 @@ namespace AssemblyUnhollower
                 {
                     if (!originalTypeField.Name.IsObfuscated(obfuscatedType.AssemblyContext.GlobalContext.Options)) continue;
                     var matchedField = cleanType.OriginalType.Fields[obfuscatedType.OriginalType.Fields.IndexOf(originalTypeField)];
-                    
-                    writer.WriteLine(obfuscatedType.NewType.GetNamespacePrefix() + "." + obfuscatedType.NewType.Name + "::" + Pass22GenerateEnums.GetUnmangledName(originalTypeField) + ";" + matchedField.Name + ";0");
+
+
+                    string maybeWithDot = obfuscatedType.NewType.GetNamespacePrefix() + ".";
+                    //if (maybeWithDot.IndexOf('.') == 0) maybeWithDot = maybeWithDot.Substring(1);
+                    writer.WriteLine(obfuscatedType.NewType.GetNamespacePrefix() + obfuscatedType.NewType.Name + "::" + Pass22GenerateEnums.GetUnmangledName(originalTypeField) + ";" + matchedField.Name + ";0");
                 }
             }
             
@@ -117,7 +120,7 @@ namespace AssemblyUnhollower
                     if (!usedNames.TryGetValue(cleanType.Item1.NewType, out var existing) || existing.Penalty < cleanType.Item2)
                     {
                         string maybeWithDot = typeContext.NewType.GetNamespacePrefix() + ".";
-                        if (maybeWithDot.IndexOf('.') == 0) maybeWithDot = maybeWithDot.Substring(1);
+                        //if (maybeWithDot.IndexOf('.') == 0) maybeWithDot = maybeWithDot.Substring(1);
                         usedNames[cleanType.Item1.NewType] = (maybeWithDot + typeContext.NewType.Name, cleanType.Item2, typeContext.OriginalType.Namespace != cleanType.Item1.OriginalType.Namespace);
                     } else 
                         return;
