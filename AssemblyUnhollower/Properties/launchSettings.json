@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AssemblyUnhollower": {
+      "commandName": "Project",
+      "commandLineArgs": "--input=\"D:\\House party\\modding\\deobf maps\\deobfuscated_no_regex\" --deobf-generate --deobf-generate-new=\"D:\\House party\\modding\\deobf maps\\obfuscated_no_regex\" --mscorlib=\"D:\\House party\\modding\\deobf maps\\deobfuscated\\mscorlib.dll\" --deobf-generate-asm=\"Assembly-CSharp\" --output=\"./House Party\""
+    }
+  }
+}
