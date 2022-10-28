@@ -42,6 +42,7 @@ namespace AssemblyUnhollower
         private readonly Lazy<TypeReference> myIl2CppArrayBase;
         private readonly Lazy<TypeReference> myIl2CppArrayBaseSetlfSubst;
         private readonly Lazy<TypeReference> myDefaultMemberAttribute;
+        private readonly Lazy<TypeReference> myIl2CppObjectReference;
 
         public TypeReference Void => myVoidReference.Value;
         public TypeReference IntPtr => myIntPtrReference.Value;
@@ -184,7 +185,7 @@ namespace AssemblyUnhollower
             myIl2CppArrayBaseSetlfSubst = new Lazy<TypeReference>(() => Module.ImportReference(new GenericInstanceType(Il2CppArrayBase) { GenericArguments = { Il2CppArrayBase.GenericParameters[0] }}));
             myIl2CppObjectBaseReference = new Lazy<TypeReference>(() => Module.ImportReference(typeof(Il2CppObjectBase)));
             myDefaultMemberAttribute = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.DefaultMemberAttribute));
-            // myIl2CppObjectReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.Object));// todo!
+            myIl2CppObjectReference = new Lazy<TypeReference>(() => Module.ImportReference(TargetTypeSystemHandler.Object));
             
             myIl2CppObjectToPointer = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("Il2CppObjectBaseToPtr")));
             myIl2CppObjectToPointerNotNull = new Lazy<MethodReference>(() => Module.ImportReference(typeof(IL2CPP).GetMethod("Il2CppObjectBaseToPtrNotNull")));
