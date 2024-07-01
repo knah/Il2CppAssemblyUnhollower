@@ -1,3 +1,6 @@
+# Archival note
+This repository has been unmaintained for a while and will be archived soon. Consider using [BepInEx/Il2CppInterop](https://github.com/BepInEx/Il2CppInterop/) as a replacement.
+
 # Il2CppAssemblyUnhollower
 A tool to generate Managed->IL2CPP proxy assemblies from
  [Il2CppDumper](https://github.com/Perfare/Il2CppDumper )'s output.
