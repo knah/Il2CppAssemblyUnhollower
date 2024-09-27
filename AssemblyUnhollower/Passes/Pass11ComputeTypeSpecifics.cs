@@ -16,6 +16,7 @@ namespace AssemblyUnhollower.Passes
 
         private static void ComputeSpecifics(TypeRewriteContext typeContext)
         {
+            if (typeContext == null) return;
             if (typeContext.ComputedTypeSpecifics != TypeRewriteContext.TypeSpecifics.NotComputed) return;
             typeContext.ComputedTypeSpecifics = TypeRewriteContext.TypeSpecifics.Computing;
             
@@ -32,6 +33,7 @@ namespace AssemblyUnhollower.Passes
                 }
 
                 var fieldTypeContext = typeContext.AssemblyContext.GlobalContext.GetNewTypeForOriginal(fieldType.Resolve());
+                if (fieldTypeContext == null) return;
                 ComputeSpecifics(fieldTypeContext);
                 if (fieldTypeContext.ComputedTypeSpecifics != TypeRewriteContext.TypeSpecifics.BlittableStruct)
                 {
